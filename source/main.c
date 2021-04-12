@@ -2,10 +2,12 @@
 #include <tonc.h>
 #include "test.h"
 
-#include "tiles.h"	//bg tiles
-#include "box.h"	//test sprite
-#include "metr.h"	//metroid sprite
-#include "kirby.h"	//kirby sprite
+#include "sprites.h"
+#include "gear.h"
+
+#include "testmap.h"
+#include "fe-map.h"
+
 
 
 extern int testFunction(int test_int);
@@ -17,38 +19,45 @@ void draw_bg();
 
 void test_init_tte_se4();
 void test_run_tte_se4();
-
+void bg_demo();
 
 OBJ_ATTR obj_buffer[128];
 OBJ_AFFINE *obj_aff_buffer= (OBJ_AFFINE*)obj_buffer;
 
 OBJ_ATTR *kirby;
-int kirby_x= 96, kirby_y= 32;
+int kirby_x= 96, kirby_y= 92;
 u32 kirby_tid= 0, kirby_pb= 0;		// tile id, pal-bank
+
+OBJ_ATTR *gear;
+int gear_x = 0, gear_y= 128;
+u32 gear_tid= 0, gear_pb= 2;		// tile id, pal-bank
+
 
 int main(void)
 {
+
 	irq_init(NULL);
 	irq_enable(II_VBLANK);
-	REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_OBJ | DCNT_OBJ_1D;
+	// set up BG0 for a 4bpp 32x32t map, using charblock 0 and screenblock 31
+	REG_BG0CNT= BG_CBB(0) | BG_SBB(30) | BG_4BPP | BG_REG_32x32;
+	REG_BG1CNT= BG_CBB(0) | BG_SBB(30);
+	REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
 	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
 	
-
-
 	//memcpy(&tile_mem[4][0], metrTiles, metrTilesLen);
 	//memcpy(pal_obj_mem, metrPal, metrPalLen);
 	// Places the glyphs of a 4bpp boxed kirby sprite 
 	// into LOW obj memory (cbb == 4)
 	memcpy(&tile_mem[4][0], kirbyTiles, kirbyTilesLen);
 	memcpy(pal_obj_mem, kirbyPal, kirbyPalLen);
-	memcpy(&tile_mem[4][32], tilesTiles, tilesTilesLen);
-	memcpy(pal_obj_mem + kirbyPalLen, tilesPal, tilesPalLen);
+	memcpy(&tile_mem[4][32], gearTiles, gearTilesLen);
+	memcpy(pal_obj_mem + kirbyPalLen, gearPal, gearPalLen);
 	//memcpy(&tile_mem[4][0], boxTiles, boxTilesLen);
 	//memcpy(pal_obj_mem, boxPal, boxPalLen);
 
 	oam_init(obj_buffer, 128);
-	//REG_DISPCNT= DCNT_OBJ | DCNT_OBJ_1D;
 	
+	init_bg();
 	test_init_tte_se4();
 	init_test_spr();
 
@@ -69,9 +78,21 @@ void main_game_loop()
 		vid_vsync();
 		key_poll();
 		play_test_spr();
+
 	}
 }
 
+
+
+void init_bg()
+{
+	// Load palette
+	memcpy(pal_bg_mem, fe_mapPal, fe_mapPalLen);
+	// Load tiles into CBB 0
+	memcpy(&tile_mem[0][96], fe_mapTiles, fe_mapTilesLen);		//TODO: make this not a magic number
+	// Load map into SBB 30
+	memcpy(&se_mem[30][96], fe_mapMetaMap, fe_mapMetaMapLen);
+}
 
 
 void test_init_tte_se4()
@@ -79,7 +100,7 @@ void test_init_tte_se4()
 	
 	// --- (1) Base TTE init for tilemaps ---
 	tte_init_se(
-		0,						// Background number (BG 0)
+		1,						// Background number (BG 0)
 		BG_CBB(0)|BG_SBB(31),	// BG control (for REG_BGxCNT)
 		0,						// Tile offset (special cattr)
 		CLR_YELLOW,				// Ink color
@@ -94,7 +115,6 @@ void test_init_tte_se4()
 	pal_bg_bank[4][15]= CLR_WHITE;
 	pal_bg_bank[5][15]= CLR_MAG;
 
-	pal_bg_bank[4][14]= CLR_GRAY;
 }
 
 void test_run_tte_se4()
@@ -102,6 +122,7 @@ void test_run_tte_se4()
 	
 
 	// --- (3) Print some text ---
+	tte_set_margins(16,16,144,144);
 	tte_set_pos(8, 8);
 	// "Hello world in different colors"
 	tte_write("\n Hahahahaha\n");
@@ -114,11 +135,6 @@ void test_run_tte_se4()
 	tte_write("#{cx:0x0000}C#{cx:0x1000}o#{cx:0x2000}l");
 	tte_write("#{cx:0x3000}o#{cx:0x4000}r#{cx:0x5000}s");
 	tte_write("#{cx:0} provided by \\#{cx:#}.");
-
-}
-
-void init_bg()
-{
 
 }
 
@@ -142,6 +158,15 @@ void init_test_spr()
 	obj_set_pos(kirby, kirby_x, kirby_y);
 
 	
+	gear = &obj_buffer[1];
+	obj_set_attr(gear, 
+		ATTR0_SQUARE,					// Square, regular sprite
+		ATTR1_SIZE_32,					// 32x32p, 
+		ATTR2_PALBANK(gear_pb) | gear_tid);		// palbank 0, tile 0
+
+	// position sprite (redundant here; the _real_ position
+	// is set further down
+	obj_set_pos(gear, gear_x, gear_y);
 
 }
 
@@ -158,6 +183,7 @@ void play_test_spr()
 	if(key_hit(KEY_L))
 		test_run_tte_se4();
 	if(key_hit(KEY_R))
+		//tte_erase_rect(0,0,64,32);
 		tte_erase_screen();
 
 	// flip
@@ -177,6 +203,10 @@ void play_test_spr()
 	// Hey look, it's one of them build macros!
 	kirby->attr2= ATTR2_BUILD(kirby_tid, kirby_pb, 0);
 	obj_set_pos(kirby, kirby_x, kirby_y);
+	REG_BG0HOFS= kirby_x;
+	REG_BG0VOFS= kirby_y;
+	gear->attr2= ATTR2_BUILD(gear_tid, gear_pb, 1);
+	obj_set_pos(gear, gear_x, gear_y);
 
-	oam_copy(oam_mem, obj_buffer, 1);	// only need to update one
+	oam_copy(oam_mem, obj_buffer, 2);	// only need to update one
 }
