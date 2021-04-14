@@ -2,6 +2,8 @@
 	"files.associations": {
 		"tonc.h": "c",
 		"metr.h": "c",
-		"sprites.h": "c"
+		"sprites.h": "c",
+		"gba.h": "c",
+		"testmap.h": "c"
 	}
 }

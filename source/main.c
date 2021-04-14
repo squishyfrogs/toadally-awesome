@@ -1,66 +1,45 @@
 #include <string.h>
 #include <tonc.h>
-#include "test.h"
 
-#include "sprites/kirby.h"
-#include "sprites/gear.h"
-#include "sprites/box.h"
 
 #include "maps/testmap.h"
 #include "maps/fe-map.h"
 
+#define ANIM_SPEED 5	// 60/speed =  fps 
 
 
-extern int testFunction(int test_int);
+extern void init_objs();
+extern void update_objs();
+extern void update_anim();
+
+void reg_init();
+void bg_init();
+void timer_init();
+
 void main_game_loop();
-void init_test_spr();
-void play_test_spr();
-void init_bg();
 void draw_bg();
 
 void test_init_tte_se4();
 void test_run_tte_se4();
 void bg_demo();
+void update_text();
 
-OBJ_ATTR obj_buffer[128];
-OBJ_AFFINE *obj_aff_buffer= (OBJ_AFFINE*)obj_buffer;
-
-OBJ_ATTR *kirby;
-int kirby_x= 96, kirby_y= 92;
-u32 kirby_tid= 0, kirby_pb= 0;		// tile id, pal-bank
-
-OBJ_ATTR *gear;
-int gear_x = 32, gear_y= 32;
-u32 gear_tid= (kirbyTilesLen / 32) + 1 , gear_pb= 1;		// tile id, pal-bank
 
 
 int main(void)
 {
 
 	irq_init(NULL);
+	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
-	// set up BG0 for a 4bpp 32x32t map, using charblock 0 and screenblock 31
-	REG_BG0CNT= BG_CBB(0) | BG_SBB(30);
-	REG_BG1CNT= BG_CBB(0) | BG_SBB(30) | BG_8BPP | BG_REG_32x32;
-	REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
-	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
-	
-	//memcpy(&tile_mem[4][0], metrTiles, metrTilesLen);
-	//memcpy(pal_obj_mem, metrPal, metrPalLen);
-	// Places the glyphs of a 4bpp boxed kirby sprite 
-	// into LOW obj memory (cbb == 4)
-	memcpy(&tile_mem[4][0], kirbyTiles, kirbyTilesLen);
-	memcpy(pal_obj_mem, kirbyPal, kirbyPalLen);
-	memcpy(&tile_mem[4][32], gearTiles, gearTilesLen);
-	memcpy(pal_obj_mem + 16, gearPal, gearPalLen);
-	//memcpy(&tile_mem[4][0], boxTiles, boxTilesLen);
-	//memcpy(pal_obj_mem, boxPal, boxPalLen);
+	reg_init();
 
-	oam_init(obj_buffer, 128);
+	init_objs();
 	
-	init_bg();
+	bg_init();
 	test_init_tte_se4();
-	init_test_spr();
+	
+	test_run_tte_se4();
 
 	main_game_loop();
 
@@ -70,22 +49,39 @@ int main(void)
 
 void main_game_loop()
 {
-	irq_init(NULL);
-	irq_enable(II_VBLANK);
-	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_OBJ | DCNT_OBJ_1D;
-	test_run_tte_se4();
+	static uint32_t anim_sync;
 	while (1) 
 	{
-		vid_vsync();
+		//vid_vsync();		//resource hog
+		VBlankIntrWait();	//slower but saves power
 		key_poll();
-		play_test_spr();
+
+		anim_sync++;
+
+		if(anim_sync > ANIM_SPEED)
+		{
+			update_anim();
+			anim_sync %= ANIM_SPEED;
+		}
+
+		update_text();
+		update_objs();
 
 	}
 }
 
+// initialize the bg + obj registers 
+void reg_init()
+{
+	REG_BG0CNT= BG_CBB(0) | BG_SBB(30);
+	// set up BG1 for a 8bpp 32x32t map, using charblock 0 and screenblock 31
+	REG_BG1CNT= BG_CBB(0) | BG_SBB(30) | BG_8BPP | BG_REG_32x32;
+	REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
+	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
+}
 
 
-void init_bg()
+void bg_init()
 {
 	// Load palette
 	memcpy(pal_bg_mem, fe_mapPal, fe_mapPalLen);
@@ -102,6 +98,16 @@ void init_bg()
 	
 }
 
+void timer_init()
+{
+	// Overflow every ~1 second:
+	// 0x4000 ticks @ FREQ_1024
+
+	REG_TM2D = -0x4000;				// 111 ticks to overflow - should produce 60hz cycle?
+	REG_TM2CNT= TM_FREQ_1024;		// use 1024 cycle timer
+	REG_TM2CNT = TM_ENABLE;
+	REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
+}
 
 void test_init_tte_se4()
 {
@@ -116,6 +122,7 @@ void test_init_tte_se4()
 		NULL,					// Default font (sys8) 
 		NULL);					// Default renderer (se_drawg_s)
 
+	tte_init_con();
 
 	// --- (2) Init some colors ---
 	//pal_bg_bank[1][15]= CLR_RED;
@@ -153,54 +160,8 @@ void draw_bg()
 }
 
 
-
-void init_test_spr()
+void update_text()
 {
-	kirby = &obj_buffer[0];
-	obj_set_attr(kirby, 
-		ATTR0_SQUARE,					// Square, regular sprite
-		ATTR1_SIZE_32,					// 32x32p, 
-		ATTR2_PALBANK(kirby_pb) | kirby_tid);		// palbank 0, tile 0
-
-	// position sprite (redundant here; the _real_ position
-	// is set further down
-	obj_set_pos(kirby, kirby_x, kirby_y);
-
-	
-	gear = &obj_buffer[1];
-	obj_set_attr(gear, 
-		ATTR0_SQUARE,					// Square, regular sprite
-		ATTR1_SIZE_32,					// 32x32p, 
-		ATTR2_PALBANK(gear_pb) | gear_tid);		// palbank 0, tile 0
-
-	// position sprite (redundant here; the _real_ position
-	// is set further down
-	obj_set_pos(gear, gear_x, gear_y);
-
-}
-
-void play_test_spr()
-{
-	// move left/right
-	kirby_x += 2*key_tri_horz();
-	gear_x += key_tri_horz();
-	// move up/down
-	kirby_y += 2*key_tri_vert();
-	gear_y += key_tri_vert();
-
-	// increment/decrement starting tile with R/L
-	// tid += bit_tribool(key_hit(-1), KI_R, KI_L);
-
-	if(key_hit(KEY_L))
-	{
-		//hide/unhide sprites
-		static bool spr_hidden;
-		if(spr_hidden)
-			obj_unhide_multi(kirby, DCNT_MODE0, 2);
-		else
-			obj_hide_multi(kirby, 2);
-		spr_hidden = !spr_hidden;
-	}
 	if(key_hit(KEY_R))
 	{
 		static bool txt_hidden;
@@ -211,30 +172,4 @@ void play_test_spr()
 		txt_hidden = !txt_hidden;
 		//tte_erase_rect(0,0,64,32);
 	}
-
-	// flip
-	if(key_hit(KEY_A))	// horizontally
-		kirby->attr1 ^= ATTR1_HFLIP;
-	if(key_hit(KEY_B))	// vertically
-		kirby->attr1 ^= ATTR1_VFLIP;
-	
-
-	// make it glow (via palette swapping)
-	//pb= key_is_down(KEY_SELECT) ? 1 : 0;
-
-	// toggle mapping mode
-	//if(key_hit(KEY_START))
-	//	REG_DISPCNT ^= DCNT_OBJ_1D;
-	
-	// Hey look, it's one of them build macros!
-	kirby->attr2= ATTR2_BUILD(kirby_tid, kirby_pb, 0);
-	obj_set_pos(kirby, kirby_x, kirby_y);
-
-	//REG_BG1HOFS= kirby_x;
-	//REG_BG1VOFS= kirby_y;
-
-	gear->attr2= ATTR2_BUILD(gear_tid, gear_pb, 0);
-	obj_set_pos(gear, gear_x, gear_y);
-
-	oam_copy(oam_mem, obj_buffer, 2);	// only need to update one
 }
