@@ -1,11 +1,8 @@
 #include <string.h>
 #include <tonc.h>
 #include "gameobj.h"
-
+#include "sprites.h"
 // sprite includes 
-#include "sprites/kirby.h"
-#include "sprites/gear.h"
-#include "sprites/mario.h"
 
 #define SPRITE_CT 3
 
@@ -14,18 +11,22 @@ void init_test_spr();
 void update_objs();
 void update_anim();
 
-OBJ_ATTR obj_buffer[128];
-OBJ_AFFINE *obj_aff_buffer= (OBJ_AFFINE*)obj_buffer;
+void gameobj_set_attr(GameObj *obj);
+void gameobj_set_pos(GameObj *obj, int x, int y);
+void gameobj_update(GameObj *obj);
+
+
+GameObj obj_list[OBJ_COUNT];
+OBJ_ATTR obj_buffer[OBJ_COUNT];
 
 
 
-OBJ_ATTR *kirby;
 int kirby_x= 96, kirby_y= 92;
 u32 kirby_tid= 0, kirby_pb= 0;		// tile id, pal-bank
 
 OBJ_ATTR *gear;
-int gear_x = 32, gear_y= 32;
-u32 gear_tid= (kirbyTilesLen / 32) + 1 , gear_pb= 1;		// tile id, pal-bank
+int gear_x = 0, gear_y = 128;
+u32 gear_tid= 32, gear_pb = 1;		// tile id, pal-bank
 
 OBJ_ATTR *mario;
 int mario_x = 16, mario_y= 64;
@@ -54,15 +55,14 @@ void init_objs()
 
 void init_test_spr()
 {
-	kirby = &obj_buffer[0];
-	obj_set_attr(kirby, 
-		ATTR0_SQUARE,							// Square, regular sprite
-		ATTR1_SIZE_32,							// 32x32p, 
-		ATTR2_PALBANK(kirby_pb) | kirby_tid);	// palbank 0, tile 0
+	int obj_id = 0;
 
-	// position sprite (redundant here; the _real_ position
-	// is set further down
-	obj_set_pos(kirby, kirby_x, kirby_y);
+	// init kirby
+	GameObj *kirby = &obj_list[obj_id];
+	kirby->attr = &obj_buffer[obj_id];
+	gameobj_set_attr(kirby);
+	gameobj_set_pos(kirby, 96, 96);
+
 
 	
 	gear = &obj_buffer[1];
@@ -90,12 +90,11 @@ void init_test_spr()
 
 void update_objs()
 {
+	GameObj *kirby = &obj_list[0];
 	// move left/right
 	kirby_x += 2*key_tri_horz();
-	gear_x += key_tri_horz();
 	// move up/down
 	kirby_y += 2*key_tri_vert();
-	gear_y += key_tri_vert();
 
 	// increment/decrement starting tile with R/L
 	// tid += bit_tribool(key_hit(-1), KI_R, KI_L);
@@ -105,18 +104,18 @@ void update_objs()
 		//hide/unhide sprites
 		static bool spr_hidden;
 		if(spr_hidden)
-			obj_unhide_multi(kirby, DCNT_MODE0, SPRITE_CT);
+			obj_unhide_multi(kirby->attr, DCNT_MODE0, SPRITE_CT);
 		else
-			obj_hide_multi(kirby, SPRITE_CT);
+			obj_hide_multi(kirby->attr, SPRITE_CT);
 		spr_hidden = !spr_hidden;
 	}
 	
 
 	// flip
 	if(key_hit(KEY_A))	// horizontally
-		kirby->attr1 ^= ATTR1_HFLIP;
+		kirby->attr->attr1 ^= ATTR1_HFLIP;
 	if(key_hit(KEY_B))	// vertically
-		kirby->attr1 ^= ATTR1_VFLIP;
+		kirby->attr->attr1 ^= ATTR1_VFLIP;
 	
 
 	// make it glow (via palette swapping)
@@ -126,9 +125,8 @@ void update_objs()
 	//if(key_hit(KEY_START))
 	//	REG_DISPCNT ^= DCNT_OBJ_1D;
 	
-	// Hey look, it's one of them build macros!
-	kirby->attr2= ATTR2_BUILD(kirby_tid, kirby_pb, 0);
-	obj_set_pos(kirby, kirby_x, kirby_y);
+	gameobj_update(kirby);
+	gameobj_set_pos(kirby, kirby_x, kirby_y);
 
 	//REG_BG1HOFS= kirby_x;
 	//REG_BG1VOFS= kirby_y;
@@ -148,4 +146,31 @@ void update_objs()
 void update_anim()
 {
 	mario_frame = (mario_frame + 1) % mario_frame_ct;	
+}
+
+
+// set a GameObj's attributes
+void gameobj_set_attr(GameObj *obj)
+{
+	obj_set_attr(obj->attr, 
+		ATTR0_SQUARE,									// Square, regular sprite
+		ATTR1_SIZE_32,									// 32x32p, 
+		ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id	// palbank 0, tile 0
+	);	
+}
+
+// set a GameObj's position
+void gameobj_set_pos(GameObj *obj, int x, int y)
+{
+	obj_set_pos(obj->attr, x, y);
+}
+
+// update a GameObj's position, animation, and palette
+void gameobj_update(GameObj *obj)
+{
+	obj->attr->attr2 = ATTR2_BUILD(
+		obj->tile_id,
+		obj->pal_bank_id,
+		obj->priority
+	);
 }

@@ -5,6 +5,8 @@
 #include "maps/testmap.h"
 #include "maps/fe-map.h"
 
+#include "sprites/kirby.h"
+
 #define ANIM_SPEED 5	// 60/speed =  fps 
 
 
@@ -32,9 +34,9 @@ int main(void)
 	irq_init(NULL);
 	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
-	reg_init();
+	reg_init(); 
 
-	init_objs();
+	init_objs(); 
 	
 	bg_init();
 	test_init_tte_se4();

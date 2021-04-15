@@ -4,6 +4,7 @@
 		"metr.h": "c",
 		"sprites.h": "c",
 		"gba.h": "c",
-		"testmap.h": "c"
+		"testmap.h": "c",
+		"string.h": "c"
 	}
 }
