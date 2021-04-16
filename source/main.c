@@ -9,8 +9,8 @@
 
 
 extern void init_objs();
-extern void update_gameobjs();
-extern void update_anim();
+extern void game_update();
+extern void update_anim_all();
 
 void reg_init();
 void map_init();
@@ -62,12 +62,12 @@ void main_game_loop()
 
 		if(anim_sync > ANIM_SPEED)
 		{
-			update_anim();
+			update_anim_all();
 			anim_sync %= ANIM_SPEED;
 		}
 
 		update_text();
-		update_gameobjs();
+		game_update();
 
 	}
 }

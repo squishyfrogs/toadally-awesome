@@ -13,12 +13,19 @@ void init_test_spr();
 GameObj *init_gameobj();
 GameObj *init_gameobj_with_id(int obj_id);
 
-void update_gameobjs();
-void update_anim();
+void game_update();
+void update_anim_all();
+void update_gameobj_all();
+
+
 
 void gameobj_update_attr(GameObj *obj);
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tileid, int x, int y);
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y);
+void gameobj_set_anim_info(GameObj *obj, u16 frame_count, u16 tile_offset);
 void gameobj_set_pos(GameObj *obj, int x, int y);
+void gameobj_change_pos(GameObj *obj, int move_x, int move_y);
+void gameobj_update_pos(GameObj *obj);
+void gameobj_update_anim(GameObj *obj);
 void gameobj_update(GameObj *obj);
 
 
@@ -27,19 +34,13 @@ OBJ_ATTR obj_buffer[OBJ_COUNT];
 static int free_obj = 0;		//marker of free obj in the object list
 
 
+
+
 GameObj *kirby;
-int kirby_x= 96, kirby_y= 92;
-u32 kirby_tid= 0, kirby_pb= 0;		// tile id, pal-bank
 
 GameObj *gear;
-int gear_x = 0, gear_y = 128;
-u32 gear_tid= 32, gear_pb = 1;		// tile id, pal-bank
 
 GameObj *mario;
-int mario_x = 16, mario_y= 64;
-u32 mario_tid= 64 , mario_pb= 2;		// tile id, pal-bank
-u16 mario_anim_off = 16, mario_frame_ct = 4;
-u16 mario_frame = 0;
 
 void init_objs()
 {
@@ -65,26 +66,24 @@ void init_test_spr()
 
 	// init kirby
 	kirby = init_gameobj();
-	gameobj_update_attr_full(kirby, ATTR0_SQUARE, ATTR1_SIZE_32x32, kirby_pb, kirby_tid, kirby_x, kirby_y);
+	gameobj_update_attr_full(kirby, ATTR0_SQUARE, ATTR1_SIZE_32x32, 0, 0, 96, 96);
 
 	// init gear
 	gear = init_gameobj();
-	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, gear_pb, gear_tid, gear_x, gear_y);
+	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, 1, 32, 0, 128);
 	
 	// init mario
 	mario = init_gameobj();
-	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, mario_pb, mario_tid, mario_x, mario_y);
+	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, 2, 64, 140, 80);
+	gameobj_set_anim_info(mario, 4, 16);
 
 }
 
 
-void update_gameobjs()
+void game_update()
 {
-	
-	// move left/right
-	kirby_x += 2*key_tri_horz();
-	// move up/down
-	kirby_y += 2*key_tri_vert();
+
+	gameobj_change_pos(kirby, 2*key_tri_horz(), 2*key_tri_vert());
 
 	// increment/decrement starting tile with R/L
 	// tid += bit_tribool(key_hit(-1), KI_R, KI_L);
@@ -114,36 +113,36 @@ void update_gameobjs()
 	// toggle mapping mode
 	//if(key_hit(KEY_START))
 	//	REG_DISPCNT ^= DCNT_OBJ_1D;
-	
-	gameobj_update(kirby);
-	gameobj_set_pos(kirby, kirby_x, kirby_y);
 
 	//REG_BG1HOFS= kirby_x;
 	//REG_BG1VOFS= kirby_y;
+	update_gameobj_all();
 
-	gameobj_update(gear);
-	gameobj_set_pos(gear, gear_x, gear_y);
-
-	
-
-	mario->attr->attr2= ATTR2_BUILD(mario_tid + (mario_frame * mario_anim_off), mario_pb, 0);
-	gameobj_set_pos(mario, mario_x, mario_y);
-
-	// copy changes into oam memory
+	// copy all changes into oam memory
 	oam_copy(oam_mem, obj_buffer, SPRITE_CT);	// only need to update one
 }
 
 
 
 
-
-
-
-
-void update_anim()
+// update all GameObj animations
+void update_anim_all()
 {
-	mario_frame = (mario_frame + 1) % mario_frame_ct;	
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		gameobj_update_anim(&obj_list[i]);
+	}
 }
+
+// update all GameObjs 
+void update_gameobj_all()
+{
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		gameobj_update(&obj_list[i]);
+	}
+}
+
 
 
 
@@ -171,6 +170,15 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->priority = 0;
 	obj->spr_shape = ATTR0_SQUARE;
 	obj->spr_size = ATTR1_SIZE_16x16;	// assume 16x6 for default bc I really doubt anyone is making 16x8 objects 
+
+	obj->pos_x = 0;
+	obj->pos_y = 0;
+
+	obj->anim_tile_offset = 4;			// matches 16x16 sprite size
+	obj->anim_frame_ct = 1;
+	obj->anim_cur_frame = 0;
+
+
 	return obj;
 }
 
@@ -183,29 +191,71 @@ void gameobj_update_attr(GameObj *obj)
 }
 
 // set a GameObj's attributes
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tileid, int x, int y)
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y)
 {
 	obj->spr_shape = attr0_shape;
 	obj->spr_size = attr1_size;
 	obj->pal_bank_id = palbank;
-	obj->tile_id = tileid;
+	obj->tile_id = tile_id;
+	obj->pos_x = x;
+	obj->pos_y = y;
 
-	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tileid));
+	u32 tid = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
+
+	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	obj_set_pos(obj->attr, x, y);
 }
 
-// set a GameObj's position
+
+// set a GameObj's animation info
+void gameobj_set_anim_info(GameObj *obj, u16 frame_count, u16 tile_offset)
+{
+	obj->anim_frame_ct = frame_count;
+	obj->anim_tile_offset = tile_offset;
+	obj->anim_cur_frame = 0;				//if we changed the anim info, its a safe bet that we want to reset its frame too 
+}
+
+
+// set a GameObj's position to new values
 void gameobj_set_pos(GameObj *obj, int x, int y)
 {
-	obj_set_pos(obj->attr, x, y);
+	obj->pos_x = x;
+	obj->pos_y = y;
+	obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
+}
+
+// translate a GameObj by (x,y)
+void gameobj_change_pos(GameObj *obj, int move_x, int move_y)
+{
+	obj->pos_x += move_x;
+	obj->pos_y += move_y;
+	obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
+}
+
+// update a GameObj's attrs based on its current position
+void gameobj_update_pos(GameObj *obj)
+{
+	obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
+}
+
+//advance a GameObj's animation one frame
+void gameobj_update_anim(GameObj* obj)
+{
+	if(obj->anim_frame_ct > 0)
+	{
+		obj->anim_cur_frame = (obj->anim_cur_frame + 1) % obj->anim_frame_ct;		
+	}
 }
 
 // update a GameObj's position, animation, and palette
 void gameobj_update(GameObj *obj)
 {
+	u32 tile_id = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
 	obj->attr->attr2 = ATTR2_BUILD(
-		obj->tile_id,
+		tile_id,
 		obj->pal_bank_id,
 		obj->priority
 	);
+	obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
 }
+
