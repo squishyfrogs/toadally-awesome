@@ -1,21 +1,19 @@
 #include <string.h>
 #include <tonc.h>
 
+#include "maps.h"
+#include "game.h"
 
-#include "maps/testmap.h"
-#include "maps/fe-map.h"
-
-#include "sprites/kirby.h"
 
 #define ANIM_SPEED 5	// 60/speed =  fps 
 
 
 extern void init_objs();
-extern void update_objs();
+extern void update_gameobjs();
 extern void update_anim();
 
 void reg_init();
-void bg_init();
+void map_init();
 void timer_init();
 
 void main_game_loop();
@@ -26,10 +24,11 @@ void test_run_tte_se4();
 void bg_demo();
 void update_text();
 
-
+static enum GameState game_state;
 
 int main(void)
 {
+	game_state = GS_DEBUG;
 
 	irq_init(NULL);
 	//irq_add(II_VBLANK, NULL);
@@ -38,7 +37,8 @@ int main(void)
 
 	init_objs(); 
 	
-	bg_init();
+	map_init();
+
 	test_init_tte_se4();
 	
 	test_run_tte_se4();
@@ -67,7 +67,7 @@ void main_game_loop()
 		}
 
 		update_text();
-		update_objs();
+		update_gameobjs();
 
 	}
 }
@@ -83,7 +83,7 @@ void reg_init()
 }
 
 
-void bg_init()
+void map_init()
 {
 	// Load palette
 	memcpy(pal_bg_mem, fe_mapPal, fe_mapPalLen);
