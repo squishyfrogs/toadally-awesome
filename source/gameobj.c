@@ -7,7 +7,6 @@
 #define SPRITE_CT 3
 
 void init_objs();
-void init_test_spr();
 
 
 GameObj *init_gameobj();
@@ -17,7 +16,8 @@ void game_update();
 void update_anim_all();
 void update_gameobj_all();
 
-
+int mem_load_palette(const ushort *pal_data);
+int mem_load_tiles(const ushort *tile_data, int data_len);
 
 void gameobj_update_attr(GameObj *obj);
 void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y);
@@ -31,8 +31,9 @@ void gameobj_update(GameObj *obj);
 
 GameObj obj_list[OBJ_COUNT];
 OBJ_ATTR obj_buffer[OBJ_COUNT];
-static int free_obj = 0;		//marker of free obj in the object list
-
+static int free_obj = 0;		//marker of first free obj in the object list
+static int free_pal = 0;		//marker of first free palette in VRAM
+static int free_tile = 0;		//marker of first free tile in VRAM
 
 
 
@@ -48,33 +49,35 @@ void init_objs()
 	//memcpy(pal_obj_mem, metrPal, metrPalLen);
 	// Places the glyphs of a 4bpp boxed kirby sprite 
 	// into LOW obj memory (cbb == 4)
-	memcpy(&tile_mem[4][0], kirbyTiles, kirbyTilesLen);
-	memcpy(pal_obj_mem, kirbyPal, kirbyPalLen);
-	memcpy(&tile_mem[4][32], gearTiles, gearTilesLen);
-	memcpy(pal_obj_mem + 16, gearPal, gearPalLen);
-	memcpy(&tile_mem[4][64], marioTiles, marioTilesLen);
-	memcpy(pal_obj_mem + 32, marioPal, marioPalLen);
+
+
+
+//	mem_load_tiles(gearTiles, gearTilesLen);
+//	memcpy(pal_obj_mem + 16, gearPal, gearPalLen);
+//	mem_load_tiles(marioTiles, marioTilesLen);
+//	memcpy(pal_obj_mem + 32, marioPal, marioPalLen);
 
 	//hides all sprites
 	oam_init(obj_buffer, 128);
 
-	init_test_spr();
-}
-
-void init_test_spr()
-{
 
 	// init kirby
 	kirby = init_gameobj();
-	gameobj_update_attr_full(kirby, ATTR0_SQUARE, ATTR1_SIZE_32x32, 0, 0, 96, 96);
+	int k_pal = mem_load_palette(kirbyPal);
+	int k_tile = mem_load_tiles(kirbyTiles, kirbyTilesLen);
+	gameobj_update_attr_full(kirby, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96);
 
 	// init gear
 	gear = init_gameobj();
-	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, 1, 32, 0, 128);
+	k_pal = mem_load_palette(gearPal);
+	k_tile = mem_load_tiles(gearTiles, gearTilesLen);
+	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, 1, k_tile, 0, 128);
 	
 	// init mario
 	mario = init_gameobj();
-	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, 2, 64, 140, 80);
+	k_pal = mem_load_palette(marioPal);
+	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
+	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, 2, k_tile, 140, 80);
 	gameobj_set_anim_info(mario, 4, 16);
 
 }
@@ -125,7 +128,12 @@ void game_update()
 
 
 
-// update all GameObj animations
+////////////////////////
+/// UPDATE FUNCTIONS ///
+////////////////////////
+
+
+// update all GameObj animations (once per (vsync / anim_speed))
 void update_anim_all()
 {
 	for(int i = 0; i < OBJ_COUNT; i++)
@@ -134,7 +142,7 @@ void update_anim_all()
 	}
 }
 
-// update all GameObjs 
+// update all GameObjs (once per vsync)
 void update_gameobj_all()
 {
 	for(int i = 0; i < OBJ_COUNT; i++)
@@ -146,7 +154,31 @@ void update_gameobj_all()
 
 
 
+////////////////////////
+/// MEMORY FUNCTIONS ///
+////////////////////////
 
+int mem_load_palette(const ushort *pal_data)
+{
+	int pal_id = free_pal;
+	memcpy(pal_obj_mem + (pal_id * 16), pal_data, 32);	// 16 colors per palette, 2 bytes per color
+	free_pal++;
+	return pal_id;
+}
+
+int mem_load_tiles(const ushort *tile_data, int data_len)
+{
+	//always block 4? 
+	int tile_id = free_tile;
+	memcpy(&tile_mem[4][tile_id], tile_data, data_len);
+	free_tile += data_len / 32;
+	return tile_id;
+}
+
+
+/////////////////////////
+/// GAMEOBJ FUNCTIONS ///
+/////////////////////////
 
 
 // initialize a GameObj and return it to the caller

@@ -5,7 +5,6 @@
 #include "game.h"
 
 
-#define ANIM_SPEED 5	// 60/speed =  fps 
 
 
 extern void init_objs();

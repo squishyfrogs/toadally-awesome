@@ -9,5 +9,6 @@ enum GameState{
 };
 
 
+#define ANIM_SPEED 5	// 60/speed =  fps 
 
 #endif //GAME_H
