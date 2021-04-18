@@ -5,6 +5,8 @@
 		"sprites.h": "c",
 		"gba.h": "c",
 		"testmap.h": "c",
-		"string.h": "c"
+		"string.h": "c",
+		"game.h": "c",
+		"mario.h": "c"
 	}
 }
