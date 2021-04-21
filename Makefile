@@ -27,7 +27,7 @@ LIBTONC := $(DEVKITPRO)/libtonc
 #---------------------------------------------------------------------------------
 TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
-SOURCES		:= source source/sprites/ source/maps/
+SOURCES		:= source source/sprites/ source/maps/ source/sprites/ui/
 INCLUDES	:= include
 DATA		:=
 MUSIC		:=

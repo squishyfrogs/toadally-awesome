@@ -26,12 +26,16 @@ GameObj *mario;
 GameObj *kirby2;
 
 
+
+
 void init_objs()
 {
 	//memcpy(&tile_mem[4][0], metrTiles, metrTilesLen);
 	//memcpy(pal_obj_mem, metrPal, metrPalLen);
 	// Places the glyphs of a 4bpp boxed kirby sprite 
 	// into LOW obj memory (cbb == 4)
+
+	
 
 	// init kirby
 	kirby = init_gameobj();
@@ -54,7 +58,6 @@ void init_objs()
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
 	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, false);
 	gameobj_set_anim_info(mario, 4, 16);
-
 
 
 }

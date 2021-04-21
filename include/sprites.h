@@ -3,9 +3,11 @@
 
 
 #include "sprites/kirby.h"
-#include "sprites/gear.h"
 #include "sprites/mario.h"
 #include "sprites/player.h"
+
+#include "sprites/ui/gear.h"
+#include "sprites/ui/heart.h"
 
 
 #endif //SPRITES_H

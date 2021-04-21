@@ -10,7 +10,9 @@ extern void init_objs();
 extern void init_map();
 
 extern void playerobj_init();
+extern void ui_init();
 extern void playerobj_update();
+extern void ui_update();
 extern void update_world_pos();
 
 extern void game_update_temp();
@@ -43,6 +45,7 @@ int main(void)
 	reg_init(); 
 
 	playerobj_init();
+	ui_init();
 
 	init_objs(); 	
 	init_map();
@@ -78,6 +81,7 @@ void main_game_loop()
 		playerobj_update();				// update player first
 		game_update_temp();				// update other gameobjs 
 		update_world_pos();				//push the map around
+		ui_update();
 		gameobj_push_all_updates();		// update gameobj attrs based on gameplay changes
 	}
 }
