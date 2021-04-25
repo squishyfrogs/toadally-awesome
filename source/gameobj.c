@@ -1,5 +1,6 @@
 #include <string.h>
 #include <tonc.h>
+#include "game.h"
 #include "gameobj.h"
 #include "layers.h"
 

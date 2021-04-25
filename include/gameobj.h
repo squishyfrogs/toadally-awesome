@@ -59,4 +59,5 @@ void gameobj_hide_all();
 void gameobj_unhide_all();
 
 
+
 #endif //GAMEOBJ_H

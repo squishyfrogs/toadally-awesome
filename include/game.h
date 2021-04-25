@@ -9,6 +9,7 @@ enum GameState{
 };
 
 
-#define ANIM_SPEED 5	// 60/speed =  fps 
+#define ANIM_SPEED 5			// 60/speed =  fps 
+#define GAME_TILE_SIZE 16		// tile size in pixels
 
 #endif //GAME_H

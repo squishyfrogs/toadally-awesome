@@ -27,6 +27,10 @@ extern const unsigned short testmapMap[1024];
 #define testmapPalLen 512
 extern const unsigned short testmapPal[256];
 
+//manually added
+extern const unsigned short testmapCol[256];
+
+
 #endif // GRIT_TESTMAP_H
 
 //}}BLOCK(testmap)

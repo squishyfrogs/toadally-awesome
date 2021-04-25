@@ -1,8 +1,11 @@
 #include <tonc.h>
+#include "game.h"
 #include "gameobj.h"
+#include "map.h"
+#include "vector2.h"
 #include "sprites/player.h"
 
-#define GAME_TILE_SIZE 16		// tile size in pixels
+
 #define MOVE_SPEED 1			// move speed in pixels 
 
 void playerobj_init();
@@ -10,6 +13,7 @@ void playerobj_update();
 
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
+void update_current_tile();
 
 
 static GameObj *player_obj;
@@ -22,10 +26,19 @@ static GameObj *player_obj;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
+static Vector2 current_tile;	// tile the player is currently on (updated at rest)
+
 static bool player_moving;		// is the player currently moving? 
-static int mov_x, mov_y;		// x and y components of current movement
-static int start_x, start_y;	// position player started moving from
-static int end_x, end_y;		// destination position
+//static int start_x, start_y;	// position player started moving from	REPLACE	
+//static int end_x, end_y;		// destination position					REPLACE
+
+
+static Vector2 start_tile;		// start tile (for movement)
+static Vector2 end_tile;		// end tile (for movement)
+static Vector2 offset;			// pixel offset within one tile
+static Vector2 mov;				// x and y speed+direction of current movement
+static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
+const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 
 void playerobj_init()
 {
@@ -42,7 +55,7 @@ void playerobj_init()
 		PLAYER_START_X, PLAYER_START_Y, 
 		false);
 
-	
+	update_current_tile();
 	
 }
 
@@ -50,7 +63,8 @@ void playerobj_update()
 {
 	move_playerobj(key_tri_horz(), key_tri_vert());
 	
-	playerobj_update_movement();
+	if(player_moving)
+		playerobj_update_movement();
 }
 
 // apply dpad inputs to the player and attempt to move them
@@ -60,42 +74,70 @@ void move_playerobj(int input_x, int input_y)
 		return;
 	if(input_x == 0 && input_y == 0)
 		return;
-	//input_x = clamp(input_x, -1, 1);
-	//input_y = clamp(input_y, -1, 1);
+	
+	// update tile start and tile end 
+	start_tile.x = current_tile.x;
+	start_tile.y = current_tile.y;
+	end_tile.x = start_tile.x + input_x;
+	end_tile.y = start_tile.y + input_y;
 
-	start_x = player_obj->pos_x;
-	start_y = player_obj->pos_y;
+	// check that dest tile is a valid height to jump to
+	ushort start_height = get_tile_col_info(start_tile.x,start_tile.y);
+	ushort dest_height = get_tile_col_info(end_tile.x,end_tile.y);
+	if((dest_height == 0) || (start_height - dest_height > 2) || (dest_height - start_height > 2))
+		return;
 
-	end_x = start_x + input_x * GAME_TILE_SIZE;
-	end_y = start_y + input_y * GAME_TILE_SIZE;
+	// reset offsets (should already be 0 but just in case)
+	offset.x = 0;
+	offset.y = 0;
+	hop_offset = 0;
 
-	mov_x = input_x * MOVE_SPEED;
-	mov_y = input_y * MOVE_SPEED;
+	// set mov values
+	mov.x = input_x * MOVE_SPEED;
+	mov.y = input_y * MOVE_SPEED;
 
+	// mark player as moving
 	player_moving = true;
 }
 
 void playerobj_update_movement()
 {
-	//gameobj_change_pos(player_obj, mov_x, mov_y);
-	int x = player_obj->pos_x;
-	int y = player_obj->pos_y;
-	if((x - end_x) * ((x+mov_x) - end_x) <= 0)		//check if we cross end_x
-	{
-		x = end_x;
-		mov_x = 0;
-	}
-	if((y - end_y) * ((y+mov_y) - end_y) <= 0)		//check if we cross end_y
-	{
-		y = end_y;
-		mov_y = 0;
-	}	
-		
-	x += mov_x;
-	y += mov_y;
+	offset.x += mov.x;
+	offset.y += mov.y;
 
-	if(mov_x == 0 && mov_y == 0)
-		player_moving = false;
+	//update hop offset
+	if(mov.x != 0)
+	{
+		hop_offset = hop_arc[((GAME_TILE_SIZE + offset.x) % GAME_TILE_SIZE)];
+	}
+	else
+	{
+		hop_offset = hop_arc[((GAME_TILE_SIZE + offset.y) % GAME_TILE_SIZE)];
+	}
+
+	// check if we moved a full tile
+	if((offset.x >= GAME_TILE_SIZE) || (offset.x <= -GAME_TILE_SIZE))
+		mov.x = 0;
+	if((offset.y >= GAME_TILE_SIZE) || (offset.y <= -GAME_TILE_SIZE))
+		mov.y = 0;
 	
+	
+
+
+	int x = start_tile.x*GAME_TILE_SIZE + offset.x;
+	int y = start_tile.y*GAME_TILE_SIZE + offset.y - hop_offset;	// subtract hop_offset to go up
 	gameobj_set_pos(player_obj, x, y);
+
+	if(mov.x == 0 && mov.y == 0)
+	{
+		update_current_tile();
+		player_moving = false;
+	}
+
+}
+
+void update_current_tile()
+{
+	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
+	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
 }

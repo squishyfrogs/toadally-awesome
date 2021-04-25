@@ -74,7 +74,7 @@ void init_map()
 	
 	//load_map(fe_mapMap, fe_mapMapLen);
 	load_map(testmapMap, testmapMapLen);
-
+	load_map_col_info(testmapCol);
 
 
 }

@@ -21,7 +21,7 @@ void ui_init()
 	{
 		hearts[i] = init_gameobj();
 		hearts[i]->priority = LAYER_OVERLAY;
-		gameobj_update_attr_full(hearts[i], ATTR0_TALL, ATTR1_SIZE_8x16, h_pal, h_tile, i*8, 0, true);
+		gameobj_update_attr_full(hearts[i], ATTR0_TALL, ATTR1_SIZE_8x16, h_pal, h_tile, 16+i*8, 0, true);
 		if(i % 2)
 			gameobj_set_flip_h(hearts[i], true);
 	}

@@ -6,9 +6,10 @@
 
 
 
-extern void init_objs();
-extern void init_map();
+extern void init_objs();	//temp
+extern void init_map();		//temp
 
+extern void gameobj_init();
 extern void playerobj_init();
 extern void ui_init();
 extern void playerobj_update();
@@ -43,7 +44,8 @@ int main(void)
 	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
 	reg_init(); 
-
+	
+	gameobj_init();
 	playerobj_init();
 	ui_init();
 

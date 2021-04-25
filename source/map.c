@@ -5,12 +5,11 @@
 
 #define MAP_PAL_LEN 512 //2 bytes per color
 
+#define MAP_SIZE_X 16
+#define MAP_SIZE_Y 16
 
 
-
-
-
-
+unsigned short map_collision_info[MAP_SIZE_X*MAP_SIZE_Y];
 
 
 
@@ -39,4 +38,16 @@ void load_map(const ushort *map, int map_len)
 	{
 		se_mem[30][i] = map[i] + offset;
 	}
+}
+
+// load map collision data into memory
+void load_map_col_info(const unsigned short *map_col)
+{
+	memcpy(map_collision_info, map_col, sizeof(unsigned short)*MAP_SIZE_X*MAP_SIZE_Y);
+}
+
+// get the collision info of a given tile
+ushort get_tile_col_info(int pos_x, int pos_y)
+{
+	return map_collision_info[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)];
 }
