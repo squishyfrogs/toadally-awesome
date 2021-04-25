@@ -4,7 +4,7 @@
 #include "gameobj.h"
 #include "layers.h"
 
-
+void gameobj_init_all();
 void gameobj_update_anim_all();
 void gameobj_push_all_updates();
 
@@ -28,7 +28,7 @@ extern int world_offset_y;
 //////////////////////
 
 // necessary prep for the GameObj system
-void gameobj_init()
+void gameobj_init_all()
 {
 	
 	//hides all sprites

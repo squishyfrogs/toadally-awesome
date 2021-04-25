@@ -1,4 +1,5 @@
 #include <tonc.h>
+#include "direction.h"
 #include "game.h"
 #include "gameobj.h"
 #include "map.h"
@@ -11,6 +12,7 @@
 void playerobj_init();
 void playerobj_update();
 
+void playerobj_set_facing(int dir);
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
 void update_current_tile();
@@ -26,7 +28,9 @@ static GameObj *player_obj;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
-static Vector2 current_tile;	// tile the player is currently on (updated at rest)
+
+static int p_facing;			// which direction the player is facing
+static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
 
 static bool player_moving;		// is the player currently moving? 
 //static int start_x, start_y;	// position player started moving from	REPLACE	
@@ -67,6 +71,24 @@ void playerobj_update()
 		playerobj_update_movement();
 }
 
+
+// set which direction the player is facing 
+void playerobj_set_facing(int dir)
+{
+	p_facing = dir;
+	if(dir == DIRECTION_WEST)
+	{
+		dir = DIRECTION_EAST;
+		gameobj_set_flip_h(player_obj, true);
+	}
+	else
+	{
+		gameobj_set_flip_h(player_obj, false);
+	}
+	player_obj->tile_id = p_tile_start + PLAYER_TILE_OFFSET * (dir * PLAYER_FACING_OFFSET);
+	gameobj_push_changes(player_obj);
+}
+
 // apply dpad inputs to the player and attempt to move them
 void move_playerobj(int input_x, int input_y)
 {
@@ -74,6 +96,15 @@ void move_playerobj(int input_x, int input_y)
 		return;
 	if(input_x == 0 && input_y == 0)
 		return;
+	
+	if(input_x > 0)
+		playerobj_set_facing(DIRECTION_EAST);
+	else if(input_x < 0)
+		playerobj_set_facing(DIRECTION_WEST);
+	else if(input_y > 0)
+		playerobj_set_facing(DIRECTION_SOUTH);
+	else if(input_y < 0)
+		playerobj_set_facing(DIRECTION_NORTH);
 	
 	// update tile start and tile end 
 	start_tile.x = current_tile.x;
