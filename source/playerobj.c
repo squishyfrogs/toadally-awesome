@@ -7,13 +7,12 @@
 #include "sprites/player.h"
 
 
-#define SCREEN_HALF_WIDTH (SCREEN_WIDTH/2)		// half screen width
-#define SCREEN_HALF_HEIGHT (SCREEN_HEIGHT/2)	// half screen height
+
 #define MOVE_SPEED		1						// move speed in pixels 
-#define PLAYER_SIZE		16						// player size in pixels
 
 extern void increment_action_counter();
-extern void set_world_offset(int off_x, int off_y);
+extern void update_camera_pos(int target_x, int target_y);
+
 
 void playerobj_init();
 void playerobj_update();
@@ -49,10 +48,6 @@ static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
 const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
-
-
-extern int world_offset_x;
-extern int world_offset_y;
 
 
 void playerobj_init()
@@ -126,6 +121,32 @@ void move_playerobj(int input_x, int input_y)
 	end_tile.x = start_tile.x + input_x;
 	end_tile.y = start_tile.y + input_y;
 
+	//make sure player does not move past the end of the map
+	if(end_tile.x < 0)
+	{
+		end_tile.x = 0;
+		input_x = 0;
+		return;
+	}
+	if(end_tile.x >= MAP_SIZE_X)
+	{
+		end_tile.x = MAP_SIZE_X-1;
+		input_x = 0;
+		return;
+	}
+	if(end_tile.y < 0)
+	{
+		end_tile.y = 0;
+		input_y = 0;
+		return;
+	}
+	if(end_tile.y >= MAP_SIZE_Y)
+	{
+		end_tile.y = MAP_SIZE_Y-1;
+		input_y = 0;
+		return;
+	}
+
 	// check that dest tile is a valid height to jump to
 	ushort start_height = get_tile_col_info(start_tile.x,start_tile.y);
 	ushort dest_height = get_tile_col_info(end_tile.x,end_tile.y);
@@ -175,21 +196,10 @@ void playerobj_update_movement()
 	int player_y = start_tile.y*GAME_TILE_SIZE + offset.y;
 	gameobj_set_pos(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
 	
-	//move camera to follow player
-	int cam_x = world_offset_x + SCREEN_HALF_WIDTH;
-	int cam_y = world_offset_y + SCREEN_HALF_HEIGHT;
-	int cam_bound_h = (SCREEN_HALF_WIDTH) - CAMERA_BOUNDS_HORIZONTAL;
-	int cam_bound_v = (SCREEN_HALF_HEIGHT) - CAMERA_BOUNDS_VERTICAL;
-	if(cam_x < player_x - cam_bound_h + PLAYER_SIZE)
-		cam_x = player_x - cam_bound_h + PLAYER_SIZE;
-	if(cam_x > player_x + cam_bound_h)
-		cam_x = player_x + cam_bound_h;
-	if(cam_y < player_y - cam_bound_v + PLAYER_SIZE)
-		cam_y = player_y - cam_bound_v + PLAYER_SIZE;
-	if(cam_y > player_y + cam_bound_v)
-		cam_y = player_y + cam_bound_v;
-	set_world_offset(cam_x - SCREEN_HALF_WIDTH, cam_y - SCREEN_HALF_HEIGHT);
 
+	//move camera to follow player
+	update_camera_pos(player_x, player_y);
+	
 	if(mov.x == 0 && mov.y == 0)
 	{
 		update_current_tile();

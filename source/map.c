@@ -5,8 +5,6 @@
 
 #define MAP_PAL_LEN 512 //2 bytes per color
 
-#define MAP_SIZE_X 16
-#define MAP_SIZE_Y 16
 
 
 unsigned short map_collision_info[MAP_SIZE_X*MAP_SIZE_Y];

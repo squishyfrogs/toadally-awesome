@@ -9,4 +9,8 @@ void load_map_col_info(const unsigned short *map_col);
 
 ushort get_tile_col_info(int pos_x, int pos_y);
 
+
+#define MAP_SIZE_X 16
+#define MAP_SIZE_Y 16
+
 #endif //MAP_H
