@@ -187,7 +187,7 @@ void gameobj_update_pos(GameObj *obj)
 	if(obj->fixed_pos)
 		obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
 	else
-		obj_set_pos(obj->attr, obj->pos_x - world_offset_x, obj->pos_y - world_offset_y);
+		obj_set_pos(obj->attr, obj->pos_x - world_offset_x, obj->pos_y - 2 - world_offset_y);	//subtract 2 to center sprites on tiles better
 }
 
 //advance a GameObj's animation one frame

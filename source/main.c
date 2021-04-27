@@ -14,6 +14,7 @@ extern void playerobj_init();
 extern void ui_init();
 extern void playerobj_update();
 extern void ui_update();
+extern void ui_update_anim();
 extern void update_world_pos();
 
 extern void game_update_temp();
@@ -65,6 +66,7 @@ int main(void)
 void main_game_loop()
 {
 	static uint32_t anim_sync;
+	static uint32_t ui_anim_sync;
 	while (1) 
 	{
 		//vid_vsync();		//resource hog
@@ -72,19 +74,30 @@ void main_game_loop()
 		key_poll();
 
 		anim_sync++;
-
 		if(anim_sync > ANIM_SPEED)
 		{
+			// animation update functions go in here
 			gameobj_update_anim_all();
 			anim_sync %= ANIM_SPEED;
 		}
+		ui_anim_sync++;
+		if(ui_anim_sync > UI_ANIM_SPEED)
+		{
+			//ui looked weird at the slower anim speed so it runs on its own cycle
+			ui_update_anim();
+			ui_anim_sync %= UI_ANIM_SPEED;
+		}
 
+
+		// gameplay update functions go out here
 		update_text_temp();
 		playerobj_update();				// update player first
 		game_update_temp();				// update other gameobjs 
 		update_world_pos();				//push the map around
 		ui_update();
-		gameobj_push_all_updates();		// update gameobj attrs based on gameplay changes
+
+		// update gameobj attrs based on gameplay changes
+		gameobj_push_all_updates();
 	}
 }
 
@@ -201,7 +214,7 @@ void draw_bg()
 
 void update_text_temp()
 {
-	if(key_hit(KEY_R))
+	if(key_hit(KEY_SELECT))
 	{
 		static bool txt_hidden;
 		if(txt_hidden)

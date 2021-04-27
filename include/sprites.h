@@ -8,6 +8,7 @@
 
 #include "sprites/ui/gear.h"
 #include "sprites/ui/heart.h"
+#include "sprites/ui/numbers.h"
 
 
 #endif //SPRITES_H

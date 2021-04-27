@@ -7,6 +7,8 @@
 		"testmap.h": "c",
 		"string.h": "c",
 		"game.h": "c",
-		"mario.h": "c"
+		"mario.h": "c",
+		"heart.h": "c",
+		"gameobj.h": "c"
 	}
 }

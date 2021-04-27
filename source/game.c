@@ -14,6 +14,7 @@
 void init_objs();
 void init_map();
 void game_update_temp();
+void set_world_offset(int off_x, int off_y);
 void update_world_pos();
 
 
@@ -36,7 +37,7 @@ void init_objs()
 	// into LOW obj memory (cbb == 4)
 
 	
-
+	
 	// init kirby
 	kirby = init_gameobj();
 	int k_pal = mem_load_palette(kirbyPal);
@@ -80,23 +81,17 @@ void init_map()
 }
 
 
-void update_world_pos()
-{
-	REG_BG1HOFS= world_offset_x;
-	REG_BG1VOFS= world_offset_y;
-}
-
 
 void game_update_temp()
 {
 
-	gameobj_change_pos(kirby, 2*key_tri_horz(), 2*key_tri_vert());
+	gameobj_change_pos(kirby, key_tri_horz(), key_tri_vert());
 
 
 	// increment/decrement starting tile with R/L
 	// tid += bit_tribool(key_hit(-1), KI_R, KI_L);
 
-	if(key_hit(KEY_L))
+	if(key_hit(KEY_START))
 	{
 		//hide/unhide sprites
 		static bool spr_hidden;
@@ -131,4 +126,19 @@ void game_update_temp()
 
 
 
+}
+
+
+// set the world offset values
+void set_world_offset(int off_x, int off_y)
+{
+	world_offset_x = off_x;
+	world_offset_y = off_y;
+}
+
+// push changes to the world offset (done every frame)
+void update_world_pos()
+{
+	REG_BG1HOFS = world_offset_x;
+	REG_BG1VOFS = world_offset_y;
 }
