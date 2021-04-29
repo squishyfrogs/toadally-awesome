@@ -15,13 +15,14 @@ extern void set_world_offset(int off_x, int off_y);
 extern int world_offset_x;
 extern int world_offset_y;
 
+static int cam_bound_h = (SCREEN_HALF_WIDTH) - CAMERA_BOUNDS_HORIZONTAL;
+static int cam_bound_v = (SCREEN_HALF_HEIGHT) - CAMERA_BOUNDS_VERTICAL;
 
 void update_camera_pos(int target_x, int target_y)
 {
 	int cam_x = world_offset_x + SCREEN_HALF_WIDTH;
 	int cam_y = world_offset_y + SCREEN_HALF_HEIGHT;
-	int cam_bound_h = (SCREEN_HALF_WIDTH) - CAMERA_BOUNDS_HORIZONTAL;
-	int cam_bound_v = (SCREEN_HALF_HEIGHT) - CAMERA_BOUNDS_VERTICAL;
+	
 
 	//try to constrain player within camera bounds
 	if(cam_x < target_x - cam_bound_h + PLAYER_SIZE)

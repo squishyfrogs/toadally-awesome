@@ -124,7 +124,7 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->anim_tile_offset = 4;			// matches 16x16 sprite size
 	obj->anim_frame_ct = 1;
 	obj->anim_cur_frame = 0;
-
+	obj->anim_flags = 0;
 
 	return obj;
 }
@@ -157,11 +157,13 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 
 
 // set a GameObj's animation info
-void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset)
+void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, bool looping)
 {
 	obj->anim_frame_ct = frame_count;
 	obj->anim_tile_offset = tile_offset;
 	obj->anim_cur_frame = 0;				//if we changed the anim info, its a safe bet that we want to reset its frame too 
+	if(looping)
+		obj->anim_flags |= ANIM_FLAG_LOOPING;
 }
 
 
@@ -193,12 +195,44 @@ void gameobj_update_pos(GameObj *obj)
 //advance a GameObj's animation one frame
 void gameobj_update_anim(GameObj* obj)
 {
-	if(obj->anim_frame_ct > 0)
+	if((obj->anim_flags & ANIM_FLAG_PLAYING) && obj->anim_frame_ct > 0)
 	{
-		obj->anim_cur_frame = (obj->anim_cur_frame + 1) % obj->anim_frame_ct;		
+		if(obj->anim_flags & ANIM_FLAG_REVERSED)
+			obj->anim_cur_frame = (obj->anim_cur_frame + obj->anim_frame_ct - 1) % obj->anim_frame_ct;
+		else
+			obj->anim_cur_frame = (obj->anim_cur_frame + 1) % obj->anim_frame_ct;
+
+		// stop after one cycle if not looping
+		if(obj->anim_cur_frame == 0 && !(obj->anim_flags & ANIM_FLAG_LOOPING))
+			gameobj_anim_stop(obj);
 	}
 }
 
+void gameobj_anim_play(GameObj *obj)
+{
+	obj->anim_flags = obj->anim_flags | ANIM_FLAG_PLAYING;
+}
+
+void gameobj_anim_stop(GameObj *obj)
+{
+	obj->anim_flags = obj->anim_flags & ~ANIM_FLAG_PLAYING;
+}
+
+void gameobj_anim_play_reversed(GameObj *obj)
+{
+	gameobj_anim_set_reversed(obj, true);
+	obj->anim_flags = obj->anim_flags | ANIM_FLAG_PLAYING;
+}
+
+
+// set animation reverse flag
+void gameobj_anim_set_reversed(GameObj *obj, bool reversed)
+{
+	if(reversed)
+		obj->anim_flags |= ANIM_FLAG_REVERSED;
+	else
+		obj->anim_flags &= ~ANIM_FLAG_REVERSED;
+}
 
 // toggle horizontal flip
 void gameobj_flip_h(GameObj *obj)
@@ -210,6 +244,20 @@ void gameobj_flip_h(GameObj *obj)
 void gameobj_flip_v(GameObj *obj)
 {
 	obj->attr->attr1 ^= ATTR1_VFLIP;
+}
+
+// set flip values for a GameObj
+void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
+{
+	if(flip_h)
+		obj->attr->attr1 |= ATTR1_HFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_HFLIP;
+
+	if(flip_v)
+		obj->attr->attr1 |= ATTR1_VFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_VFLIP;
 }
 
 // set horizontal flip value for a GameObj
@@ -224,20 +272,6 @@ void gameobj_set_flip_h(GameObj *obj, bool flip_h)
 // set vertical flip value for a GameObj
 void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 {
-	if(flip_v)
-		obj->attr->attr1 |= ATTR1_VFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_VFLIP;
-}
-
-// set flip values for a GameObj
-void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
-{
-	if(flip_h)
-		obj->attr->attr1 |= ATTR1_HFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_HFLIP;
-
 	if(flip_v)
 		obj->attr->attr1 |= ATTR1_VFLIP;
 	else

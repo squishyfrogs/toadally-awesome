@@ -22,7 +22,6 @@ int world_offset_x;
 int world_offset_y;
 
 GameObj *kirby;
-GameObj *gear;
 GameObj *mario;
 GameObj *kirby2;
 
@@ -47,18 +46,15 @@ void init_objs()
 	kirby2 = init_gameobj();
 	gameobj_update_attr_full(kirby2, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 100, 20, false);
 	
-	// init gear
-	gear = init_gameobj();
-	k_tile = mem_load_tiles(gearTiles, gearTilesLen);
-	gear->priority = LAYER_OVERLAY;
-	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, 0, k_tile, 0, 128, true);
+	
 	
 	// init mario
 	mario = init_gameobj();
 	int m_pal = mem_load_palette(marioPal);
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
 	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, false);
-	gameobj_set_anim_info(mario, 4, 16);
+	gameobj_set_anim_info(mario, 4, 16, true);
+	gameobj_anim_play(mario);
 
 
 }
