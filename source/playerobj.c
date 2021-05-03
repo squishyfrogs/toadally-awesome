@@ -1,14 +1,16 @@
 #include <tonc.h>
-#include "direction.h"
 #include "game.h"
-#include "gameobj.h"
-#include "map.h"
 #include "vector2.h"
-#include "sprites/player.h"
+#include "direction.h"
+#include "gameobj.h"
+#include "playerobj.h"
+#include "map.h"
 
 
+#define PLAYER_START_X			5		// player starting location (temp)
+#define PLAYER_START_Y			5		// player starting location (temp)
 
-#define MOVE_SPEED		1						// move speed in pixels 
+
 
 extern void increment_action_counter();
 extern void update_camera_pos(int target_x, int target_y);
@@ -25,11 +27,6 @@ void update_current_tile();
 
 static GameObj *player_obj;
 
-#define PLAYER_START_X			80		// player starting location
-#define PLAYER_START_Y			80		// player starting location
-#define PLAYER_TILE_OFFSET		4		// TILE offset for animations (how many tiles is one frame?)
-#define PLAYER_FACING_OFFSET	8		// FRAME offset for each direction (multiply by tile offset for full offset)
-#define PLAYER_ASYMMETRIC		0		// set 1 if player sheet has unique west-facing sprites
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
@@ -38,22 +35,18 @@ static int p_facing;			// which direction the player is facing
 static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
 
 static bool player_moving;		// is the player currently moving? 
-//static int start_x, start_y;	// position player started moving from	REPLACE	
-//static int end_x, end_y;		// destination position					REPLACE
-
 
 static Vector2 start_tile;		// start tile (for movement)
 static Vector2 end_tile;		// end tile (for movement)
 static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
-const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 
 
 void playerobj_init()
 {
 
-	player_obj = init_gameobj();
+	player_obj = init_gameobj(false);
 	p_palette = mem_load_palette(playerPal);
 	p_tile_start = mem_load_tiles(playerTiles, playerTilesLen);
 	gameobj_update_attr_full(
@@ -62,8 +55,8 @@ void playerobj_init()
 		ATTR1_SIZE_16x16, 
 		p_palette, 
 		p_tile_start, 
-		PLAYER_START_X, PLAYER_START_Y, 
-		false);
+		PLAYER_START_X*GAME_TILE_SIZE, PLAYER_START_Y*GAME_TILE_SIZE
+		);
 
 	update_current_tile();
 	
@@ -153,6 +146,9 @@ void move_playerobj(int input_x, int input_y)
 	if((dest_height == 0) || (start_height - dest_height > 2) || (dest_height - start_height > 2))
 		return;
 
+	// check that dest tile is empty
+	if(get_tile_contents(end_tile.x, end_tile.y) != NULL)
+		return;
 
 	// reset offsets (should already be 0 but just in case)
 	offset.x = 0;
@@ -160,8 +156,8 @@ void move_playerobj(int input_x, int input_y)
 	hop_offset = 0;
 
 	// set mov values
-	mov.x = input_x * MOVE_SPEED;
-	mov.y = input_y * MOVE_SPEED;
+	mov.x = input_x * PLAYER_MOVE_SPEED;
+	mov.y = input_y * PLAYER_MOVE_SPEED;
 
 	// mark player as moving
 	player_moving = true;
@@ -194,7 +190,7 @@ void playerobj_update_movement()
 
 	int player_x = start_tile.x*GAME_TILE_SIZE + offset.x;
 	int player_y = start_tile.y*GAME_TILE_SIZE + offset.y;
-	gameobj_set_pos(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
+	gameobj_set_pos_pixel(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
 	
 
 	//move camera to follow player
@@ -212,4 +208,8 @@ void update_current_tile()
 {
 	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
 	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
+	// free players old tile
+	clear_tile_contents(start_tile.x, start_tile.y);
+	// claim new tile
+	set_tile_contents(player_obj, current_tile.x, current_tile.y);
 }

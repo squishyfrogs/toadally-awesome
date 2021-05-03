@@ -20,6 +20,7 @@ typedef struct struct_GameObj {
 	u16 spr_size;			// size of sprite
 	
 	int pos_x, pos_y;		// position in world/screen space
+	int spr_off_x, spr_off_y;		// offset from top left pixel of sprite to top left corner of its position
 	bool fixed_pos;			// if flag is set, position is relative to screen instead of relative to world
 
 	short anim_tile_offset;	// how many tiles to offset by per frame (should be same as sprite size in most cases) (set negative to reverse animation)
@@ -35,8 +36,8 @@ typedef struct struct_GameObj {
 
 
 
-GameObj *init_gameobj();
-GameObj *init_gameobj_with_id(int obj_id);
+GameObj *init_gameobj(bool fixed_pos);
+GameObj *init_gameobj_with_id(int obj_id, bool fixed_pos);
 
 
 int mem_load_palette(const ushort *pal_data);
@@ -44,12 +45,14 @@ int mem_load_tiles(const ushort *tile_data, int data_len);
 
 
 void gameobj_update_attr(GameObj *obj);
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, bool fixed_pos);
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y);
 
 void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, bool looping);
 
-void gameobj_set_pos(GameObj *obj, int x, int y);
-void gameobj_change_pos(GameObj *obj, int move_x, int move_y);
+void gameobj_set_sprite_offset(GameObj *obj, int x, int y);
+void gameobj_set_pos_tile(GameObj *obj, int x, int y);
+void gameobj_set_pos_pixel(GameObj *obj, int x, int y);
+void gameobj_change_pos_pixel(GameObj *obj, int move_x, int move_y);
 
 void gameobj_update_anim(GameObj *obj);
 void gameobj_anim_play(GameObj *obj);

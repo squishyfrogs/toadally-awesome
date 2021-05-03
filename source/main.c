@@ -1,6 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 
+#include "map.h"
 #include "layers.h"
 #include "game.h"
 
@@ -21,6 +22,7 @@ extern void game_update_temp();
 extern void gameobj_push_all_updates();
 extern void gameobj_update_anim_all();
 
+void game_init();
 void reg_init();
 void timer_init();
 
@@ -35,33 +37,44 @@ void update_text_temp();
 
 void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy);
 
-static enum GameState game_state;
+static GameState game_state;
 
 int main(void)
 {
-	game_state = GS_DEBUG;
-
-	irq_init(NULL);
-	//irq_add(II_VBLANK, NULL);
-	irq_enable(II_VBLANK);
-	reg_init(); 
+	game_init();
 	
-	gameobj_init_all();
-	playerobj_init();
-	ui_init();
 
+	// temp
 	init_objs(); 	
 	init_map();
-
-	test_init_tte_se4();
 	
+	test_init_tte_se4();
 	test_run_tte_se4();
+	//
 
 	main_game_loop();
 
 
 	return 0;
 }
+
+//all initialization and setup goes in here
+void game_init()
+{	
+	game_state = GS_DEBUG;
+
+	// GBA setup
+	irq_init(NULL);
+	//irq_add(II_VBLANK, NULL);
+	irq_enable(II_VBLANK);
+	reg_init(); 
+	
+	// game setup
+	gameobj_init_all();
+	playerobj_init();
+	ui_init();
+	map_init();
+}	
 
 void main_game_loop()
 {
@@ -125,6 +138,22 @@ void timer_init()
 	REG_TM2CNT = TM_ENABLE;
 	REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void test_init_tte_se4()
 {

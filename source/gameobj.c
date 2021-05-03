@@ -4,6 +4,8 @@
 #include "gameobj.h"
 #include "layers.h"
 
+#define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
+
 void gameobj_init_all();
 void gameobj_update_anim_all();
 void gameobj_push_all_updates();
@@ -96,9 +98,9 @@ int mem_load_tiles(const ushort *tile_data, int data_len)
 
 
 // initialize a GameObj and return it to the caller
-GameObj *init_gameobj()
+GameObj *init_gameobj(bool fixed_pos)
 {
-	GameObj *obj = init_gameobj_with_id(free_obj);
+	GameObj *obj = init_gameobj_with_id(free_obj, fixed_pos);
 	// eventually free_obj will be stuck at 127 - this is intended behavior (for the time being)
 	if(free_obj+1 < OBJ_COUNT)
 		free_obj++;
@@ -106,7 +108,7 @@ GameObj *init_gameobj()
 }
 
 // initialize a blank GameObj with a given ID
-GameObj *init_gameobj_with_id(int obj_id)
+GameObj *init_gameobj_with_id(int obj_id, bool fixed_pos)
 {
 	GameObj *obj = &obj_list[obj_id];
 	obj->obj_id = obj_id;
@@ -119,7 +121,10 @@ GameObj *init_gameobj_with_id(int obj_id)
 
 	obj->pos_x = 0;
 	obj->pos_y = 0;
-	obj->fixed_pos = false;
+	obj->fixed_pos = fixed_pos;
+
+	if(!fixed_pos)
+		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);			//if a sprite is fixed pos, assume it doesn't want the default offset, which is mostly intended for the map objs
 
 	obj->anim_tile_offset = 4;			// matches 16x16 sprite size
 	obj->anim_frame_ct = 1;
@@ -139,18 +144,16 @@ void gameobj_update_attr(GameObj *obj)
 }
 
 // set a GameObj's attributes
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, bool fixed_pos)
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y)
 {
 	obj->spr_shape = attr0_shape;
 	obj->spr_size = attr1_size;
 	obj->pal_bank_id = palbank;
 	obj->tile_id = tile_id;
 	obj->pos_x = x;
-	obj->pos_y = y;
-	obj->fixed_pos = fixed_pos;
+	obj->pos_y = y;	
 
 	u32 tid = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
-
 	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	gameobj_update_pos(obj);
 }
@@ -167,8 +170,24 @@ void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, boo
 }
 
 
+// set a GameObj's sprite offset
+void gameobj_set_sprite_offset(GameObj *obj, int x, int y)
+{
+	obj->spr_off_x = x;
+	obj->spr_off_y = y;
+	gameobj_update_pos(obj);
+}
+
+// set a GameObj's tile position
+void gameobj_set_pos_tile(GameObj *obj, int x, int y)
+{
+	obj->pos_x = x * GAME_TILE_SIZE;
+	obj->pos_y = y * GAME_TILE_SIZE;
+	gameobj_update_pos(obj);
+}
+
 // set a GameObj's position to new values
-void gameobj_set_pos(GameObj *obj, int x, int y)
+void gameobj_set_pos_pixel(GameObj *obj, int x, int y)
 {
 	obj->pos_x = x;
 	obj->pos_y = y;
@@ -176,7 +195,7 @@ void gameobj_set_pos(GameObj *obj, int x, int y)
 }
 
 // translate a GameObj by (x,y)
-void gameobj_change_pos(GameObj *obj, int move_x, int move_y)
+void gameobj_change_pos_pixel(GameObj *obj, int move_x, int move_y)
 {
 	obj->pos_x += move_x;
 	obj->pos_y += move_y;
@@ -187,9 +206,9 @@ void gameobj_change_pos(GameObj *obj, int move_x, int move_y)
 void gameobj_update_pos(GameObj *obj)
 {
 	if(obj->fixed_pos)
-		obj_set_pos(obj->attr, obj->pos_x, obj->pos_y);
+		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x, obj->pos_y - obj->spr_off_y);
 	else
-		obj_set_pos(obj->attr, obj->pos_x - world_offset_x, obj->pos_y - 2 - world_offset_y);	//subtract 2 to center sprites on tiles better
+		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x - world_offset_x, obj->pos_y - obj->spr_off_y - world_offset_y);	//subtract 2 to center sprites on tiles better
 }
 
 //advance a GameObj's animation one frame

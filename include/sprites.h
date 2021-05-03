@@ -5,6 +5,8 @@
 #include "sprites/kirby.h"
 #include "sprites/mario.h"
 #include "sprites/player.h"
+#include "sprites/crate.h"
+
 
 #include "sprites/ui/gear.h"
 #include "sprites/ui/heart.h"
