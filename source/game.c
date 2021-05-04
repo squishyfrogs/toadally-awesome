@@ -4,7 +4,7 @@
 #include "gameobj.h"
 #include "layers.h"
 #include "map.h"
-
+#include "objhistory.h"
 #include "sprites.h"
 #include "maps.h"
 
@@ -126,7 +126,14 @@ void game_update_temp()
 	//world_offset_x = kirby->pos_x/2;
 	//world_offset_y = kirby->pos_y/2;
 
-
+	if(key_hit(KEY_R))
+	{
+		ObjHistory *oh = get_obj_history(0);
+		int tile = get_tile_id_at_time(oh, 4);
+		int x = tile % MAP_SIZE_X;
+		int y = tile / MAP_SIZE_Y;
+		gameobj_set_pos_tile(kirby2, x, y);
+	}
 
 
 }

@@ -2,27 +2,28 @@
 #include <tonc.h>
 #include "map.h"
 #include "gameobj.h"
-#include "objhistory.h"
+
+
+extern void clear_all_obj_history();
 
 #define MAP_PAL_LEN 512 //2 bytes per color, 256 color
 
-
 void map_clear_col_info();
 void map_clear_contents();
-void map_clear_obj_history();
-
-
 
 
 // collision data for map
 unsigned short map_collision_info[MAP_SIZE];
 // gameobj data
 GameObj *map_contents[MAP_SIZE];
-// history of all gameobjs in current scene
-ObjHistory map_obj_history[OBJ_HISTORY_MAX];
 
 
 
+
+
+////////////////
+/// Map Data ///
+////////////////
 
 
 // initiation function
@@ -73,7 +74,7 @@ void map_clear_col_info()
 void map_clear()
 {
 	map_clear_col_info();
-	map_clear_obj_history();
+	clear_all_obj_history();
 	map_clear_contents();
 }
 
@@ -88,13 +89,7 @@ void map_clear_contents()
 	}
 }
 
-void map_clear_obj_history()
-{
-	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
-	{
-		clear_obj_history(&map_obj_history[i]);
-	}
-}
+
 
 
 

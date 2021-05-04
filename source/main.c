@@ -1,7 +1,6 @@
 #include <string.h>
 #include <tonc.h>
 
-#include "map.h"
 #include "layers.h"
 #include "game.h"
 
@@ -9,36 +8,48 @@
 
 extern void init_objs();	//temp
 extern void init_map();		//temp
+extern void game_update_temp();	//temp
 
 extern void gameobj_init_all();
 extern void playerobj_init();
 extern void ui_init();
+extern void map_init();
+
 extern void playerobj_update();
 extern void ui_update();
 extern void ui_update_anim();
 extern void update_world_pos();
 
-extern void game_update_temp();
 extern void gameobj_push_all_updates();
 extern void gameobj_update_anim_all();
 
+
+
+void main_game_loop();
+
+// init functions
 void game_init();
 void reg_init();
 void timer_init();
 
-void main_game_loop();
-void draw_bg();
+// update functions
+void anim_update();
+void game_update();
+void action_update();
 
+
+static GameState game_state;
+
+// placeholder
 void test_init_tte_se4();
 void test_run_tte_se4();
 void bg_demo();
 void update_text_temp();
-
-
 void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy);
 
-static GameState game_state;
 
+
+// The Big One
 int main(void)
 {
 	game_init();
@@ -47,7 +58,6 @@ int main(void)
 	// temp
 	init_objs(); 	
 	init_map();
-	
 	test_init_tte_se4();
 	test_run_tte_se4();
 	//
@@ -57,6 +67,31 @@ int main(void)
 
 	return 0;
 }
+
+// Where all the magic happens
+void main_game_loop()
+{
+	
+	while (1) 
+	{
+		//vid_vsync();		//resource hog
+		VBlankIntrWait();	//slower but saves power
+		key_poll();
+
+		anim_update();
+
+		game_update();
+		
+
+		
+	}
+}
+
+
+
+//////////////////////////////////
+/// Primary Game Init Function ///
+//////////////////////////////////
 
 //all initialization and setup goes in here
 void game_init()
@@ -76,43 +111,11 @@ void game_init()
 	map_init();
 }	
 
-void main_game_loop()
-{
-	static uint32_t anim_sync;
-	static uint32_t ui_anim_sync;
-	while (1) 
-	{
-		//vid_vsync();		//resource hog
-		VBlankIntrWait();	//slower but saves power
-		key_poll();
-
-		anim_sync++;
-		if(anim_sync > ANIM_SPEED)
-		{
-			// animation update functions go in here
-			gameobj_update_anim_all();
-			anim_sync %= ANIM_SPEED;
-		}
-		ui_anim_sync++;
-		if(ui_anim_sync > UI_ANIM_SPEED)
-		{
-			//ui looked weird at the slower anim speed so it runs on its own cycle
-			ui_update_anim();
-			ui_anim_sync %= UI_ANIM_SPEED;
-		}
 
 
-		// gameplay update functions go out here
-		update_text_temp();
-		playerobj_update();				// update player first
-		game_update_temp();				// update other gameobjs 
-		update_world_pos();				//push the map around
-		ui_update();
-
-		// update gameobj attrs based on gameplay changes
-		gameobj_push_all_updates();
-	}
-}
+////////////////////////////
+/// Other Initialization ///
+////////////////////////////
 
 // initialize the bg + obj registers 
 void reg_init()
@@ -125,35 +128,74 @@ void reg_init()
 	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
 }
 
-
-
-
+// initialize game timers (currently unused?)
 void timer_init()
 {
 	// Overflow every ~1 second:
 	// 0x4000 ticks @ FREQ_1024
 
-	REG_TM2D = -0x4000;				// 111 ticks to overflow - should produce 60hz cycle?
-	REG_TM2CNT= TM_FREQ_1024;		// use 1024 cycle timer
-	REG_TM2CNT = TM_ENABLE;
-	REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
+	// REG_TM2D = -0x4000;				// 111 ticks to overflow - should produce 60hz cycle?
+	// REG_TM2CNT = TM_FREQ_1024;		// use 1024 cycle timer
+	// REG_TM2CNT = TM_ENABLE;
+	// REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
+}
+
+
+
+/////////////////////////////
+/// Game Update Functions ///
+/////////////////////////////
+
+// update graphics and animation
+void anim_update()
+{
+	static uint32_t anim_sync;
+	static uint32_t ui_anim_sync;
+
+	anim_sync++;
+	if(anim_sync > ANIM_SPEED)
+	{
+		// animation update functions go in here
+		gameobj_update_anim_all();
+		anim_sync %= ANIM_SPEED;
+	}
+	ui_anim_sync++;
+	if(ui_anim_sync > UI_ANIM_SPEED)
+	{
+		//ui looked weird at the slower anim speed so it runs on its own cycle
+		ui_update_anim();
+		ui_anim_sync %= UI_ANIM_SPEED;
+	}
+}
+
+
+// update gameplay elements
+void game_update()
+{
+	// gameplay update functions go out here
+	update_text_temp();
+	playerobj_update();				// update player first
+	game_update_temp();				// update other gameobjs 
+	update_world_pos();				//push the map around
+	ui_update();
+
+	// update gameobj attrs based on gameplay changes
+	gameobj_push_all_updates();
+}
+
+
+// update that occurs after the player takes an action
+void action_update()
+{
+
 }
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+/////////////////////////////
+/// Testing & Placeholder ///
+/////////////////////////////
 
 void test_init_tte_se4()
 {
@@ -235,10 +277,6 @@ void test_run_tte_se4()
 
 }
 
-void draw_bg()
-{
-
-}
 
 
 void update_text_temp()

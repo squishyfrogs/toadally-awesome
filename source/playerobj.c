@@ -4,6 +4,7 @@
 #include "direction.h"
 #include "gameobj.h"
 #include "playerobj.h"
+#include "objhistory.h"
 #include "map.h"
 
 
@@ -26,7 +27,7 @@ void update_current_tile();
 
 
 static GameObj *player_obj;
-
+static ObjHistory * playerobj_history;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
@@ -57,7 +58,7 @@ void playerobj_init()
 		p_tile_start, 
 		PLAYER_START_X*GAME_TILE_SIZE, PLAYER_START_Y*GAME_TILE_SIZE
 		);
-
+	playerobj_history = register_obj_history(player_obj);
 	update_current_tile();
 	
 }
@@ -98,7 +99,12 @@ void move_playerobj(int input_x, int input_y)
 		return;
 	if(input_x == 0 && input_y == 0)
 		return;
+
+	//zero out y movement if diagonals are banned (clunky, replace with smart movement later maybe)
+	if(!ALLOW_DIAGONAL && input_x != 0)
+		input_y = 0;
 	
+	// update player facing direction
 	if(input_x > 0)
 		playerobj_set_facing(DIRECTION_EAST);
 	else if(input_x < 0)
@@ -114,7 +120,7 @@ void move_playerobj(int input_x, int input_y)
 	end_tile.x = start_tile.x + input_x;
 	end_tile.y = start_tile.y + input_y;
 
-	//make sure player does not move past the end of the map
+	// constrain player movement to map boundaries
 	if(end_tile.x < 0)
 	{
 		end_tile.x = 0;
@@ -161,6 +167,7 @@ void move_playerobj(int input_x, int input_y)
 
 	// mark player as moving
 	player_moving = true;
+	// add action
 	increment_action_counter();
 }
 
@@ -212,4 +219,6 @@ void update_current_tile()
 	clear_tile_contents(start_tile.x, start_tile.y);
 	// claim new tile
 	set_tile_contents(player_obj, current_tile.x, current_tile.y);
+	// save move to history
+	update_obj_history(playerobj_history, p_facing, current_tile.x, current_tile.y);
 }

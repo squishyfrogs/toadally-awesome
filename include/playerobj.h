@@ -9,6 +9,7 @@
 #define PLAYER_TILE_OFFSET		4		// TILE offset for animations (how many tiles is one frame?)
 #define PLAYER_FACING_OFFSET	8		// FRAME offset for each direction (multiply by tile offset for full offset)
 #define PLAYER_ASYMMETRIC		0		// set 1 if player sheet has unique west-facing sprites
+#define ALLOW_DIAGONAL			0		// set 1 to allow the player to move diagonally
 
 const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 

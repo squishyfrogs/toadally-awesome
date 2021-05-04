@@ -50,6 +50,8 @@ int g_anim;
 
 void ui_init()
 {
+	// TODO: condense UI palettes into a single complete one
+
 	// init action counter
 	a_pal = mem_load_palette(numbersPal);
 	a_tile = mem_load_tiles(numbersTiles, numbersTilesLen);
