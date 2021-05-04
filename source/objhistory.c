@@ -24,9 +24,12 @@ ObjHistory *get_obj_history(int index)
 	return  &obj_history_list[index];
 }
 
+// update the history of an obj at the end of a turn
 void update_obj_history(ObjHistory *history, int facing, int pos_x, int pos_y)
 {
-	facing &= 3;															//zero out any stray bits just in case
+	if(facing < 0)															//provide a negative facing value to repeat last turn's value
+		facing = history->facing_history;
+	facing &= 3;															//zero out any irrelevant bits
 	history->facing_history = (history->facing_history<<2) | facing;		//shift the history up 2 bits, then add in the new facing value
 
 	int tile_id = get_tile_id(pos_x,pos_y);
@@ -37,6 +40,7 @@ void update_obj_history(ObjHistory *history, int facing, int pos_x, int pos_y)
 	history->tile_history[HISTORY_TURN_MAX-1] = tile_id;
 }
 
+
 // clear and reset the history of an obj
 void clear_obj_history(ObjHistory *history)
 {
@@ -46,7 +50,7 @@ void clear_obj_history(ObjHistory *history)
 		history->tile_history[i] = 0;
 }
 
-// clear and reset all obj histories 
+// clear and reset all obj histories
 void clear_all_obj_history()
 {
 	for(int i = 0; i < OBJ_HISTORY_MAX; i++)

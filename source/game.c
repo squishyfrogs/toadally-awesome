@@ -38,31 +38,28 @@ void init_objs()
 	
 	
 	// init kirby
-	kirby = init_gameobj(false);
 	int k_pal = mem_load_palette(kirbyPal);
 	int k_tile = mem_load_tiles(kirbyTiles, kirbyTilesLen);
-	gameobj_update_attr_full(kirby, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96);
+	kirby = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96, 0);
 
-	kirby2 = init_gameobj(false);
-	gameobj_update_attr_full(kirby2, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 100, 20);
+	kirby2 = init_gameobj();
+	gameobj_update_attr_full(kirby2, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 100, 20, 0);
 	
 	//set_tile_contents(kirby2, 5,8);
 	
 	// init mario
-	mario = init_gameobj(false);
 	int m_pal = mem_load_palette(marioPal);
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
-	gameobj_update_attr_full(mario, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80);
+	mario = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, 0);
 	gameobj_set_anim_info(mario, 4, 16, true);
 	gameobj_anim_play(mario);
 
 	// init crate
-	crate = init_gameobj(false);
 	int c_pal = mem_load_palette(cratePal);
 	int c_tile = mem_load_tiles(crateTiles, crateTilesLen);
-	gameobj_update_attr_full(crate, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0);
+	crate = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
 	gameobj_set_sprite_offset(crate,0,8);
-	gameobj_set_pos_tile(crate, 2,8);
+	gameobj_set_tile_pos(crate, 2, 8);
 	set_tile_contents(crate, 2, 8);
 }
 
@@ -88,7 +85,7 @@ void init_map()
 void game_update_temp()
 {
 
-	gameobj_change_pos_pixel(kirby, key_tri_horz(), key_tri_vert());
+	gameobj_change_pixel_pos(kirby, key_tri_horz(), key_tri_vert());
 
 
 	// increment/decrement starting tile with R/L
@@ -132,7 +129,7 @@ void game_update_temp()
 		int tile = get_tile_id_at_time(oh, 4);
 		int x = tile % MAP_SIZE_X;
 		int y = tile / MAP_SIZE_Y;
-		gameobj_set_pos_tile(kirby2, x, y);
+		gameobj_set_tile_pos(kirby2, x, y);
 	}
 
 

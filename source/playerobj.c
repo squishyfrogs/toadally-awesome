@@ -47,16 +47,16 @@ static int hop_offset;			// number of pixels to shove sprite vertically to simul
 void playerobj_init()
 {
 
-	player_obj = init_gameobj(false);
 	p_palette = mem_load_palette(playerPal);
 	p_tile_start = mem_load_tiles(playerTiles, playerTilesLen);
-	gameobj_update_attr_full(
-		player_obj, 
+	player_obj = init_gameobj_full(
+		LAYER_GAMEOBJ, 
 		ATTR0_SQUARE, 
 		ATTR1_SIZE_16x16, 
 		p_palette, 
 		p_tile_start, 
-		PLAYER_START_X*GAME_TILE_SIZE, PLAYER_START_Y*GAME_TILE_SIZE
+		PLAYER_START_X*GAME_TILE_SIZE, PLAYER_START_Y*GAME_TILE_SIZE,
+		OBJPROP_SOLID
 		);
 	playerobj_history = register_obj_history(player_obj);
 	update_current_tile();
@@ -197,7 +197,7 @@ void playerobj_update_movement()
 
 	int player_x = start_tile.x*GAME_TILE_SIZE + offset.x;
 	int player_y = start_tile.y*GAME_TILE_SIZE + offset.y;
-	gameobj_set_pos_pixel(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
+	gameobj_set_pixel_pos(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
 	
 
 	//move camera to follow player

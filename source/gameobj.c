@@ -2,7 +2,6 @@
 #include <tonc.h>
 #include "game.h"
 #include "gameobj.h"
-#include "layers.h"
 
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
 
@@ -98,9 +97,9 @@ int mem_load_tiles(const ushort *tile_data, int data_len)
 
 
 // initialize a GameObj and return it to the caller
-GameObj *init_gameobj(bool fixed_pos)
+GameObj *init_gameobj()
 {
-	GameObj *obj = init_gameobj_with_id(free_obj, fixed_pos);
+	GameObj *obj = init_gameobj_with_id(free_obj);
 	// eventually free_obj will be stuck at 127 - this is intended behavior (for the time being)
 	if(free_obj+1 < OBJ_COUNT)
 		free_obj++;
@@ -108,31 +107,76 @@ GameObj *init_gameobj(bool fixed_pos)
 }
 
 // initialize a blank GameObj with a given ID
-GameObj *init_gameobj_with_id(int obj_id, bool fixed_pos)
+GameObj *init_gameobj_with_id(int obj_id)
 {
 	GameObj *obj = &obj_list[obj_id];
 	obj->obj_id = obj_id;
 	obj->attr = &objattr_buffer[obj_id];
-	obj->tile_id = 0;
 	obj->pal_bank_id = 0;
-	obj->priority = LAYER_GAMEOBJ;
+	obj->tile_id = 0;
+	obj->layer_priority = LAYER_GAMEOBJ;
 	obj->spr_shape = ATTR0_SQUARE;
-	obj->spr_size = ATTR1_SIZE_16x16;	// assume 16x6 for default bc I really doubt anyone is making 16x8 objects 
+	obj->spr_size = ATTR1_SIZE_16x16;	// assume 16x6 for default bc I really doubt anyone is regularly making 16x8 objects 
 
 	obj->pos_x = 0;
 	obj->pos_y = 0;
-	obj->fixed_pos = fixed_pos;
 
-	if(!fixed_pos)
-		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);			//if a sprite is fixed pos, assume it doesn't want the default offset, which is mostly intended for the map objs
-
-	obj->anim_tile_offset = 4;			// matches 16x16 sprite size
+	obj->anim_tile_offset = ANIM_OFFSET_16x16;			// default offset for 16x16 sprite size
 	obj->anim_frame_ct = 1;
 	obj->anim_cur_frame = 0;
 	obj->anim_flags = 0;
 
 	return obj;
 }
+
+// initialize a GameObj in detail
+GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+{
+	GameObj *obj = init_gameobj();
+
+	obj->layer_priority = layer_priority;
+	obj->spr_shape = attr0_shape;
+	obj->pal_bank_id = palbank;
+	obj->spr_size = attr1_size;
+	obj->tile_id = tile_id;
+	obj->pos_x = x;
+	obj->pos_y = y;
+	obj->obj_properties = properties;
+
+	//if a sprite is fixed pos, assume it doesn't want the default offset, which is mostly intended for the map objs
+	if(!(properties & OBJPROP_FIXED_POS))
+		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);
+
+	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id));
+	gameobj_update_pos(obj);
+
+	return obj;
+}
+
+// initialize a GameObj in detail
+GameObj *init_gameobj_with_id_full(int obj_id, u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+{
+	GameObj *obj = init_gameobj_with_id(obj_id);
+
+	obj->layer_priority = layer_priority;
+	obj->spr_shape = attr0_shape;
+	obj->spr_size = attr1_size;
+	obj->pal_bank_id = palbank;
+	obj->tile_id = tile_id;
+	obj->pos_x = x;
+	obj->pos_y = y;
+	obj->obj_properties = properties;
+
+	//if a sprite is fixed pos, assume it doesn't want the default offset, which is mostly intended for the map objs
+	if(!(properties & OBJPROP_FIXED_POS))
+		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);
+	
+	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id));
+	gameobj_update_pos(obj);
+		
+	return obj;
+}
+
 
 
 
@@ -144,7 +188,7 @@ void gameobj_update_attr(GameObj *obj)
 }
 
 // set a GameObj's attributes
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y)
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
 {
 	obj->spr_shape = attr0_shape;
 	obj->spr_size = attr1_size;
@@ -152,12 +196,18 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 	obj->tile_id = tile_id;
 	obj->pos_x = x;
 	obj->pos_y = y;	
+	obj->obj_properties = properties;
 
 	u32 tid = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
 	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	gameobj_update_pos(obj);
 }
 
+// set a GameObj's properties
+void gameobj_set_property_flags(GameObj *obj, u16 properties)
+{
+	obj->obj_properties = properties;
+}
 
 // set a GameObj's animation info
 void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, bool looping)
@@ -179,7 +229,7 @@ void gameobj_set_sprite_offset(GameObj *obj, int x, int y)
 }
 
 // set a GameObj's tile position
-void gameobj_set_pos_tile(GameObj *obj, int x, int y)
+void gameobj_set_tile_pos(GameObj *obj, int x, int y)
 {
 	obj->pos_x = x * GAME_TILE_SIZE;
 	obj->pos_y = y * GAME_TILE_SIZE;
@@ -187,7 +237,7 @@ void gameobj_set_pos_tile(GameObj *obj, int x, int y)
 }
 
 // set a GameObj's position to new values
-void gameobj_set_pos_pixel(GameObj *obj, int x, int y)
+void gameobj_set_pixel_pos(GameObj *obj, int x, int y)
 {
 	obj->pos_x = x;
 	obj->pos_y = y;
@@ -195,7 +245,7 @@ void gameobj_set_pos_pixel(GameObj *obj, int x, int y)
 }
 
 // translate a GameObj by (x,y)
-void gameobj_change_pos_pixel(GameObj *obj, int move_x, int move_y)
+void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y)
 {
 	obj->pos_x += move_x;
 	obj->pos_y += move_y;
@@ -205,7 +255,7 @@ void gameobj_change_pos_pixel(GameObj *obj, int move_x, int move_y)
 // update a GameObj's attrs based on its current position
 void gameobj_update_pos(GameObj *obj)
 {
-	if(obj->fixed_pos)
+	if(obj->obj_properties & OBJPROP_FIXED_POS)
 		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x, obj->pos_y - obj->spr_off_y);
 	else
 		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x - world_offset_x, obj->pos_y - obj->spr_off_y - world_offset_y);	//subtract 2 to center sprites on tiles better
@@ -310,7 +360,7 @@ void gameobj_push_changes(GameObj *obj)
 	obj->attr->attr2 = ATTR2_BUILD(
 		tile_id,
 		obj->pal_bank_id,
-		obj->priority
+		obj->layer_priority
 	);
 	gameobj_update_pos(obj);
 }

@@ -57,11 +57,11 @@ void ui_init()
 	a_tile = mem_load_tiles(numbersTiles, numbersTilesLen);
 	for(int i = 0; i < ACTION_DIGITS; i++)
 	{
-		action_counter[i] = init_gameobj(true);
-		action_counter[i]->priority = LAYER_OVERLAY;
+		action_counter[i] = init_gameobj();
+		action_counter[i]->layer_priority = LAYER_OVERLAY;
 		int ac_x = ACTION_COUNTER_OFFSET_X + i*8;
 		int ac_y = ACTION_COUNTER_OFFSET_Y + 152;
-		gameobj_update_attr_full(action_counter[i], ATTR0_SQUARE, ATTR1_SIZE_8x8, a_pal, a_tile, ac_x, ac_y);
+		gameobj_update_attr_full(action_counter[i], ATTR0_SQUARE, ATTR1_SIZE_8x8, a_pal, a_tile, ac_x, ac_y, OBJPROP_FIXED_POS);
 	}
 	set_action_count(752);	//placeholder
 
@@ -70,22 +70,20 @@ void ui_init()
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
 	for(int i = 0; i < HP_MAX; i++)
 	{
-		hearts[i] = init_gameobj(true);
-		hearts[i]->priority = LAYER_OVERLAY;
 		int h_x = 4+i*8;
 		int h_y = 0;
-		gameobj_update_attr_full(hearts[i], ATTR0_TALL, ATTR1_SIZE_8x16, h_pal, h_tile, h_x, h_y);
+		hearts[i] = init_gameobj_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, h_pal, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
 		if(i % 2)
 			gameobj_set_flip_h(hearts[i], true);
 	}
 
 
 	// init gear
-	gear = init_gameobj(true);
+	gear = init_gameobj();
 	g_pal = mem_load_palette(gearPal);
 	g_tile = mem_load_tiles(gearTiles, gearTilesLen);
-	gear->priority = LAYER_OVERLAY;
-	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, g_pal, g_tile, 0, 128);
+	gear->layer_priority = LAYER_OVERLAY;
+	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, g_pal, g_tile, 0, 128, OBJPROP_FIXED_POS);
 	gameobj_set_anim_info(gear, 3, ANIM_OFFSET_32x32, false);
 	g_anim = 1;
 	gameobj_anim_set_reversed(gear, true);
