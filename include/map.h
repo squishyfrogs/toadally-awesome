@@ -19,7 +19,8 @@ int get_tile_id(int x, int y);												// converts an x,y position to a tile 
 ushort get_tile_col_info(int pos_x, int pos_y);								// get the collision info of a given tile
 struct struct_GameObj *get_tile_contents(int pos_x, int pos_y);				// get the contents of a given tile, or NULL if tile is empty
 bool set_tile_contents(struct struct_GameObj *obj, int pos_x, int pos_y);	// set the contents of a given tile, only succeeds if tile is empty
+bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id);		// set the contents of a given tile, only succeeds if tile is empty
 void clear_tile_contents(int pos_x, int pos_y);								// clear the contents of a given tile and free it for use
-
+void clear_tile_contents_by_id(int tile_id);								// clear the contents of a given tile and free it for use
 
 #endif //MAP_H

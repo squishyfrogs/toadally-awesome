@@ -4,7 +4,6 @@
 #include "gameobj.h"
 
 
-extern void clear_all_obj_history();
 
 #define MAP_PAL_LEN 512 //2 bytes per color, 256 color
 
@@ -74,7 +73,6 @@ void map_clear_col_info()
 void map_clear()
 {
 	map_clear_col_info();
-	clear_all_obj_history();
 	map_clear_contents();
 }
 
@@ -134,6 +132,16 @@ bool set_tile_contents(GameObj *obj, int pos_x, int pos_y)
 	return true;
 }
 
+// set the contents of a given tile, only succeeds if tile is empty
+bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id)
+{
+	if(map_contents[tile_id] != NULL)
+		return false;
+
+	map_contents[tile_id] = obj;
+	return true;
+}
+
 // clear the contents of a given tile and free it for use
 void clear_tile_contents(int pos_x, int pos_y)
 {
@@ -142,3 +150,8 @@ void clear_tile_contents(int pos_x, int pos_y)
 	map_contents[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)] = NULL;
 }
 
+// clear the contents of a given tile and free it for use
+void clear_tile_contents_by_id(int tile_id)
+{
+	map_contents[tile_id] = NULL;
+}

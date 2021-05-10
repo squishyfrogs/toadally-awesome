@@ -123,13 +123,20 @@ void game_update_temp()
 	//world_offset_x = kirby->pos_x/2;
 	//world_offset_y = kirby->pos_y/2;
 
+	if(key_hit(KEY_L))
+	{
+		history_rewind(1);
+	}
+
 	if(key_hit(KEY_R))
 	{
-		ObjHistory *oh = get_obj_history(0);
-		int tile = get_tile_id_at_time(oh, 4);
-		int x = tile % MAP_SIZE_X;
-		int y = tile / MAP_SIZE_Y;
-		gameobj_set_tile_pos(kirby2, x, y);
+		history_return_to_present();
+
+	//	ObjHistory *oh = get_obj_history(0);
+	//	int tile = history_get_tile_id_at_time(oh, 4);
+	//	int x = tile % MAP_SIZE_X;
+	//	int y = tile / MAP_SIZE_Y;
+	//	gameobj_set_tile_pos(kirby2, x, y);
 	}
 
 

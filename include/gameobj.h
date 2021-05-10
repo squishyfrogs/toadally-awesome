@@ -22,7 +22,7 @@ typedef struct struct_GameObj {
 	u16 spr_shape;				// shape of sprite
 	u16 spr_size;				// size of sprite
 	
-	int pos_x, pos_y;			// position in world/screen space
+	int pos_x, pos_y;			// position in world/screen space (pixels)
 	int spr_off_x, spr_off_y;	// offset from top left pixel of sprite to top left corner of its position
 
 	u16 obj_properties;			// flags for various gameplay-related properties of a given gameobj
@@ -46,8 +46,10 @@ typedef struct struct_GameObj {
 #define OBJPROP_MOVABLE			0x0004		// can the player push this object by walking into it?
 #define OBJPROP_EDIBLE			0x0008		// can the frog consume this?
 
-#define OBJPROP_TIME_IMMUNITY	0x4000		// grants immunity to time-based shenanigans
-#define OBJPROP_FIXED_POS		0x8000		// does the object remain in a fixed position on screen? (mostly for UI elements)
+#define OBJPROP_TIME_IMMUNITY	0x1000		// grants immunity to time-based shenanigans
+#define OBJPROP_FIXED_POS		0x2000		// does the object remain in a fixed position on screen? (mostly for UI elements)
+// the final two bits are reserved and refer to the direction the GameObj is facing (see direction.h for specific values)
+//
 /////////////////////////
 
 GameObj *init_gameobj();
@@ -68,8 +70,12 @@ void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, boo
 
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y);
 void gameobj_set_tile_pos(GameObj *obj, int x, int y);
+void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id);
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y);
 void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
+
+void gameobj_set_facing(GameObj *obj, int facing);
+int gameobj_get_facing(GameObj *obj);
 
 void gameobj_update_anim(GameObj *obj);
 void gameobj_anim_play(GameObj *obj);
@@ -83,8 +89,6 @@ void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v);
 void gameobj_set_flip_h(GameObj *obj, bool flip_h);
 void gameobj_set_flip_v(GameObj *obj, bool flip_v);
 
-
-void gameobj_push_changes(GameObj *obj);
 
 void gameobj_hide_all();
 void gameobj_unhide_all();

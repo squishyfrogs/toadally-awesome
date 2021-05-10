@@ -11,28 +11,32 @@
 #define PLAYER_START_X			5		// player starting location (temp)
 #define PLAYER_START_Y			5		// player starting location (temp)
 
-
-
-extern void increment_action_counter();
+// main.c
+extern void action_update();
+// camera.c
 extern void update_camera_pos(int target_x, int target_y);
 
+// gameobj.c
+extern void gameobj_push_changes(GameObj *obj);
+
+GameObj *get_player_obj();
 
 void playerobj_init();
 void playerobj_update();
 
 void playerobj_set_facing(int dir);
+void playerobj_update_sprite_direction();
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
-void update_current_tile();
-
+void player_update_current_tile();
+void player_set_tile_by_id(int tile_id);
 
 static GameObj *player_obj;
-static ObjHistory * playerobj_history;
+static ObjHistory *playerobj_history;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
 
-static int p_facing;			// which direction the player is facing
 static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
 
 static bool player_moving;		// is the player currently moving? 
@@ -43,6 +47,10 @@ static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
 
+GameObj *get_player_obj()
+{
+	return player_obj;
+}
 
 void playerobj_init()
 {
@@ -59,7 +67,7 @@ void playerobj_init()
 		OBJPROP_SOLID
 		);
 	playerobj_history = register_obj_history(player_obj);
-	update_current_tile();
+	player_update_current_tile();
 	
 }
 
@@ -75,7 +83,13 @@ void playerobj_update()
 // set which direction the player is facing 
 void playerobj_set_facing(int dir)
 {
-	p_facing = dir;
+	gameobj_set_facing(player_obj, dir);
+	playerobj_update_sprite_direction();
+}
+
+void playerobj_update_sprite_direction()
+{
+	int dir = gameobj_get_facing(player_obj);
 	if(!PLAYER_ASYMMETRIC)
 	{
 		if(dir == DIRECTION_WEST)
@@ -167,8 +181,8 @@ void move_playerobj(int input_x, int input_y)
 
 	// mark player as moving
 	player_moving = true;
-	// add action
-	increment_action_counter();
+	// perform an action update
+	action_update();
 }
 
 void playerobj_update_movement()
@@ -205,20 +219,40 @@ void playerobj_update_movement()
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
-		update_current_tile();
+		player_update_current_tile();
 		player_moving = false;
 	}
 
 }
 
-void update_current_tile()
+void player_update_current_tile()
 {
+	// free players old tile
+	clear_tile_contents(current_tile.x, current_tile.y);
+
 	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
 	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
-	// free players old tile
-	clear_tile_contents(start_tile.x, start_tile.y);
+	
 	// claim new tile
 	set_tile_contents(player_obj, current_tile.x, current_tile.y);
 	// save move to history
-	update_obj_history(playerobj_history, p_facing, current_tile.x, current_tile.y);
+	update_obj_history(playerobj_history, gameobj_get_facing(player_obj), current_tile.x, current_tile.y);
 }
+
+// TODO: cleanup and make generic for all gameobjs
+void player_set_tile_by_id(int tile_id)
+{
+	// free players old tile
+	//clear_tile_contents_by_id(tile_id);
+	clear_tile_contents(current_tile.x, current_tile.y);
+
+	
+	// claim new tile
+	set_tile_contents_by_id(player_obj, tile_id);
+	gameobj_set_tile_pos_by_id(player_obj, tile_id);
+
+	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
+	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
+	
+}
+

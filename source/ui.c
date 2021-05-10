@@ -6,6 +6,7 @@
 #include "sprites/ui/gear.h"
 
 void ui_init();
+void ui_start();
 void ui_update();
 
 void reset_action_count();
@@ -48,6 +49,7 @@ int g_pal;
 int g_tile;
 int g_anim;
 
+// initialize and set up ui
 void ui_init()
 {
 	// TODO: condense UI palettes into a single complete one
@@ -90,13 +92,19 @@ void ui_init()
 
 }
 
+// prepare ui for gameplay
+void ui_start()
+{
+	reset_action_count();
+}
+
 // gameplay update
 void ui_update()
 {
-	if(key_hit(KEY_R))
-		increment_action_counter();
-	if(key_hit(KEY_L))
-		decrement_action_counter();
+//	if(key_hit(KEY_R))
+//		increment_action_counter();
+//	if(key_hit(KEY_L))
+//		decrement_action_counter();
 
 	
 

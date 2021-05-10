@@ -15,14 +15,19 @@ extern void playerobj_init();
 extern void ui_init();
 extern void map_init();
 
+extern void ui_start();
+
 extern void playerobj_update();
 extern void ui_update();
 extern void ui_update_anim();
 extern void update_world_pos();
-
+// ui.c
+extern void increment_action_counter();
+// gameobj.c
 extern void gameobj_push_all_updates();
 extern void gameobj_update_anim_all();
-
+// objhistory.c
+extern void history_clear_future();
 
 
 void main_game_loop();
@@ -32,13 +37,19 @@ void game_init();
 void reg_init();
 void timer_init();
 
+void game_start();	// after initializing everything, this is called to set the game in motion, then we enter the game loop
+
 // update functions
 void anim_update();
 void game_update();
 void action_update();
 
+int current_turn();								// get the current turn
 
-static GameState game_state;
+
+static GameState game_state;						// what state the game is currently in
+static int game_turns_elapsed;						// prevents rewinding past the beginning of the game
+static bool game_paused;							
 
 // placeholder
 void test_init_tte_se4();
@@ -61,6 +72,7 @@ int main(void)
 	test_init_tte_se4();
 	test_run_tte_se4();
 	//
+	game_start();
 
 	main_game_loop();
 
@@ -106,9 +118,9 @@ void game_init()
 	
 	// game setup
 	gameobj_init_all();
+	map_init();
 	playerobj_init();
 	ui_init();
-	map_init();
 }	
 
 
@@ -140,6 +152,17 @@ void timer_init()
 	// REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
 }
 
+
+//////////////////
+/// Game Start ///
+//////////////////
+
+void game_start()
+{
+	game_turns_elapsed = 0;
+	game_paused = false;
+	ui_start();
+}
 
 
 /////////////////////////////
@@ -176,7 +199,7 @@ void game_update()
 	update_text_temp();
 	playerobj_update();				// update player first
 	game_update_temp();				// update other gameobjs 
-	update_world_pos();				//push the map around
+	update_world_pos();				// push the map around
 	ui_update();
 
 	// update gameobj attrs based on gameplay changes
@@ -187,10 +210,19 @@ void game_update()
 // update that occurs after the player takes an action
 void action_update()
 {
+	// if an action was taken in the past, clear the previous future 
+	history_clear_future();
 
+	game_turns_elapsed++;
+	// add an action to the counter
+	increment_action_counter();
 }
 
 
+int current_turn()
+{
+	return game_turns_elapsed;
+}
 
 
 /////////////////////////////

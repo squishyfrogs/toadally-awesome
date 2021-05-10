@@ -1,6 +1,7 @@
 #include <tonc.h>
 #include "game.h"
 #include "map.h"
+#include "gameobj.h"
 
 #define SCREEN_HALF_WIDTH (SCREEN_WIDTH/2)		// half screen width
 #define SCREEN_HALF_HEIGHT (SCREEN_HEIGHT/2)	// half screen height
@@ -9,6 +10,7 @@
 #define PLAYER_SIZE					16			// player size in pixels
 
 void update_camera_pos(int target_x, int target_y);
+void camera_find_target(GameObj *target);
 extern void set_world_offset(int off_x, int off_y);
 
 
@@ -47,4 +49,9 @@ void update_camera_pos(int target_x, int target_y)
 
 	
 	set_world_offset(cam_x - SCREEN_HALF_WIDTH, cam_y - SCREEN_HALF_HEIGHT);
+}
+
+void camera_find_target(GameObj *target)
+{
+	update_camera_pos(target->pos_x, target->pos_y);
 }

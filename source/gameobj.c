@@ -2,6 +2,7 @@
 #include <tonc.h>
 #include "game.h"
 #include "gameobj.h"
+#include "map.h"
 
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
 
@@ -10,6 +11,9 @@ void gameobj_update_anim_all();
 void gameobj_push_all_updates();
 
 void gameobj_update_pos(GameObj *obj);
+void gameobj_push_changes(GameObj *obj);
+
+extern void objhistory_init();
 
 
 GameObj obj_list[OBJ_COUNT];
@@ -35,6 +39,7 @@ void gameobj_init_all()
 	//hides all sprites
 	oam_init(objattr_buffer, 128);
 
+	objhistory_init();
 }
 
 
@@ -61,7 +66,6 @@ void gameobj_push_all_updates()
 		gameobj_push_changes(&obj_list[i]);
 	}
 
-	
 	// copy all changes into oam memory
 	oam_copy(oam_mem, objattr_buffer, free_obj);		// only need to copy changes up to obj count
 }
@@ -236,6 +240,14 @@ void gameobj_set_tile_pos(GameObj *obj, int x, int y)
 	gameobj_update_pos(obj);
 }
 
+// set a GameObj's tile position
+void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id)
+{
+	int x = tile_id % MAP_SIZE_X;
+	int y = tile_id / MAP_SIZE_X;
+	gameobj_set_tile_pos(obj, x, y);
+}
+
 // set a GameObj's position to new values
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y)
 {
@@ -258,7 +270,22 @@ void gameobj_update_pos(GameObj *obj)
 	if(obj->obj_properties & OBJPROP_FIXED_POS)
 		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x, obj->pos_y - obj->spr_off_y);
 	else
-		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x - world_offset_x, obj->pos_y - obj->spr_off_y - world_offset_y);	//subtract 2 to center sprites on tiles better
+		obj_set_pos(obj->attr, obj->pos_x - obj->spr_off_x - world_offset_x, obj->pos_y - obj->spr_off_y - world_offset_y);
+}
+
+
+void gameobj_set_facing(GameObj *obj, int facing)
+{
+	facing = (facing & 0x0003) << 14;
+	obj->obj_properties = obj->obj_properties & 0x3FFF;
+	obj->obj_properties = obj->obj_properties | facing;
+}
+
+int gameobj_get_facing(GameObj *obj)
+{
+	int props = obj->obj_properties;
+	props = (props & 0xC000) >> 14;
+	return props;
 }
 
 //advance a GameObj's animation one frame
@@ -364,6 +391,9 @@ void gameobj_push_changes(GameObj *obj)
 	);
 	gameobj_update_pos(obj);
 }
+
+
+
 
 // hide all GameObjs
 void gameobj_hide_all()
