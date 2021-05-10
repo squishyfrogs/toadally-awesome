@@ -88,7 +88,7 @@ void ui_init()
 	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, g_pal, g_tile, 0, 128, OBJPROP_FIXED_POS);
 	gameobj_set_anim_info(gear, 3, ANIM_OFFSET_32x32, false);
 	g_anim = 1;
-	gameobj_anim_set_reversed(gear, true);
+	anim_set_reversed(gear->anim, true);
 
 }
 
@@ -200,7 +200,7 @@ void increment_action_counter()
 	count_rolling = 1;
 	c_frame = 0;
 
-	gameobj_anim_play(gear);
+	anim_play(gear->anim);
 }
 
 void decrement_action_counter()

@@ -10,6 +10,7 @@ extern void init_objs();	//temp
 extern void init_map();		//temp
 extern void game_update_temp();	//temp
 
+extern void animations_init();
 extern void gameobj_init_all();
 extern void playerobj_init();
 extern void ui_init();
@@ -40,7 +41,7 @@ void timer_init();
 void game_start();	// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
-void anim_update();
+void animations_update();
 void game_update();
 void action_update();
 
@@ -90,7 +91,7 @@ void main_game_loop()
 		VBlankIntrWait();	//slower but saves power
 		key_poll();
 
-		anim_update();
+		animations_update();
 
 		game_update();
 		
@@ -117,6 +118,7 @@ void game_init()
 	reg_init(); 
 	
 	// game setup
+	animations_init();
 	gameobj_init_all();
 	map_init();
 	playerobj_init();
@@ -170,7 +172,7 @@ void game_start()
 /////////////////////////////
 
 // update graphics and animation
-void anim_update()
+void animations_update()
 {
 	static uint32_t anim_sync;
 	static uint32_t ui_anim_sync;

@@ -52,7 +52,7 @@ void init_objs()
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
 	mario = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, 0);
 	gameobj_set_anim_info(mario, 4, 16, true);
-	gameobj_anim_play(mario);
+	anim_play(mario->anim);
 
 	// init crate
 	int c_pal = mem_load_palette(cratePal);

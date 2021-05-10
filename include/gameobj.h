@@ -28,10 +28,11 @@ typedef struct struct_GameObj {
 	u16 obj_properties;			// flags for various gameplay-related properties of a given gameobj
 
 	// anim
-	short anim_tile_offset;		// how many tiles to offset by per frame (should be same as sprite size in most cases) (set negative to reverse animation)
-	u16 anim_frame_ct;			// frame count of current animation
-	u16 anim_cur_frame;			// current frame of current animation
-	u8 anim_flags;				// flags for various animation properties
+	AnimationData *anim;		// animation data
+	//short anim_tile_offset;		// how many tiles to offset by per frame (should be same as sprite size in most cases) (set negative to reverse animation)
+	//u16 anim_frame_ct;			// frame count of current animation
+	//u16 anim_cur_frame;			// current frame of current animation
+	//u8 anim_flags;				// flags for various animation properties
 
 	//bool play_anim;			// whether or not the animation is playing
 	//bool anim_looping;		// whether or not the animation loops on completion
@@ -48,6 +49,12 @@ typedef struct struct_GameObj {
 
 #define OBJPROP_TIME_IMMUNITY	0x1000		// grants immunity to time-based shenanigans
 #define OBJPROP_FIXED_POS		0x2000		// does the object remain in a fixed position on screen? (mostly for UI elements)
+
+inline u16 objprop_is_time_immune(GameObj *obj)
+{
+	return (obj->obj_properties & OBJPROP_TIME_IMMUNITY);
+};
+
 // the final two bits are reserved and refer to the direction the GameObj is facing (see direction.h for specific values)
 //
 /////////////////////////
@@ -77,11 +84,7 @@ void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
 void gameobj_set_facing(GameObj *obj, int facing);
 int gameobj_get_facing(GameObj *obj);
 
-void gameobj_update_anim(GameObj *obj);
-void gameobj_anim_play(GameObj *obj);
-void gameobj_anim_stop(GameObj *obj);
-void gameobj_anim_play_reversed(GameObj *obj);
-void gameobj_anim_set_reversed(GameObj *obj, bool reversed);
+
 
 void gameobj_flip_h(GameObj *obj);
 void gameobj_flip_v(GameObj *obj);

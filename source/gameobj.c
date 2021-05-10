@@ -1,6 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 #include "game.h"
+#include "animation.h"
 #include "gameobj.h"
 #include "map.h"
 
@@ -54,7 +55,8 @@ void gameobj_update_anim_all()
 {
 	for(int i = 0; i < OBJ_COUNT; i++)
 	{
-		gameobj_update_anim(&obj_list[i]);
+		if(obj_list[i].anim != NULL)
+			anim_update(obj_list[i].anim);
 	}
 }
 
@@ -125,10 +127,8 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->pos_x = 0;
 	obj->pos_y = 0;
 
-	obj->anim_tile_offset = ANIM_OFFSET_16x16;			// default offset for 16x16 sprite size
-	obj->anim_frame_ct = 1;
-	obj->anim_cur_frame = 0;
-	obj->anim_flags = 0;
+	obj->anim = NULL;
+	//obj->anim = anim_create(ANIM_OFFSET_16x16, 1, 0);	// default offset for 16x16 sprite size
 
 	return obj;
 }
@@ -202,7 +202,7 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 	obj->pos_y = y;	
 	obj->obj_properties = properties;
 
-	u32 tid = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
+	u32 tid = obj->tile_id + (obj->anim->tile_offset * obj->anim->cur_frame);
 	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	gameobj_update_pos(obj);
 }
@@ -216,11 +216,13 @@ void gameobj_set_property_flags(GameObj *obj, u16 properties)
 // set a GameObj's animation info
 void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, bool looping)
 {
-	obj->anim_frame_ct = frame_count;
-	obj->anim_tile_offset = tile_offset;
-	obj->anim_cur_frame = 0;				//if we changed the anim info, its a safe bet that we want to reset its frame too 
+	u8 flags = 0;
 	if(looping)
-		obj->anim_flags |= ANIM_FLAG_LOOPING;
+		flags |= ANIM_FLAG_LOOPING;
+	if(obj->anim == NULL)
+		obj->anim = anim_create(tile_offset, frame_count, flags);
+	else
+		anim_set_info(obj->anim, tile_offset, frame_count, flags);
 }
 
 
@@ -288,47 +290,7 @@ int gameobj_get_facing(GameObj *obj)
 	return props;
 }
 
-//advance a GameObj's animation one frame
-void gameobj_update_anim(GameObj* obj)
-{
-	if((obj->anim_flags & ANIM_FLAG_PLAYING) && obj->anim_frame_ct > 0)
-	{
-		if(obj->anim_flags & ANIM_FLAG_REVERSED)
-			obj->anim_cur_frame = (obj->anim_cur_frame + obj->anim_frame_ct - 1) % obj->anim_frame_ct;
-		else
-			obj->anim_cur_frame = (obj->anim_cur_frame + 1) % obj->anim_frame_ct;
 
-		// stop after one cycle if not looping
-		if(obj->anim_cur_frame == 0 && !(obj->anim_flags & ANIM_FLAG_LOOPING))
-			gameobj_anim_stop(obj);
-	}
-}
-
-void gameobj_anim_play(GameObj *obj)
-{
-	obj->anim_flags = obj->anim_flags | ANIM_FLAG_PLAYING;
-}
-
-void gameobj_anim_stop(GameObj *obj)
-{
-	obj->anim_flags = obj->anim_flags & ~ANIM_FLAG_PLAYING;
-}
-
-void gameobj_anim_play_reversed(GameObj *obj)
-{
-	gameobj_anim_set_reversed(obj, true);
-	obj->anim_flags = obj->anim_flags | ANIM_FLAG_PLAYING;
-}
-
-
-// set animation reverse flag
-void gameobj_anim_set_reversed(GameObj *obj, bool reversed)
-{
-	if(reversed)
-		obj->anim_flags |= ANIM_FLAG_REVERSED;
-	else
-		obj->anim_flags &= ~ANIM_FLAG_REVERSED;
-}
 
 // toggle horizontal flip
 void gameobj_flip_h(GameObj *obj)
@@ -383,7 +345,10 @@ void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 // push changes to a GameObj's position, animation, and palette
 void gameobj_push_changes(GameObj *obj)
 {
-	u32 tile_id = obj->tile_id + (obj->anim_tile_offset * obj->anim_cur_frame);
+	u32 tile_id = obj->tile_id;
+	if(obj->anim != NULL)
+		tile_id += (obj->anim->tile_offset * obj->anim->cur_frame);
+
 	obj->attr->attr2 = ATTR2_BUILD(
 		tile_id,
 		obj->pal_bank_id,

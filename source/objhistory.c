@@ -178,6 +178,8 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 {
 	if(history->game_obj == NULL)
 		return;
+	if(objprop_is_time_immune(history->game_obj))
+		return;
 
 	// clear old tile
 	int tile_id = history_get_tile_id_at_time(history, current_turns_ago);
@@ -195,6 +197,9 @@ void set_player_to_turn(ObjHistory *history, int new_turns_ago)
 {
 	if(history->game_obj == NULL)
 		return;
+	if(objprop_is_time_immune(history->game_obj))
+		return;
+
 	int tile_id = history_get_tile_id_at_time(history, new_turns_ago);
 	set_action_count(tile_id);
 	gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
@@ -220,12 +225,15 @@ void history_clear_future()
 	current_turns_ago = 0;
 }
 
-
+// clear the future of a single gameobj
 void clear_obj_future(ObjHistory *history)
 {
 	if(history->game_obj == NULL)
 		return;
 	
+	if(objprop_is_time_immune(history->game_obj))
+		return;
+
 	// push histories forward again
 	history->facing_history = (history->facing_history>>(2*current_turns_ago));
 
