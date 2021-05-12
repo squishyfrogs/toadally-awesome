@@ -1,28 +1,28 @@
 
-//{{BLOCK(heart)
+//{{BLOCK(timegauge)
 
 //======================================================================
 //
-//	heart, 8x32@4, 
+//	timegauge, 32x8@4, 
 //	+ palette 16 entries, not compressed
 //	+ 4 tiles not compressed
 //	Total size: 32 + 128 = 160
 //
-//	Time-stamp: 2021-05-10, 18:44:01
+//	Time-stamp: 2021-05-10, 18:41:40
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.6
 //	( http://www.coranac.com/projects/#grit )
 //
 //======================================================================
 
-#ifndef GRIT_HEART_H
-#define GRIT_HEART_H
+#ifndef GRIT_TIMEGAUGE_H
+#define GRIT_TIMEGAUGE_H
 
-#define heartTilesLen 128
-extern const unsigned short heartTiles[64];
+#define timegaugeTilesLen 128
+extern const unsigned short timegaugeTiles[64];
 
-#define heartPalLen 32
-extern const unsigned short heartPal[16];
+#define timegaugePalLen 32
+extern const unsigned short timegaugePal[16];
 
-#endif // GRIT_HEART_H
+#endif // GRIT_TIMEGAUGE_H
 
-//}}BLOCK(heart)
+//}}BLOCK(timegauge)

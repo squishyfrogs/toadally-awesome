@@ -100,41 +100,44 @@ void map_clear_contents()
 int get_tile_id(int x, int y)
 {
 	if(x < 0 || y < 0 || x >= MAP_SIZE_X || y >= MAP_SIZE_Y)
-		return 0;
+		return -1;
 	return (x%MAP_SIZE_X)+(y*MAP_SIZE_X);
 }
 
 // get the collision info of a given tile
-ushort get_tile_col_info(int pos_x, int pos_y)
+ushort get_tile_col_info(int tile_x, int tile_y)
 {
-	if(pos_x < 0 || pos_y < 0 || pos_x >= MAP_SIZE_X || pos_y >= MAP_SIZE_Y)
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
 		return 0;
-	return map_collision_info[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)];
+	return map_collision_info[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)];
 }
 
 // get the contents of a given tile, or NULL if tile is empty
-GameObj *get_tile_contents(int pos_x, int pos_y)
+GameObj *get_tile_contents(int tile_x, int tile_y)
 {
-	if(pos_x < 0 || pos_y < 0 || pos_x >= MAP_SIZE_X || pos_y >= MAP_SIZE_Y)
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
 		return NULL;
-	return map_contents[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)];
+	return map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)];
 }
 
 // set the contents of a given tile, only succeeds if tile is empty
-bool set_tile_contents(GameObj *obj, int pos_x, int pos_y)
+bool set_tile_contents(GameObj *obj, int tile_x, int tile_y)
 {
-	if(pos_x < 0 || pos_y < 0 || pos_x >= MAP_SIZE_X || pos_y >= MAP_SIZE_Y)
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
 		return false;
-	if(map_contents[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)] != NULL)
-		return false;
+//	if(map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)] != NULL)
+//		return false;
 	
-	map_contents[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)] = obj;
+	map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)] = obj;
 	return true;
 }
 
 // set the contents of a given tile, only succeeds if tile is empty
-bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id)
+bool set_tile_contents_by_id(GameObj *obj, int tile_id)
 {
+	if(tile_id < 0 || tile_id >= MAP_SIZE)
+		return false;
+
 	if(map_contents[tile_id] != NULL)
 		return false;
 
@@ -142,16 +145,38 @@ bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id)
 	return true;
 }
 
-// clear the contents of a given tile and free it for use
-void clear_tile_contents(int pos_x, int pos_y)
+// sets a tile's contents, and moves the object to that tile
+bool place_obj_in_tile(GameObj *obj, int tile_x, int tile_y)
 {
-	if(pos_x < 0 || pos_y < 0 || pos_x >= MAP_SIZE_X || pos_y >= MAP_SIZE_Y)
-		return;
-	map_contents[(pos_x%MAP_SIZE_X)+(pos_y*MAP_SIZE_X)] = NULL;
+	bool success = set_tile_contents(obj, tile_x, tile_y);
+	if(success)
+		gameobj_set_tile_pos(obj, tile_x, tile_y);
+	return success;
+}
+
+// sets a tile's contents, and moves the object to that tile
+bool place_obj_in_tile_by_id(GameObj *obj, int tile_id)
+{
+	bool success = set_tile_contents_by_id(obj, tile_id);
+	if(success)
+		gameobj_set_tile_pos_by_id(obj, tile_id);
+	return success;
 }
 
 // clear the contents of a given tile and free it for use
-void clear_tile_contents_by_id(int tile_id)
+void remove_tile_contents(GameObj *obj, int tile_x, int tile_y)
 {
-	map_contents[tile_id] = NULL;
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return;
+	if(map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)] == obj)
+		map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)] = NULL;
+}
+
+// clear the contents of a given tile and free it for use
+void remove_tile_contents_by_id(GameObj *obj, int tile_id)
+{
+	if(tile_id < 0 || tile_id >= MAP_SIZE)
+		return;
+	if(map_contents[tile_id] == obj)
+		map_contents[tile_id] = NULL;
 }

@@ -2,7 +2,6 @@
 #define OBJHISTORY_H
 
 #include <tonc.h>
-#include "gameobj.h"
 
 
 #define HISTORY_TURN_MAX 16	// maximum turns to remember
@@ -10,15 +9,15 @@
 
 // history of a GameObj's movement and facing direction
 typedef struct struct_ObjHistory{
-	GameObj *game_obj;
-	uint32_t facing_history;				// facing data stored as 16 pairs of bits to save space (see directions.h for values)
-	int tile_history[HISTORY_TURN_MAX];		// position data stored as a series of ints (referring to tileID)
+	struct struct_GameObj *game_obj;
+	uint32_t facing_history;															// facing data stored as 16 pairs of bits to save space (see directions.h for values)
+	int tile_history[HISTORY_TURN_MAX];													// position data stored as a series of ints (referring to tileID)
 } ObjHistory;
 
 void objhistory_init();																	// initialize ObjHistory list
-ObjHistory *register_obj_history(GameObj *obj);											// returns a free ObjHistory from the list and assigns a GameObj to it
+ObjHistory *register_obj_history(struct struct_GameObj *obj);							// returns a free ObjHistory from the list and assigns a GameObj to it
 ObjHistory *get_obj_history(int index);													// returns the ObjHistory at a given index
-void update_obj_history(ObjHistory *history, int facing, int pos_x, int pos_y);			// pushes changes to the action queue
+void update_obj_history(ObjHistory *history, int facing, int tpos_x, int tpos_y);		// pushes changes to the action queue
 void clear_obj_history(ObjHistory *history);											// clear and reset the history of an obj
 void clear_all_obj_history();															// clear and reset all obj histories
 
@@ -29,6 +28,7 @@ void history_rewind(int turn_count);													// rewind the clock X number of
 void history_return_to_present();														// return to the present if the player has not moved yet
 
 void history_clear_future();															// clear the future and progress with a new timeline
+void history_update_all();																// update history of all objs after an action is performed
 
 
-#endif
+#endif //OBJHISTORY_H

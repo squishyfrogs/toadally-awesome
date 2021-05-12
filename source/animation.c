@@ -1,6 +1,11 @@
 #include "animation.h"
+#include "gameobj.h"
+
+extern void gameobj_push_changes(GameObj *obj);
 
 #define MAX_ANIM_COUNT 64
+
+void gameobj_update_facing(GameObj *obj);
 
 AnimationData animationLibrary[MAX_ANIM_COUNT]; 
 static int free_anim = 0;
@@ -17,21 +22,25 @@ void animations_init()
 }
 
 
-AnimationData *anim_create(short tile_offset, u16 frame_ct, u8 flags)
+AnimationData *anim_create(int tile_start, short tile_offset, u16 frame_ct, int facing_offset, u8 flags)
 {
 	AnimationData *anim = &animationLibrary[free_anim];
+	anim->tile_start = tile_start;
 	anim->tile_offset = tile_offset;
 	anim->frame_ct = frame_ct;
+	anim->facing_offset = facing_offset;
 	anim->flags = flags;
 	anim->cur_frame = 0;
 	free_anim++;
 	return anim;
 }
 
-void anim_set_info(AnimationData *anim, short tile_offset, u16 frame_ct, u8 flags)
+void anim_set_info(AnimationData *anim, int tile_start, short tile_offset, u16 frame_ct, int facing_offset, u8 flags)
 {
+	anim->tile_start = tile_start;
 	anim->tile_offset = tile_offset;
 	anim->frame_ct = frame_ct;
+	anim->facing_offset = facing_offset;
 	anim->flags = flags;
 	anim->cur_frame = 0;
 }
@@ -96,3 +105,4 @@ void anim_set_reversed(AnimationData *anim, bool reversed)
 	else
 		anim->flags &= ~ANIM_FLAG_REVERSED;
 }
+

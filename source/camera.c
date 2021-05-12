@@ -9,7 +9,9 @@
 #define CAMERA_BOUNDS_VERTICAL		32
 #define PLAYER_SIZE					16			// player size in pixels
 
-void update_camera_pos(int target_x, int target_y);
+void set_camera_pos(int target_x, int target_y);
+void camera_update_pos();
+void camera_set_target(GameObj *target);
 void camera_find_target(GameObj *target);
 extern void set_world_offset(int off_x, int off_y);
 
@@ -20,7 +22,9 @@ extern int world_offset_y;
 static int cam_bound_h = (SCREEN_HALF_WIDTH) - CAMERA_BOUNDS_HORIZONTAL;
 static int cam_bound_v = (SCREEN_HALF_HEIGHT) - CAMERA_BOUNDS_VERTICAL;
 
-void update_camera_pos(int target_x, int target_y)
+static GameObj *cam_target;
+
+void set_camera_pos(int target_x, int target_y)
 {
 	int cam_x = world_offset_x + SCREEN_HALF_WIDTH;
 	int cam_y = world_offset_y + SCREEN_HALF_HEIGHT;
@@ -51,7 +55,22 @@ void update_camera_pos(int target_x, int target_y)
 	set_world_offset(cam_x - SCREEN_HALF_WIDTH, cam_y - SCREEN_HALF_HEIGHT);
 }
 
+void camera_update_pos()
+{
+	if(cam_target != NULL)
+	{
+		Vector2 v = gameobj_get_pixel_pos(cam_target);
+		set_camera_pos(v.x, v.y);
+	}
+}
+
+void camera_set_target(GameObj *target)
+{
+	cam_target = target;
+}
+
 void camera_find_target(GameObj *target)
 {
-	update_camera_pos(target->pos_x, target->pos_y);
+	Vector2 v = gameobj_get_pixel_pos(target);
+	camera_update_pos(v.x, v.y);
 }

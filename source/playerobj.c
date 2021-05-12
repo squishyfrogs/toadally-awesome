@@ -2,6 +2,7 @@
 #include "game.h"
 #include "vector2.h"
 #include "direction.h"
+#include "input.h"
 #include "gameobj.h"
 #include "playerobj.h"
 #include "objhistory.h"
@@ -11,15 +12,17 @@
 #define PLAYER_START_X			5		// player starting location (temp)
 #define PLAYER_START_Y			5		// player starting location (temp)
 
+const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
+
 // main.c
 extern void action_update();
 // camera.c
-extern void update_camera_pos(int target_x, int target_y);
+extern void camera_set_target(GameObj *target);
 
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
 
-GameObj *get_player_obj();
+
 
 void playerobj_init();
 void playerobj_update();
@@ -31,13 +34,16 @@ void playerobj_update_movement();
 void player_update_current_tile();
 void player_set_tile_by_id(int tile_id);
 
+void set_push_obj(GameObj *obj);		// set current push obj
+void free_push_obj();					// free current push obj
+
 static GameObj *player_obj;
-static ObjHistory *playerobj_history;
+//static ObjHistory *playerobj_history;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
 
-static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
+//static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
 
 static bool player_moving;		// is the player currently moving? 
 
@@ -46,6 +52,8 @@ static Vector2 end_tile;		// end tile (for movement)
 static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
+
+GameObj *push_obj;				// object the player is currently pushing
 
 GameObj *get_player_obj()
 {
@@ -63,17 +71,20 @@ void playerobj_init()
 		ATTR1_SIZE_16x16, 
 		p_palette, 
 		p_tile_start, 
-		PLAYER_START_X*GAME_TILE_SIZE, PLAYER_START_Y*GAME_TILE_SIZE,
+		PLAYER_START_X, PLAYER_START_Y,
 		OBJPROP_SOLID
 		);
-	playerobj_history = register_obj_history(player_obj);
+	player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 0, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
 	player_update_current_tile();
+	push_obj = NULL;
+	camera_set_target(player_obj);
 	
 }
 
 void playerobj_update()
 {
-	move_playerobj(key_tri_horz(), key_tri_vert());
+	if(!input_locked())
+		move_playerobj(key_tri_horz(), key_tri_vert());
 	
 	if(player_moving)
 		playerobj_update_movement();
@@ -120,17 +131,17 @@ void move_playerobj(int input_x, int input_y)
 	
 	// update player facing direction
 	if(input_x > 0)
-		playerobj_set_facing(DIRECTION_EAST);
+		gameobj_set_facing(player_obj, DIRECTION_EAST);
 	else if(input_x < 0)
-		playerobj_set_facing(DIRECTION_WEST);
+		gameobj_set_facing(player_obj, DIRECTION_WEST);
 	else if(input_y > 0)
-		playerobj_set_facing(DIRECTION_SOUTH);
+		gameobj_set_facing(player_obj, DIRECTION_SOUTH);
 	else if(input_y < 0)
-		playerobj_set_facing(DIRECTION_NORTH);
+		gameobj_set_facing(player_obj, DIRECTION_NORTH);
 	
 	// update tile start and tile end 
-	start_tile.x = current_tile.x;
-	start_tile.y = current_tile.y;
+	start_tile.x = player_obj->tile_x;
+	start_tile.y = player_obj->tile_y;
 	end_tile.x = start_tile.x + input_x;
 	end_tile.y = start_tile.y + input_y;
 
@@ -167,8 +178,28 @@ void move_playerobj(int input_x, int input_y)
 		return;
 
 	// check that dest tile is empty
-	if(get_tile_contents(end_tile.x, end_tile.y) != NULL)
-		return;
+	GameObj *contents = get_tile_contents(end_tile.x, end_tile.y);
+	if(contents != NULL)
+	{
+		// attempt to move object
+		if(contents->obj_properties & OBJPROP_MOVABLE)
+		{
+			// check tile past obj
+			// TODO: Constrain this to map bounds
+			GameObj *far_tile_contents = get_tile_contents(end_tile.x + input_x, end_tile.y + input_y);
+			if(far_tile_contents == NULL || !(far_tile_contents->obj_properties & OBJPROP_SOLID))
+			{
+				// valid to push object
+				//place_obj_in_tile(contents, end_tile.x + input_x, end_tile.y + input_y);
+				remove_tile_contents(contents, end_tile.x, end_tile.y);
+				set_tile_contents(contents, end_tile.x + input_x, end_tile.y + input_y);
+				set_push_obj(contents);
+			}
+		}
+		// if immovable and solid
+		else if(contents->obj_properties & OBJPROP_SOLID)
+			return;
+	}
 
 	// reset offsets (should already be 0 but just in case)
 	offset.x = 0;
@@ -209,18 +240,20 @@ void playerobj_update_movement()
 	
 
 
-	int player_x = start_tile.x*GAME_TILE_SIZE + offset.x;
-	int player_y = start_tile.y*GAME_TILE_SIZE + offset.y;
-	gameobj_set_pixel_pos(player_obj, player_x, player_y - hop_offset);		// subtract hop_offset to show verticality
-	
+	gameobj_set_pixel_pos(player_obj, offset.x, offset.y - hop_offset);		// subtract hop_offset to show verticality
+	if(push_obj != NULL)
+	{
+		gameobj_set_pixel_pos(push_obj, offset.x, offset.y);
+	}
 
-	//move camera to follow player
-	update_camera_pos(player_x, player_y);
+
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
+		
 		player_update_current_tile();
 		player_moving = false;
+		free_push_obj();
 	}
 
 }
@@ -228,31 +261,31 @@ void playerobj_update_movement()
 void player_update_current_tile()
 {
 	// free players old tile
-	clear_tile_contents(current_tile.x, current_tile.y);
+	remove_tile_contents(player_obj, player_obj->tile_x, player_obj->tile_y);
 
-	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
-	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
+	if((player_obj->pixel_x >= GAME_TILE_SIZE) || (player_obj->pixel_x <= -GAME_TILE_SIZE))
+	{
+		player_obj->tile_x += (player_obj->pixel_x / GAME_TILE_SIZE);
+		player_obj->pixel_x %= GAME_TILE_SIZE;
+	}
+	if((player_obj->pixel_y >= GAME_TILE_SIZE) || (player_obj->pixel_y <= -GAME_TILE_SIZE))
+	{
+		player_obj->tile_y += (player_obj->pixel_y / GAME_TILE_SIZE);
+		player_obj->pixel_y %= GAME_TILE_SIZE;
+	}
+	
 	
 	// claim new tile
-	set_tile_contents(player_obj, current_tile.x, current_tile.y);
-	// save move to history
-	update_obj_history(playerobj_history, gameobj_get_facing(player_obj), current_tile.x, current_tile.y);
+	set_tile_contents(player_obj, player_obj->tile_x, player_obj->tile_y);
 }
 
-// TODO: cleanup and make generic for all gameobjs
-void player_set_tile_by_id(int tile_id)
+
+void set_push_obj(GameObj *obj)
 {
-	// free players old tile
-	//clear_tile_contents_by_id(tile_id);
-	clear_tile_contents(current_tile.x, current_tile.y);
-
-	
-	// claim new tile
-	set_tile_contents_by_id(player_obj, tile_id);
-	gameobj_set_tile_pos_by_id(player_obj, tile_id);
-
-	current_tile.x = player_obj->pos_x/GAME_TILE_SIZE;
-	current_tile.y = player_obj->pos_y/GAME_TILE_SIZE;
-	
+	push_obj = obj;
 }
 
+void free_push_obj()
+{
+	push_obj = NULL;
+}

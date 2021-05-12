@@ -1,6 +1,7 @@
 #ifndef PLAYEROBJ_H
 #define PLAYEROBJ_H
 
+#include "gameobj.h"
 #include "sprites/player.h"
 
 
@@ -11,6 +12,8 @@
 #define PLAYER_ASYMMETRIC		0		// set 1 if player sheet has unique west-facing sprites
 #define ALLOW_DIAGONAL			0		// set 1 to allow the player to move diagonally
 
-const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 
-#endif
+
+GameObj *get_player_obj();
+
+#endif //PLAYEROBJ_H

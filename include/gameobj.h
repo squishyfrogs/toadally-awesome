@@ -1,8 +1,10 @@
 #ifndef GAMEOBJ_H
 #define GAMEOBJ_H
 
+#include "vector2.h"
 #include "layers.h"
 #include "animation.h"
+#include "objhistory.h"
 
 #define OBJ_COUNT 128
 
@@ -22,20 +24,15 @@ typedef struct struct_GameObj {
 	u16 spr_shape;				// shape of sprite
 	u16 spr_size;				// size of sprite
 	
-	int pos_x, pos_y;			// position in world/screen space (pixels)
+	int tile_x, tile_y;			// position on map (in tiles) || ignored in FIXED_POS mode
+	int pixel_x, pixel_y;		// position relative to tile (in pixels) or position on screen if in FIXED_POS mode
 	int spr_off_x, spr_off_y;	// offset from top left pixel of sprite to top left corner of its position
 
 	u16 obj_properties;			// flags for various gameplay-related properties of a given gameobj
 
-	// anim
-	AnimationData *anim;		// animation data
-	//short anim_tile_offset;		// how many tiles to offset by per frame (should be same as sprite size in most cases) (set negative to reverse animation)
-	//u16 anim_frame_ct;			// frame count of current animation
-	//u16 anim_cur_frame;			// current frame of current animation
-	//u8 anim_flags;				// flags for various animation properties
+	ObjHistory *hist;			// object history - used for time travel
 
-	//bool play_anim;			// whether or not the animation is playing
-	//bool anim_looping;		// whether or not the animation loops on completion
+	AnimationData *anim;		// animation data
 
 } GameObj;
 
@@ -62,7 +59,6 @@ inline u16 objprop_is_time_immune(GameObj *obj)
 GameObj *init_gameobj();
 GameObj *init_gameobj_with_id(int obj_id);
 GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
-GameObj *init_gameobj_with_id_full(int obj_id, u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
 
 
 int mem_load_palette(const ushort *pal_data);
@@ -73,16 +69,18 @@ void gameobj_update_attr(GameObj *obj);
 void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
 
 void gameobj_set_property_flags(GameObj *obj, u16 properties);
-void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, bool looping);
+void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping);
 
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y);
 void gameobj_set_tile_pos(GameObj *obj, int x, int y);
 void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id);
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y);
 void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
+Vector2 gameobj_get_pixel_pos(GameObj *obj);															// get the pixel position of a GameObj as a Vector2
 
 void gameobj_set_facing(GameObj *obj, int facing);
 int gameobj_get_facing(GameObj *obj);
+
 
 
 

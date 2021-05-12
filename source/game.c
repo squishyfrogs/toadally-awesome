@@ -51,7 +51,7 @@ void init_objs()
 	int m_pal = mem_load_palette(marioPal);
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
 	mario = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, 0);
-	gameobj_set_anim_info(mario, 4, 16, true);
+	gameobj_set_anim_info(mario, 4, 16, 0, true);
 	anim_play(mario->anim);
 
 	// init crate
@@ -59,8 +59,7 @@ void init_objs()
 	int c_tile = mem_load_tiles(crateTiles, crateTilesLen);
 	crate = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
 	gameobj_set_sprite_offset(crate,0,8);
-	gameobj_set_tile_pos(crate, 2, 8);
-	set_tile_contents(crate, 2, 8);
+	place_obj_in_tile(crate, 6, 12);
 }
 
 void init_map()

@@ -22,6 +22,7 @@ extern void playerobj_update();
 extern void ui_update();
 extern void ui_update_anim();
 extern void update_world_pos();
+extern void camera_update_pos();
 // ui.c
 extern void increment_action_counter();
 // gameobj.c
@@ -29,6 +30,7 @@ extern void gameobj_push_all_updates();
 extern void gameobj_update_anim_all();
 // objhistory.c
 extern void history_clear_future();
+extern void history_update_all();
 
 
 void main_game_loop();
@@ -45,7 +47,9 @@ void animations_update();
 void game_update();
 void action_update();
 
-int current_turn();								// get the current turn
+int current_turn();									// get the current turn
+void set_current_turn(int turn_count);				// set the current turn
+
 
 
 static GameState game_state;						// what state the game is currently in
@@ -164,6 +168,9 @@ void game_start()
 	game_turns_elapsed = 0;
 	game_paused = false;
 	ui_start();
+	
+	// update all obj histories once
+	history_update_all();
 }
 
 
@@ -203,6 +210,7 @@ void game_update()
 	game_update_temp();				// update other gameobjs 
 	update_world_pos();				// push the map around
 	ui_update();
+	camera_update_pos();
 
 	// update gameobj attrs based on gameplay changes
 	gameobj_push_all_updates();
@@ -214,6 +222,8 @@ void action_update()
 {
 	// if an action was taken in the past, clear the previous future 
 	history_clear_future();
+	// update all obj histories
+	history_update_all();
 
 	game_turns_elapsed++;
 	// add an action to the counter
@@ -224,6 +234,11 @@ void action_update()
 int current_turn()
 {
 	return game_turns_elapsed;
+}
+
+void set_current_turn(int turn_count)
+{
+	game_turns_elapsed = turn_count;
 }
 
 
