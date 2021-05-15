@@ -2,8 +2,9 @@
 #include <tonc.h>
 #include "game.h"
 #include "direction.h"
-#include "animation.h"
 #include "gameobj.h"
+#include "objhistory.h"
+#include "animation.h"
 #include "map.h"
 
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
@@ -126,8 +127,8 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->spr_shape = ATTR0_SQUARE;
 	obj->spr_size = ATTR1_SIZE_16x16;	// assume 16x6 for default bc I really doubt anyone is regularly making 16x8 objects 
 
-	obj->tile_x = 0;
-	obj->tile_y = 0;
+	obj->tile_pos.x = 0;
+	obj->tile_pos.y = 0;
 
 	obj->anim = NULL;
 	//obj->anim = anim_create(ANIM_OFFSET_16x16, 1, 0);	// default offset for 16x16 sprite size
@@ -153,10 +154,10 @@ GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 		// assume it doesn't want an ObjHistory or the default offset, which is mostly intended for the map objs
 		obj->hist = NULL;
 		// FIXED_POS objs only use pixel pos
-		obj->tile_x = -1;
-		obj->tile_y = -1;
-		obj->pixel_x = x;
-		obj->pixel_y = y;
+		obj->tile_pos.x = -1;
+		obj->tile_pos.y = -1;
+		obj->pixel_pos.x = x;
+		obj->pixel_pos.y = y;
 	}
 	else
 	{
@@ -164,10 +165,10 @@ GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 		register_obj_history(obj);
 		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);
 		// set position as tile pos for non-FIXED_POS objs
-		obj->pixel_x = 0;
-		obj->pixel_y = 0;
-		obj->tile_x = x;
-		obj->tile_y = y;
+		obj->pixel_pos.x = 0;
+		obj->pixel_pos.y = 0;
+		obj->tile_pos.x = x;
+		obj->tile_pos.y = y;
 	}
 
 	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id));
@@ -199,14 +200,14 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 	if(properties & OBJPROP_FIXED_POS)
 	{
 		// FIXED_POS objs only use pixel pos
-		obj->pixel_x = x;
-		obj->pixel_y = y;
+		obj->pixel_pos.x = x;
+		obj->pixel_pos.y = y;
 	}
 	else
 	{
 		// set position as tile pos for non-FIXED_POS objs
-		obj->tile_x = x;
-		obj->tile_y = y;
+		obj->tile_pos.x = x;
+		obj->tile_pos.y = y;
 	}
 
 	u32 tid = obj->tile_id + (obj->anim->tile_offset * obj->anim->cur_frame);
@@ -236,16 +237,16 @@ void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int
 // set a GameObj's sprite offset
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y)
 {
-	obj->spr_off_x = x;
-	obj->spr_off_y = y;
+	obj->spr_off.x = x;
+	obj->spr_off.y = y;
 	gameobj_update_pos(obj);
 }
 
 // set a GameObj's tile position
 void gameobj_set_tile_pos(GameObj *obj, int x, int y)
 {
-	obj->tile_x = x;
-	obj->tile_y = y;
+	obj->tile_pos.x = x;
+	obj->tile_pos.y = y;
 	gameobj_update_pos(obj);
 }
 
@@ -262,26 +263,26 @@ void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id)
 // set a GameObj's position to new values
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y)
 {
-	obj->pixel_x = x;
-	obj->pixel_y = y;
+	obj->pixel_pos.x = x;
+	obj->pixel_pos.y = y;
 	gameobj_update_pos(obj);
 }
 
 // translate a GameObj by (x,y)
 void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y)
 {
-	obj->pixel_x += move_x;
-	obj->pixel_y += move_y;
+	obj->pixel_pos.x += move_x;
+	obj->pixel_pos.y += move_y;
 	gameobj_update_pos(obj);
 }
 
 // update a GameObj's attrs based on its current position
 void gameobj_update_pos(GameObj *obj)
 {
-	int pos_x = (obj->tile_x * GAME_TILE_SIZE) + obj->pixel_x - obj->spr_off_x - world_offset_x;
-	int pos_y = (obj->tile_y * GAME_TILE_SIZE) + obj->pixel_y - obj->spr_off_y - world_offset_y;
+	int pos_x = (obj->tile_pos.x * GAME_TILE_SIZE) + obj->pixel_pos.x - obj->spr_off.x - world_offset_x;
+	int pos_y = (obj->tile_pos.y * GAME_TILE_SIZE) + obj->pixel_pos.y - obj->spr_off.y - world_offset_y;
 	if(obj->obj_properties & OBJPROP_FIXED_POS)
-		obj_set_pos(obj->attr, obj->pixel_x - obj->spr_off_x, obj->pixel_y - obj->spr_off_y);
+		obj_set_pos(obj->attr, obj->pixel_pos.x - obj->spr_off.x, obj->pixel_pos.y - obj->spr_off.y);
 	else
 		obj_set_pos(obj->attr, pos_x, pos_y);
 }
@@ -293,17 +294,28 @@ Vector2 gameobj_get_pixel_pos(GameObj *obj)
 	Vector2 v;
 	if(obj->obj_properties & OBJPROP_FIXED_POS)
 	{
-		v.x = obj->pixel_x;
-		v.y = obj->pixel_y;
+		v.x = obj->pixel_pos.x;
+		v.y = obj->pixel_pos.y;
 	}
 	else
 	{
-		v.x = (obj->tile_x * GAME_TILE_SIZE) + obj->pixel_x;
-		v.y = (obj->tile_y * GAME_TILE_SIZE) + obj->pixel_y;
+		v.x = (obj->tile_pos.x * GAME_TILE_SIZE) + obj->pixel_pos.x;
+		v.y = (obj->tile_pos.y * GAME_TILE_SIZE) + obj->pixel_pos.y;
 	}
 	return v;
 }
 
+// 
+void gameobj_update_current_tile(GameObj *obj)
+{
+	int x = obj->pixel_pos.x / GAME_TILE_SIZE;
+	int y = obj->pixel_pos.y / GAME_TILE_SIZE;
+	obj->tile_pos.x += x;
+	obj->pixel_pos.x -= (x * GAME_TILE_SIZE);
+
+	obj->tile_pos.y += y;
+	obj->pixel_pos.y -= (y * GAME_TILE_SIZE);
+}
 
 //////////////
 /// Facing ///

@@ -23,14 +23,16 @@ extern void ui_update();
 extern void ui_update_anim();
 extern void update_world_pos();
 extern void camera_update_pos();
-// ui.c
-extern void increment_action_counter();
 // gameobj.c
 extern void gameobj_push_all_updates();
 extern void gameobj_update_anim_all();
 // objhistory.c
 extern void history_clear_future();
 extern void history_update_all();
+extern int turn_count_get();
+extern void turn_count_set(int turn_count);
+extern void turn_count_increment();
+extern void turn_count_decrement();
 
 
 void main_game_loop();
@@ -40,12 +42,13 @@ void game_init();
 void reg_init();
 void timer_init();
 
-void game_start();	// after initializing everything, this is called to set the game in motion, then we enter the game loop
+void game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
-void animations_update();
-void game_update();
-void action_update();
+void animations_update();							// update graphics and animation
+void game_update();									// update gameplay elements
+void action_update();								// update that occurs when the player takes an action
+void finalize_turn();								// update that occurs after all pieces have settled
 
 int current_turn();									// get the current turn
 void set_current_turn(int turn_count);				// set the current turn
@@ -53,7 +56,6 @@ void set_current_turn(int turn_count);				// set the current turn
 
 
 static GameState game_state;						// what state the game is currently in
-static int game_turns_elapsed;						// prevents rewinding past the beginning of the game
 static bool game_paused;							
 
 // placeholder
@@ -165,7 +167,7 @@ void timer_init()
 
 void game_start()
 {
-	game_turns_elapsed = 0;
+	turn_count_set(0);
 	game_paused = false;
 	ui_start();
 	
@@ -217,30 +219,21 @@ void game_update()
 }
 
 
-// update that occurs after the player takes an action
+// update that occurs when the player takes an action
 void action_update()
 {
 	// if an action was taken in the past, clear the previous future 
 	history_clear_future();
+}
+
+// update that occurs after all pieces have settled
+void finalize_turn()
+{
 	// update all obj histories
 	history_update_all();
 
-	game_turns_elapsed++;
-	// add an action to the counter
-	increment_action_counter();
+	turn_count_increment();
 }
-
-
-int current_turn()
-{
-	return game_turns_elapsed;
-}
-
-void set_current_turn(int turn_count)
-{
-	game_turns_elapsed = turn_count;
-}
-
 
 /////////////////////////////
 /// Testing & Placeholder ///

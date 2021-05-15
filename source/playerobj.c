@@ -16,6 +16,7 @@ const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 
 // main.c
 extern void action_update();
+extern void finalize_turn();
 // camera.c
 extern void camera_set_target(GameObj *target);
 
@@ -27,8 +28,6 @@ extern void gameobj_push_changes(GameObj *obj);
 void playerobj_init();
 void playerobj_update();
 
-void playerobj_set_facing(int dir);
-void playerobj_update_sprite_direction();
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
 void player_update_current_tile();
@@ -91,32 +90,6 @@ void playerobj_update()
 }
 
 
-// set which direction the player is facing 
-void playerobj_set_facing(int dir)
-{
-	gameobj_set_facing(player_obj, dir);
-	playerobj_update_sprite_direction();
-}
-
-void playerobj_update_sprite_direction()
-{
-	int dir = gameobj_get_facing(player_obj);
-	if(!PLAYER_ASYMMETRIC)
-	{
-		if(dir == DIRECTION_WEST)
-		{
-			dir = DIRECTION_EAST;
-			gameobj_set_flip_h(player_obj, true);
-		}
-		else
-		{
-			gameobj_set_flip_h(player_obj, false);
-		}
-	}
-	player_obj->tile_id = p_tile_start + PLAYER_TILE_OFFSET * (dir * PLAYER_FACING_OFFSET);
-	gameobj_push_changes(player_obj);
-}
-
 // apply dpad inputs to the player and attempt to move them
 void move_playerobj(int input_x, int input_y)
 {
@@ -140,8 +113,8 @@ void move_playerobj(int input_x, int input_y)
 		gameobj_set_facing(player_obj, DIRECTION_NORTH);
 	
 	// update tile start and tile end 
-	start_tile.x = player_obj->tile_x;
-	start_tile.y = player_obj->tile_y;
+	start_tile.x = player_obj->tile_pos.x;
+	start_tile.y = player_obj->tile_pos.y;
 	end_tile.x = start_tile.x + input_x;
 	end_tile.y = start_tile.y + input_y;
 
@@ -250,10 +223,16 @@ void playerobj_update_movement()
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
-		
 		player_update_current_tile();
 		player_moving = false;
-		free_push_obj();
+		if(push_obj)
+		{
+			gameobj_update_current_tile(push_obj);
+			free_push_obj();
+		}
+		
+		// finalize the turn when all objects come to rest
+
 	}
 
 }
@@ -261,22 +240,22 @@ void playerobj_update_movement()
 void player_update_current_tile()
 {
 	// free players old tile
-	remove_tile_contents(player_obj, player_obj->tile_x, player_obj->tile_y);
+	remove_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
 
-	if((player_obj->pixel_x >= GAME_TILE_SIZE) || (player_obj->pixel_x <= -GAME_TILE_SIZE))
+	if((player_obj->pixel_pos.x >= GAME_TILE_SIZE) || (player_obj->pixel_pos.x <= -GAME_TILE_SIZE))
 	{
-		player_obj->tile_x += (player_obj->pixel_x / GAME_TILE_SIZE);
-		player_obj->pixel_x %= GAME_TILE_SIZE;
+		player_obj->tile_pos.x += (player_obj->pixel_pos.x / GAME_TILE_SIZE);
+		player_obj->pixel_pos.x %= GAME_TILE_SIZE;
 	}
-	if((player_obj->pixel_y >= GAME_TILE_SIZE) || (player_obj->pixel_y <= -GAME_TILE_SIZE))
+	if((player_obj->pixel_pos.y >= GAME_TILE_SIZE) || (player_obj->pixel_pos.y <= -GAME_TILE_SIZE))
 	{
-		player_obj->tile_y += (player_obj->pixel_y / GAME_TILE_SIZE);
-		player_obj->pixel_y %= GAME_TILE_SIZE;
+		player_obj->tile_pos.y += (player_obj->pixel_pos.y / GAME_TILE_SIZE);
+		player_obj->pixel_pos.y %= GAME_TILE_SIZE;
 	}
 	
 	
 	// claim new tile
-	set_tile_contents(player_obj, player_obj->tile_x, player_obj->tile_y);
+	set_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
 }
 
 

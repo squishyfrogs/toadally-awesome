@@ -4,7 +4,6 @@
 #include "vector2.h"
 #include "layers.h"
 #include "animation.h"
-#include "objhistory.h"
 
 #define OBJ_COUNT 128
 
@@ -14,25 +13,25 @@ typedef struct struct_GameObj {
 	int obj_id;
 	OBJ_ATTR *attr;
 
-	//u16 attr0;				// AABC DDEE FFFF FFFF || A = SHAPE, B = COLORMODE, C = MOSAIC, D = GFXMODE, E = OBJMODE, F = YPOS
-	//u16 attr1;				// AABC xxxD DDDD DDDD || A = SIZE, B = VFLIP, C = HFLIP, D = XPOS || BCxxx = AFFINDEX
-	//u16 attr2;				// AAAA BBCC CCCC CCCC || A = PALBANK, B = PRIORITY, C = TILEINDEX
+	//u16 attr0;						// AABC DDEE FFFF FFFF || A = SHAPE, B = COLORMODE, C = MOSAIC, D = GFXMODE, E = OBJMODE, F = YPOS
+	//u16 attr1;						// AABC xxxD DDDD DDDD || A = SIZE, B = VFLIP, C = HFLIP, D = XPOS || BCxxx = AFFINDEX
+	//u16 attr2;						// AAAA BBCC CCCC CCCC || A = PALBANK, B = PRIORITY, C = TILEINDEX
 
-	u32 tile_id;				// index of upperleft tile in obj memory
-	u16 pal_bank_id;			// index of palette in pal memory
-	u8 layer_priority;			// draw order layer_priority in layer (0 = drawn on top)
-	u16 spr_shape;				// shape of sprite
-	u16 spr_size;				// size of sprite
+	u32 tile_id;						// index of upperleft tile in obj memory
+	u16 pal_bank_id;					// index of palette in pal memory
+	u8 layer_priority;					// draw order layer_priority in layer (0 = drawn on top)
+	u16 spr_shape;						// shape of sprite
+	u16 spr_size;						// size of sprite
 	
-	int tile_x, tile_y;			// position on map (in tiles) || ignored in FIXED_POS mode
-	int pixel_x, pixel_y;		// position relative to tile (in pixels) or position on screen if in FIXED_POS mode
-	int spr_off_x, spr_off_y;	// offset from top left pixel of sprite to top left corner of its position
+	Vector2 tile_pos;					// position on map (in tiles) || ignored in FIXED_POS mode
+	Vector2 pixel_pos;					// position relative to tile (in pixels) or position on screen if in FIXED_POS mode
+	Vector2 spr_off;					// offset from top left pixel of sprite to top left corner of its position
 
-	u16 obj_properties;			// flags for various gameplay-related properties of a given gameobj
+	u16 obj_properties;					// flags for various gameplay-related properties of a given gameobj
 
-	ObjHistory *hist;			// object history - used for time travel
+	AnimationData *anim;				// animation data
+	struct struct_ObjHistory *hist;		// object history - used for time travel
 
-	AnimationData *anim;		// animation data
 
 } GameObj;
 
@@ -77,6 +76,7 @@ void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id);
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y);
 void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
 Vector2 gameobj_get_pixel_pos(GameObj *obj);															// get the pixel position of a GameObj as a Vector2
+void gameobj_update_current_tile(GameObj *obj);
 
 void gameobj_set_facing(GameObj *obj, int facing);
 int gameobj_get_facing(GameObj *obj);
