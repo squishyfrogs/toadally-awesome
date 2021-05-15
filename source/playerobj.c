@@ -232,7 +232,7 @@ void playerobj_update_movement()
 		}
 		
 		// finalize the turn when all objects come to rest
-
+		finalize_turn();
 	}
 
 }
