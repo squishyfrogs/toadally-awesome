@@ -183,6 +183,8 @@ void move_playerobj(int input_x, int input_y)
 	mov.x = input_x * PLAYER_MOVE_SPEED;
 	mov.y = input_y * PLAYER_MOVE_SPEED;
 
+	// lock inputs
+	input_lock();
 	// mark player as moving
 	player_moving = true;
 	// perform an action update

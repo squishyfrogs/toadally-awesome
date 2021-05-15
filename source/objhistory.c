@@ -188,7 +188,7 @@ void set_game_to_turn(int turns_ago)
 {
 	
 	// i guess???
-	map_clear_contents();
+	//map_clear_contents();
 
 	// move all objects to their proper positions for the selected turn
 	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
@@ -210,13 +210,13 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	if(objprop_is_time_immune(history->game_obj))
 		return;
 
-	int tile_id = history_get_tile_id_at_time(history, current_turns_ago);
 	// clear old tiles
-	//remove_tile_contents_by_id(history->game_obj, tile_id);
-	//remove_tile_contents_by_id(history->game_obj, history->game_obj->tile_id);
+	int tile_id = history_get_tile_id_at_time(history, current_turns_ago);
+	remove_tile_contents_by_id(history->game_obj, tile_id);
 	// enter new tile
 	tile_id = history_get_tile_id_at_time(history, new_turns_ago);
-	gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
+	//gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
+	place_obj_in_tile_by_id(history->game_obj, tile_id);
 	
 	int facing = history_get_facing_at_time(history, new_turns_ago);
 	gameobj_set_facing(history->game_obj, facing);

@@ -3,6 +3,7 @@
 
 #include "layers.h"
 #include "game.h"
+#include "input.h"
 
 
 
@@ -233,6 +234,8 @@ void finalize_turn()
 	history_update_all();
 
 	turn_count_increment();
+
+	input_unlock();
 }
 
 /////////////////////////////

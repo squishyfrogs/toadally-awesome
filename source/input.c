@@ -1,19 +1,19 @@
 #include "input.h"
 
 
-static bool input_lock = false;
+static bool inp_lck = false;
 
-void lock_input()
+void input_lock()
 {
-	input_lock = 1;
+	inp_lck = true;
 }
 
-void unlock_input()
+void input_unlock()
 {
-	input_lock = 0;
+	inp_lck = false;
 }
 
 bool input_locked()
 {
-	return input_lock;
+	return inp_lck;
 }
