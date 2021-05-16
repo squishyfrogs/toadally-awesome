@@ -31,8 +31,6 @@ typedef struct struct_GameObj {
 
 	AnimationData *anim;				// animation data
 	struct struct_ObjHistory *hist;		// object history - used for time travel
-
-
 } GameObj;
 
 /////////////////////////
@@ -41,18 +39,22 @@ typedef struct struct_GameObj {
 #define OBJPROP_SOLID			0x0001		// does the object take up a tile, or can the player/another object step on it?
 #define OBJPROP_PICKUP			0x0002		// does the object get destroyed when the player eats/steps on it?
 #define OBJPROP_MOVABLE			0x0004		// can the player push this object by walking into it?
-#define OBJPROP_EDIBLE			0x0008		// can the frog consume this?
+#define OBJPROP_MOVING			0x0008		// is the object currently moving
 
-#define OBJPROP_TIME_IMMUNITY	0x1000		// grants immunity to time-based shenanigans
-#define OBJPROP_FIXED_POS		0x2000		// does the object remain in a fixed position on screen? (mostly for UI elements)
+#define OBJPROP_EDIBLE			0x0010		// can the frog consume this?
+
+#define OBJPROP_TIME_IMMUNITY	0x0400		// grants immunity to time-based shenanigans
+#define OBJPROP_FIXED_POS		0x0800		// does the object remain in a fixed position on screen? (mostly for UI elements)
+// last 4 bits are treated a little differently
+#define OBJPROP_FACING_MASK		0x3000		// bits 13+14 refer to the direction the GameObj is facing (see direction.h for specific values)
+#define OBJPROP_FACING_BIT_OFFSET	12
+#define OBJPROP_MOVING_MASK		0xC000		// bits 15+16 refer to the direction the GameObj is moving (see direction.h for specific values)
+#define OBJPROP_MOVING_BIT_OFFSET	14
 
 inline u16 objprop_is_time_immune(GameObj *obj)
 {
 	return (obj->obj_properties & OBJPROP_TIME_IMMUNITY);
 };
-
-// the final two bits are reserved and refer to the direction the GameObj is facing (see direction.h for specific values)
-//
 /////////////////////////
 
 GameObj *init_gameobj();
@@ -63,7 +65,7 @@ GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 int mem_load_palette(const ushort *pal_data);
 int mem_load_tiles(const ushort *tile_data, int data_len);
 
-
+void gameobj_main_update(GameObj *obj);
 void gameobj_update_attr(GameObj *obj);
 void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
 
@@ -78,10 +80,16 @@ void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
 Vector2 gameobj_get_pixel_pos(GameObj *obj);															// get the pixel position of a GameObj as a Vector2
 void gameobj_update_current_tile(GameObj *obj);
 
+
 void gameobj_set_facing(GameObj *obj, int facing);
 int gameobj_get_facing(GameObj *obj);
 
-
+void gameobj_set_move_dir(GameObj *obj, int move_dir);
+int gameobj_get_move_dir(GameObj *obj);
+void gameobj_set_moving(GameObj *obj, bool moving, int move_dir);
+void gameobj_set_moving_vec(GameObj *obj, bool moving, Vector2 move_dir);
+bool gameobj_is_moving(GameObj *obj);
+bool gameobj_all_at_rest();
 
 
 void gameobj_flip_h(GameObj *obj);

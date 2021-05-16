@@ -6,7 +6,7 @@
 #include "input.h"
 
 
-
+// game.c
 extern void init_objs();	//temp
 extern void init_map();		//temp
 extern void game_update_temp();	//temp
@@ -25,8 +25,10 @@ extern void ui_update_anim();
 extern void update_world_pos();
 extern void camera_update_pos();
 // gameobj.c
-extern void gameobj_push_all_updates();
+extern void gameobj_update_all();
 extern void gameobj_update_anim_all();
+extern void gameobj_push_all_updates();
+extern bool gameobj_all_at_rest();
 // objhistory.c
 extern void history_clear_future();
 extern void history_update_all();
@@ -51,13 +53,12 @@ void game_update();									// update gameplay elements
 void action_update();								// update that occurs when the player takes an action
 void finalize_turn();								// update that occurs after all pieces have settled
 
-int current_turn();									// get the current turn
-void set_current_turn(int turn_count);				// set the current turn
-
+void set_turn_active();
 
 
 static GameState game_state;						// what state the game is currently in
 static bool game_paused;							
+static bool turn_active;		
 
 // placeholder
 void test_init_tte_se4();
@@ -170,6 +171,7 @@ void game_start()
 {
 	turn_count_set(0);
 	game_paused = false;
+	turn_active = false;
 	ui_start();
 	
 	// update all obj histories once
@@ -210,10 +212,18 @@ void game_update()
 	// gameplay update functions go out here
 	update_text_temp();
 	playerobj_update();				// update player first
-	game_update_temp();				// update other gameobjs 
+	gameobj_update_all();			// update gameobj movement
+	game_update_temp();				
 	update_world_pos();				// push the map around
-	ui_update();
 	camera_update_pos();
+	ui_update();
+
+	// finalize the turn when all objects come to rest
+	if(turn_active && gameobj_all_at_rest())
+	{
+		finalize_turn();
+		turn_active = false;
+	}
 
 	// update gameobj attrs based on gameplay changes
 	gameobj_push_all_updates();
@@ -237,6 +247,24 @@ void finalize_turn()
 
 	input_unlock();
 }
+
+// set the game state to "objects are moving"
+void set_turn_active()
+{
+	turn_active = true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////
 /// Testing & Placeholder ///

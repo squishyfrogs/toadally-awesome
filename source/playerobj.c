@@ -17,6 +17,7 @@ const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 // main.c
 extern void action_update();
 extern void finalize_turn();
+extern void set_turn_active();
 // camera.c
 extern void camera_set_target(GameObj *target);
 
@@ -164,9 +165,11 @@ void move_playerobj(int input_x, int input_y)
 			{
 				// valid to push object
 				//place_obj_in_tile(contents, end_tile.x + input_x, end_tile.y + input_y);
-				remove_tile_contents(contents, end_tile.x, end_tile.y);
-				set_tile_contents(contents, end_tile.x + input_x, end_tile.y + input_y);
-				set_push_obj(contents);
+				//remove_tile_contents(contents, end_tile.x, end_tile.y);
+				//set_tile_contents(contents, end_tile.x + input_x, end_tile.y + input_y);
+				//set_push_obj(contents);
+				gameobj_set_moving(contents, true, ints_to_dir(input_x, input_y));
+				return;
 			}
 		}
 		// if immovable and solid
@@ -185,6 +188,8 @@ void move_playerobj(int input_x, int input_y)
 
 	// lock inputs
 	input_lock();
+	// set the turn active
+	set_turn_active();
 	// mark player as moving
 	player_moving = true;
 	// perform an action update
@@ -216,9 +221,11 @@ void playerobj_update_movement()
 
 
 	gameobj_set_pixel_pos(player_obj, offset.x, offset.y - hop_offset);		// subtract hop_offset to show verticality
+
+
 	if(push_obj != NULL)
 	{
-		gameobj_set_pixel_pos(push_obj, offset.x, offset.y);
+		//gameobj_set_pixel_pos(push_obj, offset.x, offset.y);
 	}
 
 
@@ -229,12 +236,10 @@ void playerobj_update_movement()
 		player_moving = false;
 		if(push_obj)
 		{
-			gameobj_update_current_tile(push_obj);
+		//	gameobj_update_current_tile(push_obj);
 			free_push_obj();
 		}
 		
-		// finalize the turn when all objects come to rest
-		finalize_turn();
 	}
 
 }

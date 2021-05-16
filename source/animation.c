@@ -5,7 +5,7 @@ extern void gameobj_push_changes(GameObj *obj);
 
 #define MAX_ANIM_COUNT 64
 
-void gameobj_update_facing(GameObj *obj);
+void gameobj_update_sprite_facing(GameObj *obj);
 
 AnimationData animationLibrary[MAX_ANIM_COUNT]; 
 static int free_anim = 0;

@@ -10,11 +10,14 @@
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
 
 void gameobj_init_all();
+void gameobj_update_all();
+void gameobj_update(GameObj *obj);
+void gameobj_update_movement(GameObj *obj);
 void gameobj_update_anim_all();
 void gameobj_push_all_updates();
 
 void gameobj_update_pos(GameObj *obj);
-void gameobj_update_facing(GameObj *obj);							// updates a GameObj's sprite after changing direction
+void gameobj_update_sprite_facing(GameObj *obj);							// updates a GameObj's sprite after changing direction
 void gameobj_push_changes(GameObj *obj);
 
 extern void objhistory_init();
@@ -51,6 +54,22 @@ void gameobj_init_all()
 ////////////////////////
 /// UPDATE FUNCTIONS ///
 ////////////////////////
+
+// update all GameObj motion/interaction (once per vsync)
+void gameobj_update_all()
+{
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		gameobj_update(&obj_list[i]);
+	}
+}
+
+// update a single GameObj
+void gameobj_update(GameObj *obj)
+{
+	if(gameobj_is_moving(obj))
+		gameobj_update_movement(obj);
+}
 
 
 // update all GameObj animations (once per (vsync / anim_speed))
@@ -176,7 +195,6 @@ GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 
 	return obj;
 }
-
 
 
 
@@ -310,11 +328,17 @@ void gameobj_update_current_tile(GameObj *obj)
 {
 	int x = obj->pixel_pos.x / GAME_TILE_SIZE;
 	int y = obj->pixel_pos.y / GAME_TILE_SIZE;
+
+	remove_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
+
 	obj->tile_pos.x += x;
 	obj->pixel_pos.x -= (x * GAME_TILE_SIZE);
 
 	obj->tile_pos.y += y;
 	obj->pixel_pos.y -= (y * GAME_TILE_SIZE);
+
+	
+	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
 }
 
 //////////////
@@ -323,22 +347,22 @@ void gameobj_update_current_tile(GameObj *obj)
 
 void gameobj_set_facing(GameObj *obj, int facing)
 {
-	facing = (facing & 0x0003) << 14;
-	obj->obj_properties = obj->obj_properties & 0x3FFF;
+	facing = (facing & 0x0003) << OBJPROP_FACING_BIT_OFFSET;
+	obj->obj_properties = obj->obj_properties & ~(0x0003 << OBJPROP_FACING_BIT_OFFSET);
 	obj->obj_properties = obj->obj_properties | facing;
 
-	gameobj_update_facing(obj);
+	gameobj_update_sprite_facing(obj);
 }
 
 int gameobj_get_facing(GameObj *obj)
 {
 	int props = obj->obj_properties;
-	props = (props & 0xC000) >> 14;
+	props = (props >> OBJPROP_FACING_BIT_OFFSET) & 0x0003;
 	return props;
 }
 
 // updates a GameObj's sprite after changing direction
-void gameobj_update_facing(GameObj *obj)
+void gameobj_update_sprite_facing(GameObj *obj)
 {
 	if(obj == NULL || obj->anim == NULL)
 		return;
@@ -359,6 +383,91 @@ void gameobj_update_facing(GameObj *obj)
 	gameobj_push_changes(obj);
 }
 
+
+////////////////
+/// Move Dir ///
+////////////////
+
+void gameobj_set_move_dir(GameObj *obj, int move_dir)
+{
+	move_dir = (move_dir & 0x0003) << OBJPROP_MOVING_BIT_OFFSET;
+	obj->obj_properties = obj->obj_properties & ~(0x0003 << OBJPROP_MOVING_BIT_OFFSET);
+	obj->obj_properties = obj->obj_properties | move_dir;
+
+	gameobj_update_sprite_facing(obj);
+}
+
+int gameobj_get_move_dir(GameObj *obj)
+{
+	int props = obj->obj_properties;
+	props = (props >> OBJPROP_MOVING_BIT_OFFSET) & 0x0003;
+	return props;
+}
+
+void gameobj_set_moving(GameObj *obj, bool moving, int move_dir)
+{
+	if(obj == NULL)
+		return;
+	if(moving)
+	{
+		gameobj_set_move_dir(obj, move_dir);
+		obj->obj_properties |= OBJPROP_MOVING;
+	}
+	else
+		obj->obj_properties &= ~OBJPROP_MOVING;
+}
+
+void gameobj_set_moving_vec(GameObj *obj, bool moving, Vector2 move_dir)
+{
+	if(obj == NULL)
+		return;
+	if(moving)
+	{
+		gameobj_set_move_dir(obj, vec_to_dir(move_dir));
+		obj->obj_properties |= OBJPROP_MOVING;
+	}
+	else
+		obj->obj_properties &= ~OBJPROP_MOVING;
+}
+
+bool gameobj_is_moving(GameObj *obj)
+{
+	return (obj->obj_properties & OBJPROP_MOVING) != 0;
+}
+
+void gameobj_update_movement(GameObj *obj)
+{
+	if(!gameobj_is_moving(obj))
+		return;
+	Vector2 mov = dir_to_vec(gameobj_get_move_dir(obj));
+	Vector2 offset;
+	// TODO: add move speed or something here
+	offset.x = obj->pixel_pos.x + mov.x;
+	offset.y = obj->pixel_pos.y + mov.y;
+	if((offset.x >= GAME_TILE_SIZE) || (offset.x <= -GAME_TILE_SIZE))
+		mov.x = 0;
+	if((offset.y >= GAME_TILE_SIZE) || (offset.y <= -GAME_TILE_SIZE))
+		mov.y = 0;
+
+	gameobj_set_pixel_pos(obj, offset.x, offset.y);	
+	
+	if(mov.x == 0 && mov.y == 0)
+	{
+		gameobj_update_current_tile(obj);
+		gameobj_set_moving(obj, false, 0);
+	}
+}
+
+// returns true if no gameobjs are in motion (used to check for turn end)
+bool gameobj_all_at_rest()
+{
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		if(gameobj_is_moving(&obj_list[i]))
+			return false;
+	}
+	return true;
+}
 
 /////////////
 /// Flips ///
