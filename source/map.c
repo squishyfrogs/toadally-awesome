@@ -120,6 +120,20 @@ GameObj *get_tile_contents(int tile_x, int tile_y)
 	return map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)];
 }
 
+// returns true if the tile is within map bounds and can be entered
+bool check_tile_free(int tile_x, int tile_y)
+{
+	// make sure tile is within map bounds
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return false;
+	// make sure tile has a valid height
+	ushort height = get_tile_col_info(tile_x, tile_y);
+	if(height == 0)
+		return false;
+
+	return (map_contents[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)] == NULL);
+}
+
 // set the contents of a given tile, only succeeds if tile is empty
 bool set_tile_contents(GameObj *obj, int tile_x, int tile_y)
 {

@@ -12,9 +12,12 @@ void ui_start();
 void ui_update();
 
 void reset_action_count();
+void set_action_count_immediate(int count);
 void set_action_count(int count);
 void increment_action_counter();
 void decrement_action_counter();
+void ui_animate_gear_forward();
+void ui_animate_gear_backward();
 
 
 int ui_palette;										// shared palette for ui elements
@@ -28,7 +31,9 @@ int ui_palette;										// shared palette for ui elements
 GameObj *action_counter[ACTION_COUNTER_DIGITS];		// action counter objects
 int a_tile;											// tile of digit 0 
 
-static int action_count = 0;						// count of actions 
+
+static int true_action_count = 0;					// the actual action count, for gameplay purposes
+static int displayed_action_count = 0;				// the displayed action count, which will roll up or down until reaching the true action count
 static int count_rolling;							// whether or not to animate the counter changing (and in which direction)
 static int c_frame = 0;
 
@@ -145,7 +150,7 @@ void ui_update_anim()
 		action_counter[2]->tile_id = a_tile + f_offset;
 		
 		//if rolling up to a 0 or down to a 9
-		if(((count_rolling > 0) && (action_count % 10 == 0)) || ((count_rolling < 0) && (action_count % 10 == 9)))
+		if(((count_rolling > 0) && (displayed_action_count % 10 == 0)) || ((count_rolling < 0) && (displayed_action_count % 10 == 9)))
 		{
 			// update tens digit as well
 			f_offset = action_counter[1]->tile_id - a_tile;
@@ -153,7 +158,7 @@ void ui_update_anim()
 			action_counter[1]->tile_id = a_tile + f_offset;
 
 			//repeat process for hundreds digit
-			if(((count_rolling > 0) && (action_count % 100 == 0)) || ((count_rolling < 0) && (action_count % 100 == 99)))
+			if(((count_rolling > 0) && (displayed_action_count % 100 == 0)) || ((count_rolling < 0) && (displayed_action_count % 100 == 99)))
 			{
 				f_offset = action_counter[0]->tile_id - a_tile;
 				f_offset = ((10 * DIGIT_ANIM_LENGTH) + (f_offset + count_rolling)) % (10 * DIGIT_ANIM_LENGTH);
@@ -165,8 +170,12 @@ void ui_update_anim()
 		if(c_frame == DIGIT_ANIM_LENGTH)
 		{
 			c_frame = 0;
-			count_rolling = 0;
-			set_action_count(action_count);		//should be redundant if everything works properly, but just in case
+			displayed_action_count += count_rolling;
+			if(displayed_action_count == true_action_count)
+			{
+				count_rolling = 0;
+				set_action_count_immediate(true_action_count);		//should be redundant if everything works properly, but just in case
+			}
 		}
 	}
 
@@ -177,7 +186,8 @@ void ui_update_anim()
 
 void reset_action_count()
 {
-	action_count = 0;
+	true_action_count = 0;
+	displayed_action_count = 0;
 	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
 	{
 		action_counter[i]->tile_id = a_tile;
@@ -185,10 +195,10 @@ void reset_action_count()
 	}
 }
 
-
-void set_action_count(int count)
+void set_action_count_immediate(int count)
 {
-	action_count = count;
+	true_action_count = count;
+	displayed_action_count = count;
 	// hundreds digit
 	action_counter[0]->tile_id = a_tile + (DIGIT_ANIM_LENGTH * ((count / 100) % 10));
 	gameobj_update_attr(action_counter[0]);
@@ -200,18 +210,45 @@ void set_action_count(int count)
 	gameobj_update_attr(action_counter[2]);
 }
 
+void set_action_count(int count)
+{
+	true_action_count = count;
+	if(true_action_count < displayed_action_count)
+	{
+		count_rolling = -1;
+		c_frame = 0;
+		ui_animate_gear_backward();
+	}
+	if(true_action_count > displayed_action_count)
+	{
+		count_rolling = 1;
+		c_frame = 0;
+		ui_animate_gear_forward();
+	}
+}
+
 void increment_action_counter()
 {
-	action_count++;
+	displayed_action_count++;
 	count_rolling = 1;
 	c_frame = 0;
-	anim_play_forward(gear->anim);
+	ui_animate_gear_forward();
 }
 
 void decrement_action_counter()
 {
-	action_count--;
+	displayed_action_count--;
 	count_rolling = -1;
 	c_frame = 0;
+	ui_animate_gear_backward();
+}
+
+void ui_animate_gear_forward()
+{
+	anim_play_forward(gear->anim);
+}
+
+void ui_animate_gear_backward()
+{
 	anim_play_reversed(gear->anim);
 }

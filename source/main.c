@@ -11,17 +11,22 @@ extern void init_objs();	//temp
 extern void init_map();		//temp
 extern void game_update_temp();	//temp
 
-extern void animations_init();
-extern void gameobj_init_all();
-extern void playerobj_init();
-extern void ui_init();
-extern void map_init();
-
-extern void ui_start();
+extern void audio_init();			// audio.c
+extern void animations_init();		// animation.c
+extern void gameobj_init_all();		// gameobj.c
+extern void playerobj_init();		// playerobj.c
+extern void ui_init();				// ui.c
+extern void map_init();				// map.c
+// effects.c
+extern void effects_init();
+extern void effects_anim_update();
 
 extern void playerobj_update();
+// ui.c
+extern void ui_start();
 extern void ui_update();
 extern void ui_update_anim();
+
 extern void update_world_pos();
 extern void camera_update_pos();
 // gameobj.c
@@ -124,6 +129,7 @@ void game_init()
 	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
 	reg_init(); 
+	audio_init();
 	
 	// game setup
 	animations_init();
@@ -131,7 +137,8 @@ void game_init()
 	map_init();
 	playerobj_init();
 	ui_init();
-}	
+	effects_init();
+}
 
 
 
@@ -194,6 +201,7 @@ void animations_update()
 	{
 		// animation update functions go in here
 		gameobj_update_anim_all();
+		effects_anim_update();
 		anim_sync %= ANIM_SPEED;
 	}
 	ui_anim_sync++;
@@ -215,7 +223,7 @@ void game_update()
 	gameobj_update_all();			// update gameobj movement
 	game_update_temp();				
 	update_world_pos();				// push the map around
-	camera_update_pos();
+//	camera_update_pos();
 	ui_update();
 
 	// finalize the turn when all objects come to rest
@@ -243,7 +251,7 @@ void finalize_turn()
 	// update all obj histories
 	history_update_all();
 
-	turn_count_increment();
+	//turn_count_increment();
 
 	input_unlock();
 }
@@ -252,6 +260,8 @@ void finalize_turn()
 void set_turn_active()
 {
 	turn_active = true;
+	// start the turn counter animation
+	turn_count_increment();
 }
 
 

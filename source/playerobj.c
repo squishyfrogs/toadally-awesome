@@ -20,10 +20,13 @@ extern void finalize_turn();
 extern void set_turn_active();
 // camera.c
 extern void camera_set_target(GameObj *target);
+extern void set_camera_pos(int target_x, int target_y);
+
+// effects.c
+extern void create_effect_at_position(int tile_x, int tile_y);
 
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
-
 
 
 void playerobj_init();
@@ -34,18 +37,13 @@ void playerobj_update_movement();
 void player_update_current_tile();
 void player_set_tile_by_id(int tile_id);
 
-void set_push_obj(GameObj *obj);		// set current push obj
-void free_push_obj();					// free current push obj
+void push_gameobj(GameObj *obj, int push_dir);		// push a game object
+
 
 static GameObj *player_obj;
-//static ObjHistory *playerobj_history;
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
-
-//static Vector2 current_tile;	// map tile the player is currently on (updated at rest)
-
-static bool player_moving;		// is the player currently moving? 
 
 static Vector2 start_tile;		// start tile (for movement)
 static Vector2 end_tile;		// end tile (for movement)
@@ -53,7 +51,6 @@ static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
 
-GameObj *push_obj;				// object the player is currently pushing
 
 GameObj *get_player_obj()
 {
@@ -74,11 +71,11 @@ void playerobj_init()
 		PLAYER_START_X, PLAYER_START_Y,
 		OBJPROP_SOLID
 		);
-	player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 0, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
+	player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
 	player_update_current_tile();
-	push_obj = NULL;
+	//push_obj = NULL;
 	camera_set_target(player_obj);
-	
+	anim_play(player_obj->anim);
 }
 
 void playerobj_update()
@@ -86,7 +83,7 @@ void playerobj_update()
 	if(!input_locked())
 		move_playerobj(key_tri_horz(), key_tri_vert());
 	
-	if(player_moving)
+	if(gameobj_is_moving(player_obj))
 		playerobj_update_movement();
 }
 
@@ -94,7 +91,7 @@ void playerobj_update()
 // apply dpad inputs to the player and attempt to move them
 void move_playerobj(int input_x, int input_y)
 {
-	if(player_moving)
+	if(gameobj_is_moving(player_obj))
 		return;
 	if(input_x == 0 && input_y == 0)
 		return;
@@ -159,22 +156,25 @@ void move_playerobj(int input_x, int input_y)
 		if(contents->obj_properties & OBJPROP_MOVABLE)
 		{
 			// check tile past obj
-			// TODO: Constrain this to map bounds
-			GameObj *far_tile_contents = get_tile_contents(end_tile.x + input_x, end_tile.y + input_y);
-			if(far_tile_contents == NULL || !(far_tile_contents->obj_properties & OBJPROP_SOLID))
+			if(check_tile_free(end_tile.x + input_x, end_tile.y + input_y))
 			{
-				// valid to push object
-				//place_obj_in_tile(contents, end_tile.x + input_x, end_tile.y + input_y);
-				//remove_tile_contents(contents, end_tile.x, end_tile.y);
-				//set_tile_contents(contents, end_tile.x + input_x, end_tile.y + input_y);
-				//set_push_obj(contents);
-				gameobj_set_moving(contents, true, ints_to_dir(input_x, input_y));
-				return;
+				// if tile beyond push obj is free, valid to push object
+				push_gameobj(contents, ints_to_dir(input_x, input_y));
+				//gameobj_set_moving(contents, true, ints_to_dir(input_x, input_y));
+				//create_effect_at_position(end_tile.x, end_tile.y);
+				input_lock();
+				set_turn_active();
 			}
+			// whether we can push the obj or not, end movement at this point
+			// TODO: play bonk sound
+			return;
 		}
 		// if immovable and solid
 		else if(contents->obj_properties & OBJPROP_SOLID)
+		{
+			// TODO: play bonk sound
 			return;
+		}
 	}
 
 	// reset offsets (should already be 0 but just in case)
@@ -191,7 +191,8 @@ void move_playerobj(int input_x, int input_y)
 	// set the turn active
 	set_turn_active();
 	// mark player as moving
-	player_moving = true;
+	gameobj_set_moving(player_obj, true, ints_to_dir(input_x, input_y));
+	// player_moving = true;
 	// perform an action update
 	action_update();
 }
@@ -222,24 +223,15 @@ void playerobj_update_movement()
 
 	gameobj_set_pixel_pos(player_obj, offset.x, offset.y - hop_offset);		// subtract hop_offset to show verticality
 
+	Vector2 v = gameobj_get_pixel_pos(player_obj);
+	set_camera_pos(v.x, v.y + hop_offset);
 
-	if(push_obj != NULL)
-	{
-		//gameobj_set_pixel_pos(push_obj, offset.x, offset.y);
-	}
-
-
+	
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
 		player_update_current_tile();
-		player_moving = false;
-		if(push_obj)
-		{
-		//	gameobj_update_current_tile(push_obj);
-			free_push_obj();
-		}
-		
+		gameobj_set_moving(player_obj,false, 0);
 	}
 
 }
@@ -266,12 +258,17 @@ void player_update_current_tile()
 }
 
 
-void set_push_obj(GameObj *obj)
+// push a game object
+void push_gameobj(GameObj *obj, int push_dir)
 {
-	push_obj = obj;
+	gameobj_set_moving(obj, true, push_dir);
+	create_effect_at_position(end_tile.x, end_tile.y);
 }
 
-void free_push_obj()
+
+
+// checks whether or not a given GameObj is the PlayerObj
+bool gameobj_is_player(GameObj *obj)
 {
-	push_obj = NULL;
+	return (obj == player_obj && obj != NULL);
 }

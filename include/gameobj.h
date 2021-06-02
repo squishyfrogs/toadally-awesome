@@ -43,7 +43,8 @@ typedef struct struct_GameObj {
 
 #define OBJPROP_EDIBLE			0x0010		// can the frog consume this?
 
-#define OBJPROP_TIME_IMMUNITY	0x0400		// grants immunity to time-based shenanigans
+#define OBJPROP_TIME_IMMUNITY	0x0200		// grants immunity to time-based shenanigans
+#define OBJPROP_HIDDEN			0x0400		// when activated the obj will disappear from view (and collision)
 #define OBJPROP_FIXED_POS		0x0800		// does the object remain in a fixed position on screen? (mostly for UI elements)
 // last 4 bits are treated a little differently
 #define OBJPROP_FACING_MASK		0x3000		// bits 13+14 refer to the direction the GameObj is facing (see direction.h for specific values)
@@ -57,19 +58,20 @@ inline u16 objprop_is_time_immune(GameObj *obj)
 };
 /////////////////////////
 
+int mem_load_palette(const ushort *pal_data);
+int mem_load_tiles(const ushort *tile_data, int data_len);
+
 GameObj *init_gameobj();
 GameObj *init_gameobj_with_id(int obj_id);
 GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
-
-
-int mem_load_palette(const ushort *pal_data);
-int mem_load_tiles(const ushort *tile_data, int data_len);
 
 void gameobj_main_update(GameObj *obj);
 void gameobj_update_attr(GameObj *obj);
 void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
 
 void gameobj_set_property_flags(GameObj *obj, u16 properties);
+void gameobj_unhide(GameObj *obj);
+void gameobj_hide(GameObj *obj);
 void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping);
 
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y);
@@ -77,8 +79,8 @@ void gameobj_set_tile_pos(GameObj *obj, int x, int y);
 void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id);
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y);
 void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
-Vector2 gameobj_get_pixel_pos(GameObj *obj);															// get the pixel position of a GameObj as a Vector2
-void gameobj_update_current_tile(GameObj *obj);
+Vector2 gameobj_get_pixel_pos(GameObj *obj);														// get the pixel position of a GameObj as a Vector2
+void gameobj_update_current_tile(GameObj *obj);														// remove obj from old tile, update tile + pixel vectors, assign obj to new tile
 
 
 void gameobj_set_facing(GameObj *obj, int facing);
@@ -92,16 +94,16 @@ bool gameobj_is_moving(GameObj *obj);
 bool gameobj_all_at_rest();
 
 
-void gameobj_flip_h(GameObj *obj);
-void gameobj_flip_v(GameObj *obj);
-void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v);
-void gameobj_set_flip_h(GameObj *obj, bool flip_h);
-void gameobj_set_flip_v(GameObj *obj, bool flip_v);
+void gameobj_flip_h(GameObj *obj);																	// flip an object horizontally across the vertical axis
+void gameobj_flip_v(GameObj *obj);																	// flip an object vertically across the horizontal axis
+void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v);										// set the horizontal and vertical flip state
+void gameobj_set_flip_h(GameObj *obj, bool flip_h);													// set the horizontal flip state
+void gameobj_set_flip_v(GameObj *obj, bool flip_v);													// set the vertical flip state
 
 
 void gameobj_hide_all();
 void gameobj_unhide_all();
 
-
+bool gameobj_is_player(GameObj *obj);																// checks whether or not a given GameObj is the PlayerObj
 
 #endif //GAMEOBJ_H

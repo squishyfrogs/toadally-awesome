@@ -10,6 +10,8 @@ extern void camera_update_pos();
 extern void set_action_count(int count);
 // map.c
 extern void map_clear_contents();
+// effects.c
+extern void create_smoke_at_tile(int tile_id);
 
 void set_game_to_turn(int new_turns_ago);
 void set_obj_to_turn(ObjHistory *history, int turns_ago);
@@ -162,6 +164,9 @@ void history_step_back(int turn_count)
 // jump forward X number of turns
 void history_step_forward(int turn_count)
 {
+	if(current_turns_ago == 0)
+		return;
+
 	int new_turns_ago = current_turns_ago - turn_count;
 	// make sure we dont go farther forward than the present
 	if(new_turns_ago < 0)
@@ -187,7 +192,6 @@ void history_return_to_present()
 void set_game_to_turn(int turns_ago)
 {
 	
-	// i guess???
 	//map_clear_contents();
 
 	// move all objects to their proper positions for the selected turn
@@ -213,6 +217,9 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	// clear old tiles
 	int tile_id = history_get_tile_id_at_time(history, current_turns_ago);
 	remove_tile_contents_by_id(history->game_obj, tile_id);
+
+	create_smoke_at_tile(tile_id);
+
 	// enter new tile
 	tile_id = history_get_tile_id_at_time(history, new_turns_ago);
 	//gameobj_set_tile_pos_by_id(history->game_obj, tile_id);

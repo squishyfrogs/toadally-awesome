@@ -27,10 +27,10 @@ LIBTONC := $(DEVKITPRO)/libtonc
 #---------------------------------------------------------------------------------
 TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
-SOURCES		:= source source/sprites/ source/maps/ source/sprites/ui/
+SOURCES		:= source source/sprites/ source/maps/ source/sprites/ui/ source/sprites/effects/ 
 INCLUDES	:= include
 DATA		:=
-MUSIC		:=
+MUSIC		:= 
 
 #---------------------------------------------------------------------------------
 # options for code generation

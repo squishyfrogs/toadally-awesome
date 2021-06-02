@@ -7,6 +7,7 @@
 #include "objhistory.h"
 #include "sprites.h"
 #include "maps.h"
+#include "input.h"
 
 
 
@@ -122,15 +123,18 @@ void game_update_temp()
 	//world_offset_x = kirby->pos_x/2;
 	//world_offset_y = kirby->pos_y/2;
 
-	if(key_hit(KEY_L))
+	if(!input_locked())
 	{
-		history_step_back(1);
-	}
+		if(key_hit(KEY_L))
+		{
+			history_step_back(1);
+		}
 
-	if(key_hit(KEY_R))
-	{
-		//history_return_to_present();
-		history_step_forward(1);
+		if(key_hit(KEY_R))
+		{
+			//history_return_to_present();
+			history_step_forward(1);
+		}
 	}
 
 

@@ -123,7 +123,6 @@ int mem_load_tiles(const ushort *tile_data, int data_len)
 /// GAMEOBJ FUNCTIONS ///
 /////////////////////////
 
-
 // initialize a GameObj and return it to the caller
 GameObj *init_gameobj()
 {
@@ -149,6 +148,7 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->tile_pos.x = 0;
 	obj->tile_pos.y = 0;
 
+	obj->hist = NULL;
 	obj->anim = NULL;
 	//obj->anim = anim_create(ANIM_OFFSET_16x16, 1, 0);	// default offset for 16x16 sprite size
 
@@ -239,6 +239,20 @@ void gameobj_set_property_flags(GameObj *obj, u16 properties)
 	obj->obj_properties = properties;
 }
 
+// unhide a GameObj
+void gameobj_unhide(GameObj *obj)
+{
+	obj->obj_properties &= ~OBJPROP_HIDDEN;
+	obj_unhide(obj->attr,DCNT_MODE0);
+}
+
+// hide a GameObj
+void gameobj_hide(GameObj *obj)
+{
+	obj->obj_properties |= OBJPROP_HIDDEN;
+	obj_hide(obj->attr);
+}
+
 // set a GameObj's animation info
 void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping)
 {
@@ -323,7 +337,7 @@ Vector2 gameobj_get_pixel_pos(GameObj *obj)
 	return v;
 }
 
-// 
+// remove obj from old tile, update tile + pixel vectors, assign obj to new tile
 void gameobj_update_current_tile(GameObj *obj)
 {
 	int x = obj->pixel_pos.x / GAME_TILE_SIZE;
@@ -340,6 +354,7 @@ void gameobj_update_current_tile(GameObj *obj)
 	
 	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
 }
+
 
 //////////////
 /// Facing ///
@@ -379,7 +394,9 @@ void gameobj_update_sprite_facing(GameObj *obj)
 			gameobj_set_flip_h(obj, false);
 		}
 	}
-	obj->tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
+	
+	//obj->tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
+	obj->tile_id = obj->anim->tile_start + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
 	gameobj_push_changes(obj);
 }
 
@@ -437,6 +454,8 @@ bool gameobj_is_moving(GameObj *obj)
 
 void gameobj_update_movement(GameObj *obj)
 {
+	if(gameobj_is_player(obj))
+		return;
 	if(!gameobj_is_moving(obj))
 		return;
 	Vector2 mov = dir_to_vec(gameobj_get_move_dir(obj));
@@ -469,23 +488,24 @@ bool gameobj_all_at_rest()
 	return true;
 }
 
+
 /////////////
 /// Flips ///
 /////////////
 
-// toggle horizontal flip
+// flip an object horizontally across the vertical axis
 void gameobj_flip_h(GameObj *obj)
 {
 	obj->attr->attr1 ^= ATTR1_HFLIP;
 }
 
-// toggle vertical flip
+// flip an object vertically across the horizontal axis
 void gameobj_flip_v(GameObj *obj)
 {
 	obj->attr->attr1 ^= ATTR1_VFLIP;
 }
 
-// set flip values for a GameObj
+// set the horizontal and vertical flip state
 void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
 {
 	if(flip_h)
@@ -499,7 +519,7 @@ void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
 		obj->attr->attr1 &= ~ATTR1_VFLIP;
 }
 
-// set horizontal flip value for a GameObj
+// set the horizontal flip state
 void gameobj_set_flip_h(GameObj *obj, bool flip_h)
 {
 	if(flip_h)
@@ -508,7 +528,7 @@ void gameobj_set_flip_h(GameObj *obj, bool flip_h)
 		obj->attr->attr1 &= ~ATTR1_HFLIP;
 }
 
-// set vertical flip value for a GameObj
+// set the vertical flip state
 void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 {
 	if(flip_v)
