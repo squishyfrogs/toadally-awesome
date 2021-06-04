@@ -10,6 +10,7 @@
 
 // history of a GameObj's movement and facing direction
 typedef struct struct_ObjHistory{
+	u8 in_use;																			// if zero, history is free to be overwritten
 	struct struct_GameObj *game_obj;
 	uint32_t facing_history;															// facing data stored as 16 pairs of bits to save space (see directions.h for values)
 	int tile_history[HISTORY_TURN_MAX];													// position data stored as a series of ints (referring to tileID)

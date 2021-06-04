@@ -35,7 +35,7 @@ inline void unlink_history(ObjHistory *hist, GameObj *obj){
 
 
 ObjHistory obj_history_list[OBJ_HISTORY_MAX];		// history of all gameobjs in current scene
-static int free_history = 0;						// marker for first free slot in history array
+//static int free_history = 0;						// marker for first free slot in history array
 
 
 static int game_turns_elapsed;						// how many turns have passed since the game started
@@ -56,12 +56,21 @@ void objhistory_init()
 // grabs a free ObjHistory from the list and links it to a provided GameObj
 ObjHistory *register_obj_history(GameObj *obj)
 {
-	ObjHistory *obj_hist = &obj_history_list[free_history];
-	// link to gameobj
-	link_history(obj_hist, obj);
-
-	free_history++;
+	
+	ObjHistory *obj_hist = NULL;
+	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
+	{
+		if(obj_history_list[i].in_use == 0)
+		{
+			obj_history_list[i].in_use = 1;
+			obj_hist = &obj_history_list[i];
+			// link to gameobj
+			link_history(obj_hist, obj);
+		}
+	}
+	
 	return obj_hist;
+	
 }
 
 // returns the ObjHistory at a given index
@@ -89,6 +98,9 @@ void update_obj_history(ObjHistory *history, int facing, int tpos_x, int tpos_y)
 // clear and reset the history of an obj
 void clear_obj_history(ObjHistory *history)
 {
+	if(history == NULL)
+		return;
+	history->in_use = 0;
 	// unlink from gameobj
 	unlink_history(history, history->game_obj);
 	history->facing_history = 0;
@@ -103,10 +115,7 @@ void clear_all_obj_history()
 	{
 		clear_obj_history(&obj_history_list[i]);
 	}
-	free_history = 0;
 }
-
-
 
 
 ///////////////////////
@@ -228,10 +237,8 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	int facing = history_get_facing_at_time(history, new_turns_ago);
 	gameobj_set_facing(history->game_obj, facing);
 
-	if(history->game_obj->anim != NULL)
-	{
-		history->game_obj->anim->cur_frame = 0;
-	}
+	history->game_obj->anim.cur_frame = 0;
+
 }
 
 // clear the future and progress with a new timeline
@@ -281,7 +288,7 @@ void clear_obj_future(ObjHistory *history)
 // update history of all objs after an action is performed
 void history_update_all()
 {
-	for(int i = 0; i < free_history; i++)
+	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
 	{
 		ObjHistory *hist = &obj_history_list[i];
 		if(hist->game_obj == NULL)

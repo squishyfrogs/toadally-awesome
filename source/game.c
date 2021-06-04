@@ -41,9 +41,9 @@ void init_objs()
 	// init kirby
 	int k_pal = mem_load_palette(kirbyPal);
 	int k_tile = mem_load_tiles(kirbyTiles, kirbyTilesLen);
-	kirby = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96, 0);
+	kirby = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96, 0);
 
-	kirby2 = init_gameobj();
+	kirby2 = gameobj_init();
 	gameobj_update_attr_full(kirby2, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 100, 20, 0);
 	
 	//set_tile_contents(kirby2, 5,8);
@@ -51,14 +51,16 @@ void init_objs()
 	// init mario
 	int m_pal = mem_load_palette(marioPal);
 	k_tile = mem_load_tiles(marioTiles, marioTilesLen);
-	mario = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, 0);
-	gameobj_set_anim_info(mario, 4, 16, 0, true);
-	anim_play(mario->anim);
+	mario = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, m_pal, k_tile, 140, 80, 0);
+	AnimationData *mario_anim = animdata_create(k_tile, 16, 4, 0);
+	gameobj_set_anim_data(mario, mario_anim, ANIM_FLAG_LOOPING);
+	//gameobj_set_anim_info(mario, 4, 16, 0, true);
+	gameobj_play_anim(mario);
 
 	// init crate
 	int c_pal = mem_load_palette(cratePal);
 	int c_tile = mem_load_tiles(crateTiles, crateTilesLen);
-	crate = init_gameobj_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
+	crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
 	gameobj_set_sprite_offset(crate,0,8);
 	place_obj_in_tile(crate, 6, 12);
 }

@@ -62,7 +62,7 @@ void playerobj_init()
 
 	p_palette = mem_load_palette(playerPal);
 	p_tile_start = mem_load_tiles(playerTiles, playerTilesLen);
-	player_obj = init_gameobj_full(
+	player_obj = gameobj_init_full(
 		LAYER_GAMEOBJ, 
 		ATTR0_SQUARE, 
 		ATTR1_SIZE_16x16, 
@@ -71,11 +71,13 @@ void playerobj_init()
 		PLAYER_START_X, PLAYER_START_Y,
 		OBJPROP_SOLID
 		);
-	player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
+	AnimationData *player_anim = animdata_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET);
+	gameobj_set_anim_data(player_obj, player_anim, ANIM_FLAG_LOOPING);
+	//player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
 	player_update_current_tile();
 	//push_obj = NULL;
 	camera_set_target(player_obj);
-	anim_play(player_obj->anim);
+	gameobj_play_anim(player_obj);
 }
 
 void playerobj_update()

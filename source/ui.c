@@ -74,7 +74,7 @@ void ui_init()
 	a_tile = mem_load_tiles(numbersTiles, numbersTilesLen);
 	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
 	{
-		action_counter[i] = init_gameobj();
+		action_counter[i] = gameobj_init();
 		action_counter[i]->layer_priority = LAYER_OVERLAY;
 		int ac_x = ACTION_COUNTER_OFFSET_X + i*8;
 		int ac_y = ACTION_COUNTER_OFFSET_Y + 152;
@@ -92,18 +92,20 @@ void ui_init()
 	{
 		int h_x = 4+i*8;
 		int h_y = 0;
-		hearts[i] = init_gameobj_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, ui_palette, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
+		hearts[i] = gameobj_init_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, ui_palette, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
 		if(i % 2)
 			gameobj_set_flip_h(hearts[i], true);
 	}
 
 
 	// init gear
-	gear = init_gameobj();
+	gear = gameobj_init();
 	g_tile = mem_load_tiles(gearTiles, gearTilesLen);
 	gear->layer_priority = LAYER_OVERLAY;
 	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, ui_palette, g_tile, 0, 128, OBJPROP_FIXED_POS);
-	gameobj_set_anim_info(gear, 3, ANIM_OFFSET_32x32, 0, false);
+	AnimationData *gear_anim = animdata_create(g_tile, ANIM_OFFSET_32x32, 3, 0);
+	gameobj_set_anim_data(gear, gear_anim, 0);
+	//gameobj_set_anim_info(gear, 3, ANIM_OFFSET_32x32, 0, false);
 	g_anim = 1;
 
 }
@@ -245,10 +247,10 @@ void decrement_action_counter()
 
 void ui_animate_gear_forward()
 {
-	anim_play_forward(gear->anim);
+	anim_play_forward(&gear->anim);
 }
 
 void ui_animate_gear_backward()
 {
-	anim_play_reversed(gear->anim);
+	anim_play_reversed(&gear->anim);
 }

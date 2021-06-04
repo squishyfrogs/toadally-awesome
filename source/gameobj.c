@@ -9,12 +9,16 @@
 
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
 
-void gameobj_init_all();
+
+GameObj *create_gameobj_with_id(int obj_id);
+
 void gameobj_update_all();
 void gameobj_update(GameObj *obj);
 void gameobj_update_movement(GameObj *obj);
 void gameobj_update_anim_all();
 void gameobj_push_all_updates();
+
+void gameobj_init_all();
 
 void gameobj_update_pos(GameObj *obj);
 void gameobj_update_sprite_facing(GameObj *obj);							// updates a GameObj's sprite after changing direction
@@ -25,7 +29,6 @@ extern void objhistory_init();
 
 GameObj obj_list[OBJ_COUNT];
 OBJ_ATTR objattr_buffer[OBJ_COUNT];
-static int free_obj = 0;		//marker of first free obj in the object list
 static int free_pal = 0;		//marker of first free palette in VRAM
 static int free_tile = 0;		//marker of first free tile in VRAM
 
@@ -77,8 +80,8 @@ void gameobj_update_anim_all()
 {
 	for(int i = 0; i < OBJ_COUNT; i++)
 	{
-		if(obj_list[i].anim != NULL)
-			anim_update(obj_list[i].anim);
+		if(obj_list[i].anim.anim_data != NULL)
+			anim_update(&obj_list[i].anim);
 	}
 }
 
@@ -91,7 +94,7 @@ void gameobj_push_all_updates()
 	}
 
 	// copy all changes into oam memory
-	oam_copy(oam_mem, objattr_buffer, free_obj);		// only need to copy changes up to obj count
+	oam_copy(oam_mem, objattr_buffer, OBJ_COUNT);		// copy changes up to obj count
 }
 
 
@@ -123,20 +126,12 @@ int mem_load_tiles(const ushort *tile_data, int data_len)
 /// GAMEOBJ FUNCTIONS ///
 /////////////////////////
 
-// initialize a GameObj and return it to the caller
-GameObj *init_gameobj()
-{
-	GameObj *obj = init_gameobj_with_id(free_obj);
-	// eventually free_obj will be stuck at 127 - this is intended behavior (for the time being)
-	if(free_obj+1 < OBJ_COUNT)
-		free_obj++;
-	return obj;
-}
 
-// initialize a blank GameObj with a given ID
-GameObj *init_gameobj_with_id(int obj_id)
+// generate a blank GameObj with a given ID
+GameObj *create_gameobj_with_id(int obj_id)
 {
 	GameObj *obj = &obj_list[obj_id];
+	obj->in_use = 1;
 	obj->obj_id = obj_id;
 	obj->attr = &objattr_buffer[obj_id];
 	obj->pal_bank_id = 0;
@@ -149,16 +144,31 @@ GameObj *init_gameobj_with_id(int obj_id)
 	obj->tile_pos.y = 0;
 
 	obj->hist = NULL;
-	obj->anim = NULL;
+	anim_clear(&obj->anim);
 	//obj->anim = anim_create(ANIM_OFFSET_16x16, 1, 0);	// default offset for 16x16 sprite size
 
 	return obj;
 }
 
-// initialize a GameObj in detail
-GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+
+// initialize a GameObj and return it to the caller
+GameObj *gameobj_init()
 {
-	GameObj *obj = init_gameobj();
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		if(obj_list[i].in_use == 0)
+		{
+			return create_gameobj_with_id(i);
+		}
+	}
+	return NULL;
+}
+
+
+// initialize a GameObj in detail
+GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+{
+	GameObj *obj = gameobj_init();
 
 	obj->layer_priority = layer_priority;
 	obj->spr_shape = attr0_shape;
@@ -196,6 +206,66 @@ GameObj *init_gameobj_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 	return obj;
 }
 
+// duplicate a GameObj into another slot in memory
+GameObj *gameobj_duplicate(GameObj *src)
+{
+	GameObj *obj = gameobj_init();
+	return gameobj_clone(obj, src);
+}
+
+// copy all attributes of a GameObj into another existing GameObj
+GameObj *gameobj_clone(GameObj *dest, GameObj *src)
+{
+	if(dest == src || dest == NULL || src == NULL)
+		return dest;
+
+	//dest->attr = src->attr;
+
+	dest->layer_priority = src->layer_priority;
+	dest->tile_id = src->tile_id;
+	dest->pal_bank_id = src->pal_bank_id;
+	dest->layer_priority = src->layer_priority;
+	dest->spr_shape = src->spr_shape;
+	dest->spr_size = src->spr_size;
+
+	dest->tile_pos = src->tile_pos;
+	dest->pixel_pos = src->pixel_pos;
+	dest->spr_off = src->spr_off;
+
+	dest->obj_properties = src->obj_properties;
+	// copy anim data and flags, but keep frame at 0 
+	dest->anim.anim_data = src->anim.anim_data;
+	dest->anim.flags = src->anim.flags;
+	// do not copy these -- remake from scratch
+	//obj->hist = src->hist;
+
+	obj_set_attr(dest->attr, dest->spr_shape, dest->spr_size, (ATTR2_PALBANK(dest->pal_bank_id) | dest->tile_id));
+	gameobj_update_pos(dest);
+
+	return dest;
+}
+
+// wipe all attributes of a GameObj and mark it as unused
+void gameobj_erase(GameObj *obj)
+{
+	obj_set_attr(&objattr_buffer[obj->obj_id], 0, 0, 0);
+	obj->in_use = 0;
+	obj->obj_id = 0;
+	obj->pal_bank_id = 0;
+	obj->tile_id = 0;
+	obj->layer_priority = 0;
+	obj->spr_shape = 0;
+	obj->spr_size = 0;
+
+	obj->tile_pos.x = 0;
+	obj->tile_pos.y = 0;
+
+
+	if(obj->hist != NULL)
+		clear_obj_history(obj->hist);
+	obj->hist = NULL;
+	anim_clear(&obj->anim);
+}
 
 
 // set a GameObj's attributes
@@ -228,7 +298,7 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 		obj->tile_pos.y = y;
 	}
 
-	u32 tid = obj->tile_id + (obj->anim->tile_offset * obj->anim->cur_frame);
+	u32 tid = obj->tile_id + (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
 	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	gameobj_update_pos(obj);
 }
@@ -254,7 +324,18 @@ void gameobj_hide(GameObj *obj)
 }
 
 // set a GameObj's animation info
-void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping)
+void gameobj_set_anim_data(GameObj *obj, AnimationData *anim_data, u8 flags)
+{
+	anim_init(&obj->anim, anim_data, flags);
+}
+
+
+void gameobj_play_anim(GameObj *obj)
+{
+	anim_play(&obj->anim);
+}
+
+/*void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping)
 {
 	u8 flags = 0;
 	if(looping)
@@ -263,7 +344,8 @@ void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int
 		obj->anim = anim_create(obj->tile_id, tile_offset, frame_count, facing_offset, flags);
 	else
 		anim_set_info(obj->anim, obj->tile_id, tile_offset, frame_count, facing_offset, flags);
-}
+}*/
+
 
 
 // set a GameObj's sprite offset
@@ -379,10 +461,10 @@ int gameobj_get_facing(GameObj *obj)
 // updates a GameObj's sprite after changing direction
 void gameobj_update_sprite_facing(GameObj *obj)
 {
-	if(obj == NULL || obj->anim == NULL)
+	if(obj == NULL || obj->anim.anim_data == NULL)
 		return;
 	int dir = gameobj_get_facing(obj);
-	if(!(obj->anim->flags & ANIM_FLAG_ASYMMETRIC))
+	if(!(obj->anim.flags & ANIM_FLAG_ASYMMETRIC))
 	{
 		if(dir == DIRECTION_WEST)
 		{
@@ -396,7 +478,7 @@ void gameobj_update_sprite_facing(GameObj *obj)
 	}
 	
 	//obj->tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
-	obj->tile_id = obj->anim->tile_start + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
+	obj->tile_id = obj->anim.anim_data->tile_start + (dir * obj->anim.anim_data->facing_offset * obj->anim.anim_data->tile_offset);
 	gameobj_push_changes(obj);
 }
 
@@ -544,8 +626,8 @@ void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 void gameobj_push_changes(GameObj *obj)
 {
 	u32 tile_id = obj->tile_id;
-	if(obj->anim != NULL)
-		tile_id += (obj->anim->tile_offset * obj->anim->cur_frame);
+	if(obj->anim.anim_data != NULL)
+		tile_id += (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
 
 	obj->attr->attr2 = ATTR2_BUILD(
 		tile_id,
@@ -561,11 +643,11 @@ void gameobj_push_changes(GameObj *obj)
 // hide all GameObjs
 void gameobj_hide_all()
 {
-	obj_hide_multi(&objattr_buffer[0], free_obj);
+	obj_hide_multi(&objattr_buffer[0], OBJ_COUNT);
 }
 
 // unhide all GameObjs
 void gameobj_unhide_all()
 {
-	obj_unhide_multi(&objattr_buffer[0], DCNT_MODE0, free_obj);
+	obj_unhide_multi(&objattr_buffer[0], DCNT_MODE0, OBJ_COUNT);
 }

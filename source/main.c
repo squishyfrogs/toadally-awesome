@@ -12,7 +12,7 @@ extern void init_map();		//temp
 extern void game_update_temp();	//temp
 
 extern void audio_init();			// audio.c
-extern void animations_init();		// animation.c
+extern void animdata_init_all();		// animation.c
 extern void gameobj_init_all();		// gameobj.c
 extern void playerobj_init();		// playerobj.c
 extern void ui_init();				// ui.c
@@ -132,7 +132,7 @@ void game_init()
 	audio_init();
 	
 	// game setup
-	animations_init();
+	animdata_init_all();
 	gameobj_init_all();
 	map_init();
 	playerobj_init();
