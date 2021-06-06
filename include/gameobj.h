@@ -53,10 +53,12 @@ typedef struct struct_GameObj {
 #define OBJPROP_MOVING_MASK		0xC000		// bits 15+16 refer to the direction the GameObj is moving (see direction.h for specific values)
 #define OBJPROP_MOVING_BIT_OFFSET	14
 
-inline u16 objprop_is_time_immune(GameObj *obj)
+inline u16 objprop_ignore_time(GameObj *obj)
 {
-	return (obj->obj_properties & OBJPROP_TIME_IMMUNITY);
+	return (obj->obj_properties & (OBJPROP_FIXED_POS | OBJPROP_HIDDEN | OBJPROP_TIME_IMMUNITY));
 };
+
+
 /////////////////////////
 
 int mem_load_palette(const ushort *pal_data);

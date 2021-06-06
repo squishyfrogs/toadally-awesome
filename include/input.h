@@ -3,9 +3,13 @@
 
 #include <tonc.h>
 
-void input_lock();
-void input_unlock();
 bool input_locked();
+void input_unlock_override_all();
+
+void input_lock_player();
+void input_unlock_player();
+void input_lock_ui();
+void input_unlock_ui();
 
 
 #endif //INPUT_H

@@ -252,8 +252,7 @@ void finalize_turn()
 	history_update_all();
 
 	//turn_count_increment();
-
-	input_unlock();
+	input_unlock_player();
 }
 
 // set the game state to "objects are moving"

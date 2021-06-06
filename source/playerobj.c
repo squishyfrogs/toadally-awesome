@@ -164,7 +164,7 @@ void move_playerobj(int input_x, int input_y)
 				push_gameobj(contents, ints_to_dir(input_x, input_y));
 				//gameobj_set_moving(contents, true, ints_to_dir(input_x, input_y));
 				//create_effect_at_position(end_tile.x, end_tile.y);
-				input_lock();
+				input_lock_player();
 				set_turn_active();
 			}
 			// whether we can push the obj or not, end movement at this point
@@ -189,7 +189,7 @@ void move_playerobj(int input_x, int input_y)
 	mov.y = input_y * PLAYER_MOVE_SPEED;
 
 	// lock inputs
-	input_lock();
+	input_lock_player();
 	// set the turn active
 	set_turn_active();
 	// mark player as moving

@@ -7,6 +7,12 @@
 #include "sprites/ui/gear.h"
 #include "sprites/ui/timegauge.h"
 
+
+// input.c
+extern void input_lock_ui();
+extern void input_unlock_ui();
+
+
 void ui_init();
 void ui_start();
 void ui_update();
@@ -152,7 +158,7 @@ void ui_update_anim()
 		action_counter[2]->tile_id = a_tile + f_offset;
 		
 		//if rolling up to a 0 or down to a 9
-		if(((count_rolling > 0) && (displayed_action_count % 10 == 0)) || ((count_rolling < 0) && (displayed_action_count % 10 == 9)))
+		if(((count_rolling > 0) && (displayed_action_count % 10 == 9)) || ((count_rolling < 0) && (displayed_action_count % 10 == 0)))
 		{
 			// update tens digit as well
 			f_offset = action_counter[1]->tile_id - a_tile;
@@ -160,7 +166,7 @@ void ui_update_anim()
 			action_counter[1]->tile_id = a_tile + f_offset;
 
 			//repeat process for hundreds digit
-			if(((count_rolling > 0) && (displayed_action_count % 100 == 0)) || ((count_rolling < 0) && (displayed_action_count % 100 == 99)))
+			if(((count_rolling > 0) && (displayed_action_count % 100 == 99)) || ((count_rolling < 0) && (displayed_action_count % 100 == 0)))
 			{
 				f_offset = action_counter[0]->tile_id - a_tile;
 				f_offset = ((10 * DIGIT_ANIM_LENGTH) + (f_offset + count_rolling)) % (10 * DIGIT_ANIM_LENGTH);
@@ -175,6 +181,7 @@ void ui_update_anim()
 			displayed_action_count += count_rolling;
 			if(displayed_action_count == true_action_count)
 			{
+				input_unlock_ui();
 				count_rolling = 0;
 				set_action_count_immediate(true_action_count);		//should be redundant if everything works properly, but just in case
 			}
@@ -220,12 +227,14 @@ void set_action_count(int count)
 		count_rolling = -1;
 		c_frame = 0;
 		ui_animate_gear_backward();
+		input_lock_ui();
 	}
 	if(true_action_count > displayed_action_count)
 	{
 		count_rolling = 1;
 		c_frame = 0;
 		ui_animate_gear_forward();
+		input_lock_ui();
 	}
 }
 

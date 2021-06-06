@@ -4,14 +4,18 @@
 #include "game.h"
 #include "map.h"
 
+#include "debug.h"
+
 // camera.c
 extern void camera_update_pos();
 // ui.c
 extern void set_action_count(int count);
+extern void set_action_count_immediate(int count);
 // map.c
 extern void map_clear_contents();
 // effects.c
 extern void create_smoke_at_tile(int tile_id);
+
 
 void set_game_to_turn(int new_turns_ago);
 void set_obj_to_turn(ObjHistory *history, int turns_ago);
@@ -66,6 +70,7 @@ ObjHistory *register_obj_history(GameObj *obj)
 			obj_hist = &obj_history_list[i];
 			// link to gameobj
 			link_history(obj_hist, obj);
+			break;
 		}
 	}
 	
@@ -200,7 +205,6 @@ void history_return_to_present()
 // set the game to a turn
 void set_game_to_turn(int turns_ago)
 {
-	
 	//map_clear_contents();
 
 	// move all objects to their proper positions for the selected turn
@@ -218,21 +222,28 @@ void set_game_to_turn(int turns_ago)
 // set a GameObj to a specific turn in its history
 void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 {
+	if(!history->in_use)
+		return;
 	if(history->game_obj == NULL)
 		return;
-	if(objprop_is_time_immune(history->game_obj))
+	if(objprop_ignore_time(history->game_obj))
 		return;
 
 	// clear old tiles
-	int tile_id = history_get_tile_id_at_time(history, current_turns_ago);
-	remove_tile_contents_by_id(history->game_obj, tile_id);
-
-	create_smoke_at_tile(tile_id);
+	int old_tile_id = history_get_tile_id_at_time(history, current_turns_ago);
+	remove_tile_contents_by_id(history->game_obj, old_tile_id);
 
 	// enter new tile
-	tile_id = history_get_tile_id_at_time(history, new_turns_ago);
+	int new_tile_id = history_get_tile_id_at_time(history, new_turns_ago);
 	//gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
-	place_obj_in_tile_by_id(history->game_obj, tile_id);
+	place_obj_in_tile_by_id(history->game_obj, new_tile_id);
+
+	// create a smoke effect if the object changed positions
+	if(old_tile_id != new_tile_id && old_tile_id >= 0 && new_tile_id >= 0)
+	{
+		create_smoke_at_tile(old_tile_id);
+	}
+
 	
 	int facing = history_get_facing_at_time(history, new_turns_ago);
 	gameobj_set_facing(history->game_obj, facing);
@@ -265,7 +276,7 @@ void clear_obj_future(ObjHistory *history)
 	if(history->game_obj == NULL)
 		return;
 	
-	if(objprop_is_time_immune(history->game_obj))
+	if(objprop_ignore_time(history->game_obj))
 		return;
 
 	// push histories forward again
