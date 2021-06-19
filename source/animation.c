@@ -60,6 +60,8 @@ void animdata_clear(AnimationData *anim_data)
 
 Animation *anim_init(Animation *anim, AnimationData *anim_data, u8 anim_flags)
 {
+	if(anim == NULL)
+		return NULL;
 	anim->anim_data = anim_data;
 	anim->flags = anim_flags;
 	anim->cur_frame = 0;
@@ -68,6 +70,8 @@ Animation *anim_init(Animation *anim, AnimationData *anim_data, u8 anim_flags)
 
 Animation *anim_clear(Animation *anim)
 {
+	if(anim == NULL)
+		return NULL;
 	anim->anim_data = NULL;
 	anim->flags = 0;
 	anim->cur_frame = 0;
@@ -78,6 +82,8 @@ Animation *anim_clear(Animation *anim)
 // advance an animation one frame
 void anim_update(Animation *anim)
 {
+	if(anim == NULL)
+		return;
 	if((anim->flags & ANIM_FLAG_PLAYING) && anim->anim_data->frame_ct > 0)
 	{
 		if(anim->flags & ANIM_FLAG_REVERSED)
@@ -94,18 +100,24 @@ void anim_update(Animation *anim)
 // play an animation
 void anim_play(Animation *anim)
 {
+	if(anim == NULL)
+		return;
 	anim->flags = anim->flags | ANIM_FLAG_PLAYING;
 }
 
 // stop playing an animation
 void anim_stop(Animation *anim)
 {
+	if(anim == NULL)
+		return;
 	anim->flags = anim->flags & ~ANIM_FLAG_PLAYING;
 }
 
 // play an animation backwards
 void anim_play_reversed(Animation *anim)
 {
+	if(anim == NULL)
+		return;
 	anim_set_reversed(anim, true);
 	anim->flags = anim->flags | ANIM_FLAG_PLAYING;
 }
@@ -113,6 +125,8 @@ void anim_play_reversed(Animation *anim)
 // force an animation to play forwards
 void anim_play_forward(Animation *anim)
 {
+	if(anim == NULL)
+		return;
 	anim_set_reversed(anim, false);
 	anim->flags = anim->flags | ANIM_FLAG_PLAYING;
 }
@@ -120,6 +134,8 @@ void anim_play_forward(Animation *anim)
 // set animation reverse flag
 void anim_set_reversed(Animation *anim, bool reversed)
 {
+	if(anim == NULL)
+		return;
 	if(reversed)
 		anim->flags |= ANIM_FLAG_REVERSED;
 	else

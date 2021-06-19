@@ -18,7 +18,7 @@ typedef struct struct_GameObj {
 	//u16 attr1;						// AABC xxxD DDDD DDDD || A = SIZE, B = VFLIP, C = HFLIP, D = XPOS || BCxxx = AFFINDEX
 	//u16 attr2;						// AAAA BBCC CCCC CCCC || A = PALBANK, B = PRIORITY, C = TILEINDEX
 
-	u32 tile_id;						// index of upperleft tile in obj memory
+	u32 spr_tile_id;						// index of upperleft tile in obj memory
 	u16 pal_bank_id;					// index of palette in pal memory
 	u8 layer_priority;					// draw order layer_priority in layer (0 = drawn on top)
 	u16 spr_shape;						// shape of sprite
@@ -61,18 +61,17 @@ inline u16 objprop_ignore_time(GameObj *obj)
 
 /////////////////////////
 
-int mem_load_palette(const ushort *pal_data);
-int mem_load_tiles(const ushort *tile_data, int data_len);
 
 GameObj *gameobj_init();
-GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
+GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 spr_tile_id, int x, int y, u16 properties);
 GameObj *gameobj_duplicate(GameObj *src);															// duplicate a GameObj into another slot in memory
 GameObj *gameobj_clone(GameObj *dest, GameObj *src);												// copy all attributes of a GameObj into another existing GameObj
 void gameobj_erase(GameObj *obj);																	// wipe all attributes of a GameObj and mark it as unused
+void gameobj_erase_all();																			// wipe all attributes of all GameObjs
 
 void gameobj_main_update(GameObj *obj);
 void gameobj_update_attr(GameObj *obj);
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties);
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 spr_tile_id, int x, int y, u16 properties);
 
 void gameobj_set_property_flags(GameObj *obj, u16 properties);
 void gameobj_unhide(GameObj *obj);

@@ -21,13 +21,12 @@ extern void set_turn_active();
 // camera.c
 extern void camera_set_target(GameObj *target);
 extern void set_camera_pos(int target_x, int target_y);
-
 // effects.c
 extern void create_effect_at_position(int tile_x, int tile_y);
-
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
-
+// objinteract.c
+extern void push_gameobj(GameObj *obj, int push_dir);
 
 void playerobj_init();
 void playerobj_update();
@@ -74,7 +73,8 @@ void playerobj_init()
 	AnimationData *player_anim = animdata_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET);
 	gameobj_set_anim_data(player_obj, player_anim, ANIM_FLAG_LOOPING);
 	//player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
-	player_update_current_tile();
+	//player_update_current_tile();
+	gameobj_update_current_tile(player_obj);
 	//push_obj = NULL;
 	camera_set_target(player_obj);
 	gameobj_play_anim(player_obj);
@@ -214,7 +214,7 @@ void playerobj_update_movement()
 		hop_offset = hop_arc[((GAME_TILE_SIZE + offset.y) % GAME_TILE_SIZE)];
 	}
 
-	// check if we moved a full tile
+	// check if we moved a full tile, and if so, stop movement 
 	if((offset.x >= GAME_TILE_SIZE) || (offset.x <= -GAME_TILE_SIZE))
 		mov.x = 0;
 	if((offset.y >= GAME_TILE_SIZE) || (offset.y <= -GAME_TILE_SIZE))
@@ -232,7 +232,8 @@ void playerobj_update_movement()
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
-		player_update_current_tile();
+		//player_update_current_tile();
+		gameobj_update_current_tile(player_obj);
 		gameobj_set_moving(player_obj,false, 0);
 	}
 
@@ -257,14 +258,6 @@ void player_update_current_tile()
 	
 	// claim new tile
 	set_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
-}
-
-
-// push a game object
-void push_gameobj(GameObj *obj, int push_dir)
-{
-	gameobj_set_moving(obj, true, push_dir);
-	create_effect_at_position(end_tile.x, end_tile.y);
 }
 
 

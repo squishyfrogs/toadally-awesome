@@ -3,6 +3,7 @@
 #include "playerobj.h"
 #include "game.h"
 #include "map.h"
+#include "effects.h"
 
 #include "debug.h"
 
@@ -13,8 +14,6 @@ extern void set_action_count(int count);
 extern void set_action_count_immediate(int count);
 // map.c
 extern void map_clear_contents();
-// effects.c
-extern void create_smoke_at_tile(int tile_id);
 
 
 void set_game_to_turn(int new_turns_ago);
@@ -22,14 +21,14 @@ void set_obj_to_turn(ObjHistory *history, int turns_ago);
 void clear_obj_future(ObjHistory *history);
 
 
-inline void link_history(ObjHistory *hist, GameObj *obj){
+inline void hist_obj_link(ObjHistory *hist, GameObj *obj){
 	if(obj != NULL)
 		obj->hist = hist;
 	if(hist != NULL)
 		hist->game_obj = obj;
 };
 
-inline void unlink_history(ObjHistory *hist, GameObj *obj){
+inline void hist_obj_unlink(ObjHistory *hist, GameObj *obj){
 	if(obj != NULL)
 		obj->hist = NULL;
 	if(hist != NULL)
@@ -52,7 +51,7 @@ static int current_turns_ago;						// measure of how far back in time we are cur
 //////////////////
 
 // initialize ObjHistory list
-void objhistory_init()
+void obj_history_init()
 {
 	clear_all_obj_history();
 }
@@ -60,7 +59,6 @@ void objhistory_init()
 // grabs a free ObjHistory from the list and links it to a provided GameObj
 ObjHistory *register_obj_history(GameObj *obj)
 {
-	
 	ObjHistory *obj_hist = NULL;
 	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
 	{
@@ -69,13 +67,11 @@ ObjHistory *register_obj_history(GameObj *obj)
 			obj_history_list[i].in_use = 1;
 			obj_hist = &obj_history_list[i];
 			// link to gameobj
-			link_history(obj_hist, obj);
-			break;
+			hist_obj_link(obj_hist, obj);
+			return obj_hist;
 		}
 	}
-	
 	return obj_hist;
-	
 }
 
 // returns the ObjHistory at a given index
@@ -107,7 +103,7 @@ void clear_obj_history(ObjHistory *history)
 		return;
 	history->in_use = 0;
 	// unlink from gameobj
-	unlink_history(history, history->game_obj);
+	hist_obj_unlink(history, history->game_obj);
 	history->facing_history = 0;
 	for(int i = 0; i < HISTORY_TURN_MAX; i++)
 		history->tile_history[i] = -1;
@@ -241,7 +237,7 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	// create a smoke effect if the object changed positions
 	if(old_tile_id != new_tile_id && old_tile_id >= 0 && new_tile_id >= 0)
 	{
-		create_smoke_at_tile(old_tile_id);
+		create_effect_at_tile(ET_SMOKE, old_tile_id);
 	}
 
 	

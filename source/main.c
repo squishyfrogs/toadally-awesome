@@ -1,39 +1,43 @@
 #include <string.h>
 #include <tonc.h>
 
+#include "memory.h"
 #include "layers.h"
 #include "game.h"
 #include "input.h"
+#include "screens.h"
 
 
-// game.c
-extern void init_objs();	//temp
-extern void init_map();		//temp
-extern void game_update_temp();	//temp
 
-extern void audio_init();			// audio.c
+
+extern void audio_init();				// audio.c
 extern void animdata_init_all();		// animation.c
-extern void gameobj_init_all();		// gameobj.c
-extern void playerobj_init();		// playerobj.c
-extern void ui_init();				// ui.c
-extern void map_init();				// map.c
+extern void gameobj_init_all();			// gameobj.c
+extern void playerobj_init();			// playerobj.c
+extern void ui_init();					// ui.c
+extern void map_init();					// map.c
+// game.c
+extern void init_objs_temp();	//temp
+extern void init_map();
+extern void game_update_main();
+extern void update_world_pos();
 // effects.c
 extern void effects_init();
 extern void effects_anim_update();
-
+// playerobj.c
 extern void playerobj_update();
 // ui.c
 extern void ui_start();
 extern void ui_update();
 extern void ui_update_anim();
-
-extern void update_world_pos();
+// camera.c
 extern void camera_update_pos();
 // gameobj.c
 extern void gameobj_update_all();
 extern void gameobj_update_anim_all();
 extern void gameobj_push_all_updates();
 extern bool gameobj_all_at_rest();
+extern void gameobj_erase_all();
 // objhistory.c
 extern void history_clear_future();
 extern void history_update_all();
@@ -46,22 +50,27 @@ extern void turn_count_decrement();
 void main_game_loop();
 
 // init functions
-void game_init();
-void reg_init();
+void global_init();
 void timer_init();
+void main_game_init();
+void main_game_end();
+void global_soft_reset();
 
-void game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
+void go_to_logo();									// go to the logo screen (the first scene upon game startup)
+void go_to_title();									// go to the title screen
+void main_game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
+void title_update();								// update title screen
 void animations_update();							// update graphics and animation
-void game_update();									// update gameplay elements
+void main_game_update();							// update gameplay elements
 void action_update();								// update that occurs when the player takes an action
 void finalize_turn();								// update that occurs after all pieces have settled
 
 void set_turn_active();
 
-
 static GameState game_state;						// what state the game is currently in
+
 static bool game_paused;							
 static bool turn_active;		
 
@@ -74,19 +83,35 @@ void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy)
 
 
 
+//////////////////
+/// Game State ///
+//////////////////
+
+void set_game_state(GameState state)
+{
+	game_state = state;
+}
+
+GameState get_game_state()
+{
+	return game_state;
+}
+
+
+////////////
+/// Main ///
+////////////
+
 // The Big One
 int main(void)
 {
-	game_init();
+	global_init();
 	
 
-	// temp
-	init_objs(); 	
-	init_map();
-	test_init_tte_se4();
-	test_run_tte_se4();
-	//
-	game_start();
+	go_to_logo();
+
+	
+	//main_game_start();
 
 	main_game_loop();
 
@@ -104,13 +129,29 @@ void main_game_loop()
 		VBlankIntrWait();	//slower but saves power
 		key_poll();
 
+		//if(key_is_down(KEY_SELECT))
+		if(key_is_down(KEY_RESET) == KEY_RESET)
+		{	
+			break;		// exit the loop 
+		}
+
 		animations_update();
 
-		game_update();
-		
-
+		switch(get_game_state())
+		{
+			case GS_LOGO:
+			case GS_TITLE:
+				title_update();
+				break;
+			case GS_MAIN_GAME:
+			default:
+				main_game_update();
+				break;
+		}
 		
 	}
+
+	global_soft_reset();
 }
 
 
@@ -120,62 +161,88 @@ void main_game_loop()
 //////////////////////////////////
 
 //all initialization and setup goes in here
-void game_init()
+void global_init()
 {	
-	game_state = GS_DEBUG;
+	//set_game_state(GS_DEBUG);
+	set_game_state(GS_STARTUP);
 
 	// GBA setup
 	irq_init(NULL);
 	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
-	reg_init(); 
 	audio_init();
-	
-	// game setup
-	animdata_init_all();
-	gameobj_init_all();
-	map_init();
-	playerobj_init();
-	ui_init();
-	effects_init();
 }
 
+
+
+void global_soft_reset()
+{
+	main_game_end();
+	input_unlock_override_all();
+	go_to_logo();
+	main_game_loop();
+}
 
 
 ////////////////////////////
 /// Other Initialization ///
 ////////////////////////////
 
-// initialize the bg + obj registers 
-void reg_init()
+
+
+
+void main_game_init()
 {
-	// set up BG0 for text
-	REG_BG0CNT= BG_CBB(LAYER_TEXT) | BG_SBB(30);
-	// set up BG1 for a 8bpp 32x32t map, using charblock 0 and screenblock 31
-	REG_BG1CNT= BG_PRIO(LAYER_BACKGROUND) | BG_CBB(0) | BG_SBB(30) | BG_8BPP | BG_REG_32x32;
-	REG_DISPCNT= DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
-	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
+	reg_init_main();
+	// game setup
+	animdata_init_all();
+	gameobj_init_all();
+
+	map_init();
+	playerobj_init();
+	ui_init();
+	effects_init();
+
+	// temp
+	init_objs_temp();
+	init_map();
+	test_init_tte_se4();
+	test_run_tte_se4();
+	//
 }
-
-// initialize game timers (currently unused?)
-void timer_init()
-{
-	// Overflow every ~1 second:
-	// 0x4000 ticks @ FREQ_1024
-
-	// REG_TM2D = -0x4000;				// 111 ticks to overflow - should produce 60hz cycle?
-	// REG_TM2CNT = TM_FREQ_1024;		// use 1024 cycle timer
-	// REG_TM2CNT = TM_ENABLE;
-	// REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
-}
-
 
 //////////////////
 /// Game Start ///
 //////////////////
 
-void game_start()
+
+
+void go_to_logo()
 {
+	reg_init_title();
+	set_game_state(GS_LOGO);
+	input_lock_sys();
+	logo_load();
+	logo_display();
+}
+
+void go_to_title()
+{
+	reg_init_title();
+	set_game_state(GS_TITLE);
+	input_lock_sys();
+	title_load();
+	title_display();
+}
+
+void main_game_start()
+{
+	input_lock_sys();
+	set_game_state(GS_MAIN_GAME);
+	main_game_init();
+
+
+
 	turn_count_set(0);
 	game_paused = false;
 	turn_active = false;
@@ -183,12 +250,73 @@ void game_start()
 	
 	// update all obj histories once
 	history_update_all();
+	
+	input_unlock_sys();
 }
 
+void main_game_end()
+{
+	//map_init();
+	//playerobj_init();
+	//ui_init();
+	//effects_init();
+	gameobj_erase_all();
+	mem_clear_palettes();
+	mem_clear_tiles();
+}
 
 /////////////////////////////
 /// Game Update Functions ///
 /////////////////////////////
+
+
+// update title screen
+void title_update()
+{
+	if(key_hit(KEY_NONDIR))
+	{
+		switch(get_game_state())
+		{
+			case GS_LOGO:
+				go_to_title();
+				break;
+			case GS_TITLE:
+				main_game_start();
+				break;
+			default:
+				break;
+		}
+		
+	}
+}
+
+
+// update gameplay elements
+void main_game_update()
+{
+	// gameplay update functions go out here
+	update_text_temp();
+	playerobj_update();				// update player first
+	gameobj_update_all();			// update gameobj movement
+	game_update_main();				
+	update_world_pos();				// push the map around
+//	camera_update_pos();
+	ui_update();
+
+	// finalize the turn when all objects come to rest
+	if(turn_active && gameobj_all_at_rest())
+	{
+		finalize_turn();
+		turn_active = false;
+		input_unlock_sys();
+	}
+
+	// update gameobj attrs based on gameplay changes
+	gameobj_push_all_updates();
+
+	
+}
+
 
 // update graphics and animation
 void animations_update()
@@ -211,30 +339,6 @@ void animations_update()
 		ui_update_anim();
 		ui_anim_sync %= UI_ANIM_SPEED;
 	}
-}
-
-
-// update gameplay elements
-void game_update()
-{
-	// gameplay update functions go out here
-	update_text_temp();
-	playerobj_update();				// update player first
-	gameobj_update_all();			// update gameobj movement
-	game_update_temp();				
-	update_world_pos();				// push the map around
-//	camera_update_pos();
-	ui_update();
-
-	// finalize the turn when all objects come to rest
-	if(turn_active && gameobj_all_at_rest())
-	{
-		finalize_turn();
-		turn_active = false;
-	}
-
-	// update gameobj attrs based on gameplay changes
-	gameobj_push_all_updates();
 }
 
 
@@ -278,6 +382,23 @@ void set_turn_active()
 /////////////////////////////
 /// Testing & Placeholder ///
 /////////////////////////////
+
+
+
+
+// initialize game timers (currently unused?)
+void timer_init()
+{
+	// Overflow every ~1 second:
+	// 0x4000 ticks @ FREQ_1024
+
+	// REG_TM2D = -0x4000;				// 111 ticks to overflow - should produce 60hz cycle?
+	// REG_TM2CNT = TM_FREQ_1024;		// use 1024 cycle timer
+	// REG_TM2CNT = TM_ENABLE;
+	// REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
+}
+
+
 
 void test_init_tte_se4()
 {
@@ -344,12 +465,12 @@ void test_run_tte_se4()
 
 	// --- (3) Print some text ---
 	//tte_set_margins(16,16,144,144);
-	tte_set_pos(8, 8);
-	// "Hello world in different colors"
-	tte_write("\n Hahahahaha\n");
-	tte_write(" #{cx:0x1000}It took me an entire day\n");
-	tte_write(" #{cx:0x2000}But I made text and sprites \n show up at the same time\n");
-	tte_write(" #{cx:0x5000}It was a 1 line fix....\n");
+	//tte_set_pos(8, 8);
+	//	"Hello world in different colors"
+	//	tte_write("\n #{cx:0x0000}Hahahahaha\n");
+	//	tte_write(" #{cx:0x1000}It took me an entire day\n");
+	//	tte_write(" #{cx:0x2000}But I made text and sprites \n show up at the same time\n");
+	//	tte_write(" #{cx:0x5000}It was a 1 line fix....\n");
 
 	// Color use explained
 	//tte_set_pos(8, 84);
@@ -374,3 +495,4 @@ void update_text_temp()
 		//tte_erase_rect(0,0,64,32);
 	}
 }
+

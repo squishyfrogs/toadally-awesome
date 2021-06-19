@@ -48,11 +48,14 @@ void load_map_tiles(const ushort *map_tiles, int tiles_len)
 // load a map into memory
 void load_map(const ushort *map, int map_len)
 {
-	u16 offset = 256;
+	// offset by 256 for reasons
+	u16 map_mem_offset = 256;
+	// divide len by 2 for reasons
+	int half_len = map_len / 2;
 	// Load map into SBB 30
-	for(int i = 0; i < 1024; i++)
+	for(int i = 0; i < half_len; i++)
 	{
-		se_mem[30][i] = map[i] + offset;
+		se_mem[30][i] = map[i] + map_mem_offset;
 	}
 }
 

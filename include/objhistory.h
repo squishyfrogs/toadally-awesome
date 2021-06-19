@@ -16,7 +16,7 @@ typedef struct struct_ObjHistory{
 	int tile_history[HISTORY_TURN_MAX];													// position data stored as a series of ints (referring to tileID)
 } ObjHistory;
 
-void objhistory_init();																	// initialize ObjHistory list
+void obj_history_init();																	// initialize ObjHistory list
 ObjHistory *register_obj_history(GameObj *obj);											// returns a free ObjHistory from the list and assigns a GameObj to it
 ObjHistory *get_obj_history(int index);													// returns the ObjHistory at a given index
 void update_obj_history(ObjHistory *history, int facing, int tpos_x, int tpos_y);		// pushes changes to the action queue

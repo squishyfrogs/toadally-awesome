@@ -7,6 +7,7 @@
 
 #define INPLCK_PLAYER	0x01
 #define INPLCK_UI		0x02
+#define INPLCK_SYS		0x04
 
 static u8 inp_lck = 0;
 
@@ -42,4 +43,14 @@ void input_lock_ui()
 void input_unlock_ui()
 {
 	inp_lck &= ~INPLCK_UI;
+}
+
+void input_lock_sys()
+{
+	inp_lck |= INPLCK_SYS;
+}
+
+void input_unlock_sys()
+{
+	inp_lck &= ~INPLCK_SYS;
 }

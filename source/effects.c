@@ -1,3 +1,4 @@
+#include "effects.h"
 #include "game.h"
 #include "gameobj.h"
 #include "sprites/effects/dustcloud.h"
@@ -12,16 +13,13 @@ typedef struct struct_Effect {
 void effects_init();
 void effects_anim_update();
 Effect *get_free_effect();
-void create_effect_at_position(int tile_x, int tile_y);
-void create_smoke_at_tile(int tile_id);
 
+GameObj *eff_templates[ET_COUNT];		// hidden templates for the different effects
 #define EFFECTS_MAX 8
 Effect effects[EFFECTS_MAX];			// effects that will be visible in game
 
-GameObj *dust_cloud;					// hidden template for dust cloud
 #define DUST_TIMER_MAX 5
 
-GameObj *smoke_cloud_src;				// hidden template for smoke cloud
 #define SMOKE_TIMER_MAX 5
 
 void effects_init()
@@ -38,17 +36,17 @@ void effects_init()
 
 	// dust
 	int dust_tile = mem_load_tiles(dustcloudTiles, dustcloudTilesLen);
-	dust_cloud = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, dust_tile, 0, 0, 0);
-	gameobj_set_sprite_offset(dust_cloud, 0, 0);
-	gameobj_hide(dust_cloud);
+	eff_templates[ET_DUST] = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, dust_tile, 0, 0, 0);
+	gameobj_set_sprite_offset(eff_templates[ET_DUST], 0, 0);
+	gameobj_hide(eff_templates[ET_DUST]);
 
 	// init smoke_cloud
 	int smoke_tile = mem_load_tiles(smokeTiles, smokeTilesLen);
-	smoke_cloud_src = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, smoke_tile, 0, 0, 0);
-	gameobj_set_sprite_offset(smoke_cloud_src, 0, 0);
+	eff_templates[ET_SMOKE] = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, smoke_tile, 0, 0, 0);
+	gameobj_set_sprite_offset(eff_templates[ET_SMOKE], 0, 0);
 	AnimationData *smoke_data = animdata_create(smoke_tile, ANIM_OFFSET_16x16, 4, 0);
-	gameobj_set_anim_data(smoke_cloud_src, smoke_data, 0);
-	gameobj_hide(smoke_cloud_src);
+	gameobj_set_anim_data(eff_templates[ET_SMOKE], smoke_data, 0);
+	gameobj_hide(eff_templates[ET_SMOKE]);
 }
 
 
@@ -82,20 +80,29 @@ Effect *get_free_effect()
 }
 
 
-void create_effect_at_position(int tile_x, int tile_y)
-{
-	
-}
 
 
-void create_smoke_at_tile(int tile_id)
+void create_effect_at_tile(EffectType eff_type, int tile_id)
 {
 	Effect *eff = get_free_effect();
 	// if no free effect slots, dont bother
 	if(eff == NULL)
 		return;
-	gameobj_clone(eff->obj, smoke_cloud_src);
+	gameobj_clone(eff->obj, eff_templates[eff_type]);
 	gameobj_set_tile_pos_by_id(eff->obj, tile_id);
+	gameobj_unhide(eff->obj);
+	gameobj_play_anim(eff->obj);
+	eff->life_timer = SMOKE_TIMER_MAX;
+}
+
+void create_effect_at_position(EffectType eff_type, int tile_x, int tile_y)
+{
+	Effect *eff = get_free_effect();
+	// if no free effect slots, dont bother
+	if(eff == NULL)
+		return;
+	gameobj_clone(eff->obj, eff_templates[eff_type]);
+	gameobj_set_tile_pos(eff->obj, tile_x, tile_y);
 	gameobj_unhide(eff->obj);
 	gameobj_play_anim(eff->obj);
 	eff->life_timer = SMOKE_TIMER_MAX;

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 #include "game.h"
+#include "vector2.h"
 #include "gameobj.h"
 #include "layers.h"
 #include "map.h"
@@ -12,24 +13,81 @@
 
 
 
-void init_objs();
+void init_objs_temp();
 void init_map();
-void game_update_temp();
+void init_map_temp();
+void game_update_main();
+void game_update_main_temp();
 void set_world_offset(int off_x, int off_y);
+Vector2 get_world_offset();
 void update_world_pos();
 
 
 int world_offset_x;
 int world_offset_y;
 
+
+
+void init_map()
+{
+	init_map_temp();
+}
+
+
+void game_update_main()
+{
+
+	if(!input_locked())
+	{
+		if(key_hit(KEY_L))
+		{
+			history_step_back(1);
+		}
+
+		if(key_hit(KEY_R))
+		{
+			//history_return_to_present();
+			history_step_forward(1);
+		}
+	}
+
+	game_update_main_temp();
+}
+
+
+
+
+
+/////////////////////////////
+/// Testing & Placeholder ///
+/////////////////////////////
+
+///// temp
 GameObj *kirby;
 GameObj *mario;
 GameObj *kirby2;
-
 GameObj *crate;
+//////
+
+void init_map_temp()
+{
+	// Load palette
+	load_map_palette(testmapPal);
+	//load_map_palette(fe_mapPal);
+	
+	//memcpy(&tile_mem[1][start], fe_mapTiles, fe_mapTilesLen);
+	//load_map_tiles(fe_mapTiles, fe_mapTilesLen);
+	load_map_tiles(testmapTiles, testmapTilesLen);
+	
+	//load_map(fe_mapMap, fe_mapMapLen);
+	load_map(testmapMap, testmapMapLen);
+	load_map_col_info(testmapCol);
 
 
-void init_objs()
+}
+
+
+void init_objs_temp()
 {
 	//memcpy(&tile_mem[4][0], metrTiles, metrTilesLen);
 	//memcpy(pal_obj_mem, metrPal, metrPalLen);
@@ -65,26 +123,7 @@ void init_objs()
 	place_obj_in_tile(crate, 6, 12);
 }
 
-void init_map()
-{
-	// Load palette
-	load_map_palette(testmapPal);
-	//load_map_palette(fe_mapPal);
-	
-	//memcpy(&tile_mem[1][start], fe_mapTiles, fe_mapTilesLen);
-	load_map_tiles(fe_mapTiles, fe_mapTilesLen);
-	load_map_tiles(testmapTiles, testmapTilesLen);
-	
-	//load_map(fe_mapMap, fe_mapMapLen);
-	load_map(testmapMap, testmapMapLen);
-	load_map_col_info(testmapCol);
-
-
-}
-
-
-
-void game_update_temp()
+void game_update_main_temp()
 {
 
 	gameobj_change_pixel_pos(kirby, key_tri_horz(), key_tri_vert());
@@ -125,29 +164,30 @@ void game_update_temp()
 	//world_offset_x = kirby->pos_x/2;
 	//world_offset_y = kirby->pos_y/2;
 
-	if(!input_locked())
-	{
-		if(key_hit(KEY_L))
-		{
-			history_step_back(1);
-		}
-
-		if(key_hit(KEY_R))
-		{
-			//history_return_to_present();
-			history_step_forward(1);
-		}
-	}
+	
 
 
 }
 
+
+////////////////////
+/// World Offset ///
+////////////////////
 
 // set the world offset values
 void set_world_offset(int off_x, int off_y)
 {
 	world_offset_x = off_x;
 	world_offset_y = off_y;
+}
+
+// get the current world offset
+Vector2 get_world_offset()
+{
+	Vector2 v;
+	v.x = world_offset_x;
+	v.y = world_offset_y;
+	return v;
 }
 
 // push changes to the world offset (done every frame)

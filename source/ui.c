@@ -135,9 +135,9 @@ void ui_update()
 	for(int i = 0; i < HP_MAX; i++)
 	{
 		if(i >= player_health)
-			hearts[i]->tile_id = h_tile + 2;
+			hearts[i]->spr_tile_id = h_tile + 2;
 		else
-			hearts[i]->tile_id = h_tile;
+			hearts[i]->spr_tile_id = h_tile;
 		gameobj_update_attr(hearts[i]);
 		if(i % 2)
 			gameobj_set_flip_h(hearts[i], true);
@@ -153,24 +153,24 @@ void ui_update_anim()
 	if(count_rolling != 0)
 	{
 		// update ones digit first
-		int f_offset = action_counter[2]->tile_id - a_tile;
+		int f_offset = action_counter[2]->spr_tile_id - a_tile;
 		f_offset = ((10 * DIGIT_ANIM_LENGTH) + (f_offset + count_rolling)) % (10 * DIGIT_ANIM_LENGTH);
-		action_counter[2]->tile_id = a_tile + f_offset;
+		action_counter[2]->spr_tile_id = a_tile + f_offset;
 		
 		//if rolling up to a 0 or down to a 9
 		if(((count_rolling > 0) && (displayed_action_count % 10 == 9)) || ((count_rolling < 0) && (displayed_action_count % 10 == 0)))
 		{
 			// update tens digit as well
-			f_offset = action_counter[1]->tile_id - a_tile;
+			f_offset = action_counter[1]->spr_tile_id - a_tile;
 			f_offset = ((10 * DIGIT_ANIM_LENGTH) + (f_offset + count_rolling)) % (10 * DIGIT_ANIM_LENGTH);
-			action_counter[1]->tile_id = a_tile + f_offset;
+			action_counter[1]->spr_tile_id = a_tile + f_offset;
 
 			//repeat process for hundreds digit
 			if(((count_rolling > 0) && (displayed_action_count % 100 == 99)) || ((count_rolling < 0) && (displayed_action_count % 100 == 0)))
 			{
-				f_offset = action_counter[0]->tile_id - a_tile;
+				f_offset = action_counter[0]->spr_tile_id - a_tile;
 				f_offset = ((10 * DIGIT_ANIM_LENGTH) + (f_offset + count_rolling)) % (10 * DIGIT_ANIM_LENGTH);
-				action_counter[0]->tile_id = a_tile + f_offset;
+				action_counter[0]->spr_tile_id = a_tile + f_offset;
 			}
 		}
 
@@ -199,9 +199,10 @@ void reset_action_count()
 	displayed_action_count = 0;
 	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
 	{
-		action_counter[i]->tile_id = a_tile;
+		action_counter[i]->spr_tile_id = a_tile;
 		gameobj_update_attr(action_counter[i]);
 	}
+	set_action_count_immediate(0);
 }
 
 void set_action_count_immediate(int count)
@@ -209,13 +210,13 @@ void set_action_count_immediate(int count)
 	true_action_count = count;
 	displayed_action_count = count;
 	// hundreds digit
-	action_counter[0]->tile_id = a_tile + (DIGIT_ANIM_LENGTH * ((count / 100) % 10));
+	action_counter[0]->spr_tile_id = a_tile + (DIGIT_ANIM_LENGTH * ((count / 100) % 10));
 	gameobj_update_attr(action_counter[0]);
 	// tens digit
-	action_counter[1]->tile_id = a_tile + (DIGIT_ANIM_LENGTH * ((count / 10) % 10));
+	action_counter[1]->spr_tile_id = a_tile + (DIGIT_ANIM_LENGTH * ((count / 10) % 10));
 	gameobj_update_attr(action_counter[1]);
 	// ones digit
-	action_counter[2]->tile_id = a_tile + (DIGIT_ANIM_LENGTH * (count % 10));
+	action_counter[2]->spr_tile_id = a_tile + (DIGIT_ANIM_LENGTH * (count % 10));
 	gameobj_update_attr(action_counter[2]);
 }
 

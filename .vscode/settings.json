@@ -9,6 +9,8 @@
 		"game.h": "c",
 		"mario.h": "c",
 		"heart.h": "c",
-		"gameobj.h": "c"
+		"gameobj.h": "c",
+		"input.h": "c",
+		"logo.h": "c"
 	}
 }

@@ -1,8 +1,9 @@
 #include <string.h>
 #include <tonc.h>
+#include "gameobj.h"
+#include "memory.h"
 #include "game.h"
 #include "direction.h"
-#include "gameobj.h"
 #include "objhistory.h"
 #include "animation.h"
 #include "map.h"
@@ -24,17 +25,15 @@ void gameobj_update_pos(GameObj *obj);
 void gameobj_update_sprite_facing(GameObj *obj);							// updates a GameObj's sprite after changing direction
 void gameobj_push_changes(GameObj *obj);
 
-extern void objhistory_init();
-
+extern void obj_history_init();
+extern Vector2 get_world_offset();
 
 GameObj obj_list[OBJ_COUNT];
 OBJ_ATTR objattr_buffer[OBJ_COUNT];
-static int free_pal = 0;		//marker of first free palette in VRAM
-static int free_tile = 0;		//marker of first free tile in VRAM
 
 
-extern int world_offset_x;
-extern int world_offset_y;
+
+
 
 
 
@@ -49,10 +48,18 @@ void gameobj_init_all()
 	//hides all sprites
 	oam_init(objattr_buffer, 128);
 
-	objhistory_init();
+	obj_history_init();
 }
 
-
+void gameobj_erase_all()
+{
+	for(int i = 0; i < OBJ_COUNT; i++)
+	{
+		gameobj_erase(&obj_list[i]);
+	}
+	OAM_CLEAR();
+	gameobj_hide_all();
+}
 
 ////////////////////////
 /// UPDATE FUNCTIONS ///
@@ -100,28 +107,6 @@ void gameobj_push_all_updates()
 
 
 
-////////////////////////
-/// MEMORY FUNCTIONS ///
-////////////////////////
-
-int mem_load_palette(const ushort *pal_data)
-{
-	int pal_id = free_pal;
-	memcpy(pal_obj_mem + (pal_id*16), pal_data, 32);	// 16 colors per palette, 2 bytes per color
-	free_pal++;
-	return pal_id;
-}
-
-int mem_load_tiles(const ushort *tile_data, int data_len)
-{
-	//always block 4? 
-	int tile_id = free_tile;
-	memcpy(&tile_mem[4][tile_id], tile_data, data_len);
-	free_tile += (data_len/32); // divide by 32;
-	return tile_id;
-}
-
-
 /////////////////////////
 /// GAMEOBJ FUNCTIONS ///
 /////////////////////////
@@ -135,7 +120,7 @@ GameObj *create_gameobj_with_id(int obj_id)
 	obj->obj_id = obj_id;
 	obj->attr = &objattr_buffer[obj_id];
 	obj->pal_bank_id = 0;
-	obj->tile_id = 0;
+	obj->spr_tile_id = 0;
 	obj->layer_priority = LAYER_GAMEOBJ;
 	obj->spr_shape = ATTR0_SQUARE;
 	obj->spr_size = ATTR1_SIZE_16x16;	// assume 16x6 for default bc I really doubt anyone is regularly making 16x8 objects 
@@ -166,7 +151,7 @@ GameObj *gameobj_init()
 
 
 // initialize a GameObj in detail
-GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 spr_tile_id, int x, int y, u16 properties)
 {
 	GameObj *obj = gameobj_init();
 
@@ -174,7 +159,7 @@ GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 	obj->spr_shape = attr0_shape;
 	obj->pal_bank_id = palbank;
 	obj->spr_size = attr1_size;
-	obj->tile_id = tile_id;
+	obj->spr_tile_id = spr_tile_id;
 	obj->obj_properties = properties;
 
 	// if a sprite is FIXED_POS, init differently 
@@ -200,7 +185,7 @@ GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 		obj->tile_pos.y = y;
 	}
 
-	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id));
+	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->spr_tile_id));
 	gameobj_update_pos(obj);
 
 	return obj;
@@ -222,7 +207,7 @@ GameObj *gameobj_clone(GameObj *dest, GameObj *src)
 	//dest->attr = src->attr;
 
 	dest->layer_priority = src->layer_priority;
-	dest->tile_id = src->tile_id;
+	dest->spr_tile_id = src->spr_tile_id;
 	dest->pal_bank_id = src->pal_bank_id;
 	dest->layer_priority = src->layer_priority;
 	dest->spr_shape = src->spr_shape;
@@ -239,7 +224,7 @@ GameObj *gameobj_clone(GameObj *dest, GameObj *src)
 	// do not copy these -- remake from scratch
 	//obj->hist = src->hist;
 
-	obj_set_attr(dest->attr, dest->spr_shape, dest->spr_size, (ATTR2_PALBANK(dest->pal_bank_id) | dest->tile_id));
+	obj_set_attr(dest->attr, dest->spr_shape, dest->spr_size, (ATTR2_PALBANK(dest->pal_bank_id) | dest->spr_tile_id));
 	gameobj_update_pos(dest);
 
 	return dest;
@@ -252,7 +237,7 @@ void gameobj_erase(GameObj *obj)
 	obj->in_use = 0;
 	obj->obj_id = 0;
 	obj->pal_bank_id = 0;
-	obj->tile_id = 0;
+	obj->spr_tile_id = 0;
 	obj->layer_priority = 0;
 	obj->spr_shape = 0;
 	obj->spr_size = 0;
@@ -271,17 +256,17 @@ void gameobj_erase(GameObj *obj)
 // set a GameObj's attributes
 void gameobj_update_attr(GameObj *obj)
 {
-	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->tile_id));
+	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->spr_tile_id));
 	gameobj_update_pos(obj);
 }
 
 // set a GameObj's attributes
-void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 tile_id, int x, int y, u16 properties)
+void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 spr_tile_id, int x, int y, u16 properties)
 {
 	obj->spr_shape = attr0_shape;
 	obj->spr_size = attr1_size;
 	obj->pal_bank_id = palbank;
-	obj->tile_id = tile_id;
+	obj->spr_tile_id = spr_tile_id;
 	obj->obj_properties = properties;
 
 	// if a sprite is FIXED_POS, update differently 
@@ -298,7 +283,7 @@ void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16
 		obj->tile_pos.y = y;
 	}
 
-	u32 tid = obj->tile_id + (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
+	u32 tid = obj->spr_tile_id + (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
 	obj_set_attr(obj->attr, attr0_shape, attr1_size, (ATTR2_PALBANK(palbank) | tid));
 	gameobj_update_pos(obj);
 }
@@ -341,9 +326,9 @@ void gameobj_play_anim(GameObj *obj)
 	if(looping)
 		flags |= ANIM_FLAG_LOOPING;
 	if(obj->anim == NULL)
-		obj->anim = anim_create(obj->tile_id, tile_offset, frame_count, facing_offset, flags);
+		obj->anim = anim_create(obj->spr_tile_id, tile_offset, frame_count, facing_offset, flags);
 	else
-		anim_set_info(obj->anim, obj->tile_id, tile_offset, frame_count, facing_offset, flags);
+		anim_set_info(obj->anim, obj->spr_tile_id, tile_offset, frame_count, facing_offset, flags);
 }*/
 
 
@@ -393,8 +378,9 @@ void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y)
 // update a GameObj's attrs based on its current position
 void gameobj_update_pos(GameObj *obj)
 {
-	int pos_x = (obj->tile_pos.x * GAME_TILE_SIZE) + obj->pixel_pos.x - obj->spr_off.x - world_offset_x;
-	int pos_y = (obj->tile_pos.y * GAME_TILE_SIZE) + obj->pixel_pos.y - obj->spr_off.y - world_offset_y;
+	Vector2 w_off = get_world_offset();
+	int pos_x = (obj->tile_pos.x * GAME_TILE_SIZE) + obj->pixel_pos.x - obj->spr_off.x - w_off.x;
+	int pos_y = (obj->tile_pos.y * GAME_TILE_SIZE) + obj->pixel_pos.y - obj->spr_off.y - w_off.y;
 	if(obj->obj_properties & OBJPROP_FIXED_POS)
 		obj_set_pos(obj->attr, obj->pixel_pos.x - obj->spr_off.x, obj->pixel_pos.y - obj->spr_off.y);
 	else
@@ -477,8 +463,8 @@ void gameobj_update_sprite_facing(GameObj *obj)
 		}
 	}
 	
-	//obj->tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
-	obj->tile_id = obj->anim.anim_data->tile_start + (dir * obj->anim.anim_data->facing_offset * obj->anim.anim_data->tile_offset);
+	//obj->spr_tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
+	obj->spr_tile_id = obj->anim.anim_data->tile_start + (dir * obj->anim.anim_data->facing_offset * obj->anim.anim_data->tile_offset);
 	gameobj_push_changes(obj);
 }
 
@@ -625,12 +611,12 @@ void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 // push changes to a GameObj's position, animation, and palette
 void gameobj_push_changes(GameObj *obj)
 {
-	u32 tile_id = obj->tile_id;
+	u32 spr_tile_id = obj->spr_tile_id;
 	if(obj->anim.anim_data != NULL)
-		tile_id += (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
+		spr_tile_id += (obj->anim.anim_data->tile_offset * obj->anim.cur_frame);
 
 	obj->attr->attr2 = ATTR2_BUILD(
-		tile_id,
+		spr_tile_id,
 		obj->pal_bank_id,
 		obj->layer_priority
 	);
