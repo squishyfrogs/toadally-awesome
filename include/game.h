@@ -8,8 +8,9 @@ typedef enum GameState_T{
 	GS_STARTUP,
 	GS_LOGO,
 	GS_TITLE,
-	GS_MAP_SELECT,
-	GS_MAIN_GAME
+	GS_LEVEL_SELECT,
+	GS_MAIN_GAME,
+	GS_CREDITS
 } GameState;
 
 

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 #include "game.h"
+#include "regmem.h"
 #include "vector2.h"
 #include "gameobj.h"
 #include "layers.h"

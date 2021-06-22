@@ -1,5 +1,6 @@
 #include <tonc.h>
-#include "memory.h"
+#include <string.h>
+#include "regmem.h"
 #include "layers.h"
 
 static int free_pal = 0;		//marker of first free palette in VRAM
@@ -40,7 +41,7 @@ void mem_clear_tiles()
 
 
 
-// initialize the bg + obj registers 
+// initialize the bg + obj registers
 void reg_init_main()
 {
 	// set up BG0 for text
@@ -52,10 +53,22 @@ void reg_init_main()
 	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
 }
 
-// initialize the bg + obj registers 
+// initialize the bg + obj registers
 void reg_init_title()
 {
 	REG_BG2CNT = BG_PRIO(LAYER_BACKGROUND) | BG_CBB(0) | BG_SBB(30) | BG_4BPP | BG_REG_32x32;
 	
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG2;
+
+}
+
+void reg_init_lev_sel()
+{
+	// set up BG0 for text
+	REG_BG0CNT = BG_CBB(LAYER_TEXT) | BG_SBB(30);
+	// set up BG1 for a 8bpp 32x32t map, using charblock 0 and screenblock 31
+	REG_BG1CNT = BG_PRIO(LAYER_BACKGROUND) | BG_CBB(0) | BG_SBB(30) | BG_8BPP | BG_REG_32x32;
+	//REG_BG2CNT = BG_PRIO(LAYER_BACKGROUND) | BG_CBB(0) | BG_SBB(30) | BG_4BPP | BG_REG_32x32;
+	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
+	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
 }

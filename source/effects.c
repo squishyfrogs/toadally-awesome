@@ -1,4 +1,5 @@
 #include "effects.h"
+#include "regmem.h"
 #include "game.h"
 #include "gameobj.h"
 #include "sprites/effects/dustcloud.h"

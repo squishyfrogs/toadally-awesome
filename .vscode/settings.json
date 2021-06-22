@@ -11,6 +11,9 @@
 		"heart.h": "c",
 		"gameobj.h": "c",
 		"input.h": "c",
-		"logo.h": "c"
+		"logo.h": "c",
+		"memory.h": "c",
+		"regmem.h": "c",
+		"smoke.h": "c"
 	}
 }

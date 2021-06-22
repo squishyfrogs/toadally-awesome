@@ -1,7 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 
-#include "memory.h"
+#include "regmem.h"
 #include "layers.h"
 #include "game.h"
 #include "input.h"
@@ -21,6 +21,8 @@ extern void init_objs_temp();	//temp
 extern void init_map();
 extern void game_update_main();
 extern void update_world_pos();
+// levelselect.c
+extern void level_select_update();
 // effects.c
 extern void effects_init();
 extern void effects_anim_update();
@@ -58,6 +60,7 @@ void global_soft_reset();
 
 void go_to_logo();									// go to the logo screen (the first scene upon game startup)
 void go_to_title();									// go to the title screen
+void go_to_level_select();
 void main_game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
@@ -143,6 +146,9 @@ void main_game_loop()
 			case GS_TITLE:
 				title_update();
 				break;
+			case GS_LEVEL_SELECT:
+				level_select_update();
+				break;
 			case GS_MAIN_GAME:
 			default:
 				main_game_update();
@@ -150,7 +156,7 @@ void main_game_loop()
 		}
 		
 	}
-
+	// if out here for whatever reason, reboot the game
 	global_soft_reset();
 }
 
@@ -171,23 +177,9 @@ void global_init()
 	//irq_add(II_VBLANK, NULL);
 	irq_enable(II_VBLANK);
 	audio_init();
+
+	gameobj_init_all();
 }
-
-
-
-void global_soft_reset()
-{
-	main_game_end();
-	input_unlock_override_all();
-	go_to_logo();
-	main_game_loop();
-}
-
-
-////////////////////////////
-/// Other Initialization ///
-////////////////////////////
-
 
 
 
@@ -196,7 +188,7 @@ void main_game_init()
 	reg_init_main();
 	// game setup
 	animdata_init_all();
-	gameobj_init_all();
+	//gameobj_init_all();
 
 	map_init();
 	playerobj_init();
@@ -211,29 +203,53 @@ void main_game_init()
 	//
 }
 
+
+
+void global_soft_reset()
+{
+	main_game_end();
+	input_unlock_override_all();
+	go_to_logo();
+	main_game_loop();
+}
+
+
 //////////////////
 /// Game Start ///
 //////////////////
 
 
-
 void go_to_logo()
 {
 	reg_init_title();
+	unload_current_screen();
 	set_game_state(GS_LOGO);
 	input_lock_sys();
 	logo_load();
 	logo_display();
 }
 
+
 void go_to_title()
 {
 	reg_init_title();
+	unload_current_screen();
 	set_game_state(GS_TITLE);
 	input_lock_sys();
 	title_load();
 	title_display();
 }
+
+
+void go_to_level_select()
+{
+	reg_init_lev_sel();
+	unload_current_screen();
+	set_game_state(GS_LEVEL_SELECT);
+	lev_sel_load();
+	lev_sel_display();
+}
+
 
 void main_game_start()
 {
@@ -281,6 +297,9 @@ void title_update()
 				go_to_title();
 				break;
 			case GS_TITLE:
+				go_to_level_select();
+				break;
+			case GS_LEVEL_SELECT:
 				main_game_start();
 				break;
 			default:
@@ -289,6 +308,7 @@ void title_update()
 		
 	}
 }
+
 
 
 // update gameplay elements

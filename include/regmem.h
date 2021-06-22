@@ -1,5 +1,5 @@
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef REGMEM_H
+#define REGMEM_H
 
 
 int mem_load_palette(const unsigned short *pal_data);
@@ -9,6 +9,7 @@ void mem_clear_tiles();
 
 void reg_init_main();
 void reg_init_title();
+void reg_init_lev_sel();
 
 
-#endif //MEMORY_H
+#endif //REGMEM_H
