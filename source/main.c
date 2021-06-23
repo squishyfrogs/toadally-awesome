@@ -1,9 +1,11 @@
 #include <string.h>
 #include <tonc.h>
+#include <maxmod.h>
 
+#include "game.h"
+#include "audio.h"
 #include "regmem.h"
 #include "layers.h"
-#include "game.h"
 #include "input.h"
 #include "screens.h"
 
@@ -125,12 +127,18 @@ int main(void)
 // Where all the magic happens
 void main_game_loop()
 {
-	
+	play_dummy_track();
 	while (1) 
 	{
 		//vid_vsync();		//resource hog
+		mmFrame();			// audio update (must call every frame)
 		VBlankIntrWait();	//slower but saves power
 		key_poll();
+
+		if(key_hit(KEY_B))
+		{
+			play_dummy_sound();
+		}
 
 		//if(key_is_down(KEY_SELECT))
 		if(key_is_down(KEY_RESET) == KEY_RESET)
@@ -172,10 +180,13 @@ void global_init()
 	//set_game_state(GS_DEBUG);
 	set_game_state(GS_STARTUP);
 
-	// GBA setup
+	// GBA interrupt setup
 	irq_init(NULL);
-	//irq_add(II_VBLANK, NULL);
+	irq_add(II_VBLANK, mmVBlank);
 	irq_enable(II_VBLANK);
+	//irq_init(NULL);
+	//irq_add(II_VBLANK, NULL);
+	//irq_enable(II_VBLANK);
 	audio_init();
 
 	gameobj_init_all();
@@ -314,6 +325,7 @@ void title_update()
 // update gameplay elements
 void main_game_update()
 {
+	
 	// gameplay update functions go out here
 	update_text_temp();
 	playerobj_update();				// update player first
