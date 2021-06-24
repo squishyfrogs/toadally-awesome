@@ -5,19 +5,23 @@
 
 // main.c
 extern void go_to_title();
-extern void main_game_start();
+extern void go_to_main_game();
+// level.c
+extern void load_level_data(int level_id);
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
 extern void gameobj_update_all();
 extern void gameobj_push_all_updates();
 
 extern void init_objs_temp();
+extern void main_game_init();
 
 void level_select_init();
 void level_select_update();
 void level_select_clear();
 
 void load_level_cursor();
+void unload_level_cursor();
 void reset_level_cursor();
 void move_level_cursor(int x, int y);
 void update_cursor_position();
@@ -50,7 +54,9 @@ void level_select_update()
 	}
 	if(key_hit(KEY_ACCEPT))
 	{
-		main_game_start();
+		main_game_init();
+		load_level_data(cur_lvl_selection);
+		go_to_main_game();
 	}
 
 	if(key_hit(KEY_DIR))
@@ -64,7 +70,7 @@ void level_select_update()
 
 void level_select_clear()
 {
-
+	unload_level_cursor();
 }
 
 ////////////////////
@@ -78,6 +84,12 @@ void load_level_cursor()
 	cursor = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_WIDE, ATTR1_SIZE_64x32, cursor_pal, cursor_tile, 32, 32, OBJPROP_FIXED_POS);
 	gameobj_set_sprite_offset(cursor, 16,8);
 	
+}
+
+void unload_level_cursor()
+{
+	mem_free_palette(cursor->pal_bank_id);
+	gameobj_erase(cursor);
 }
 
 // return cursor to level 1

@@ -4,18 +4,21 @@
 #include "gameobj.h"
 
 
-
 #define MAP_PAL_LEN 512 //2 bytes per color, 256 color
 
 void map_clear_col_info();
 void map_clear_contents();
 
 
+
+
+
+// Map Data
+static MapData current_map;
 // collision data for map
 unsigned short map_collision_info[MAP_SIZE];
 // gameobj data
 GameObj *map_contents[MAP_SIZE];
-
 
 
 
@@ -30,6 +33,38 @@ void map_init()
 {
 	map_clear();
 }
+
+
+void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info)
+{
+	current_map.palette = palette;
+	current_map.tiles = tiles;
+	current_map.tile_len = tile_len;
+	current_map.map = map;
+	current_map.map_len = map_len;
+	current_map.col_info = col_info;
+}
+
+void load_map_from_current_data()
+{
+	load_map_from_data(&current_map);
+}
+
+void load_map_from_data(MapData *map_data)
+{
+	// Load palette
+	load_map_palette(map_data->palette);
+	
+	// load tiles
+	load_map_tiles(map_data->tiles, map_data->tile_len);
+	
+	// create the map out of those tiles
+	load_map(map_data->map, map_data->map_len);
+
+	// load collision info
+	load_map_col_info(map_data->col_info);
+}
+
 
 // load a palette into palbg memory
 void load_map_palette(const ushort *map_palette)

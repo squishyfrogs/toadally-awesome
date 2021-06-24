@@ -13,6 +13,8 @@
 #define ALLOW_DIAGONAL			0		// set 1 to allow the player to move diagonally
 
 
+void playerobj_action_primary();			// perform the A press action
+void playerobj_action_secondary();			// perform the B press action
 
 GameObj *get_player_obj();
 

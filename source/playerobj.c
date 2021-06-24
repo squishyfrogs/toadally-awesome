@@ -4,8 +4,9 @@
 #include "direction.h"
 #include "input.h"
 #include "gameobj.h"
-#include "playerobj.h"
 #include "objhistory.h"
+#include "playerobj.h"
+#include "frogtongue.h"
 #include "map.h"
 
 
@@ -33,7 +34,6 @@ void playerobj_update();
 
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
-void player_update_current_tile();
 void player_set_tile_by_id(int tile_id);
 
 void push_gameobj(GameObj *obj, int push_dir);		// push a game object
@@ -56,6 +56,7 @@ GameObj *get_player_obj()
 	return player_obj;
 }
 
+// PlayerObj init function
 void playerobj_init()
 {
 
@@ -78,15 +79,28 @@ void playerobj_init()
 	//push_obj = NULL;
 	camera_set_target(player_obj);
 	gameobj_play_anim(player_obj);
+
+	// initialize tongue 
+	tongue_init(player_obj);
 }
 
+// main PlayerObj update
 void playerobj_update()
 {
 	if(!input_locked())
-		move_playerobj(key_tri_horz(), key_tri_vert());
+	{
+		if(key_hit(KEY_A))
+			playerobj_action_primary();
+		else if(key_hit(KEY_B))
+			playerobj_action_secondary();
+		else
+			move_playerobj(key_tri_horz(), key_tri_vert());
+	}
 	
 	if(gameobj_is_moving(player_obj))
 		playerobj_update_movement();
+	
+	tongue_update();
 }
 
 
@@ -199,6 +213,8 @@ void move_playerobj(int input_x, int input_y)
 	action_update();
 }
 
+
+// called every frame to keep player in motion
 void playerobj_update_movement()
 {
 	offset.x += mov.x;
@@ -222,7 +238,6 @@ void playerobj_update_movement()
 	
 	
 
-
 	gameobj_set_pixel_pos(player_obj, offset.x, offset.y - hop_offset);		// subtract hop_offset to show verticality
 
 	Vector2 v = gameobj_get_pixel_pos(player_obj);
@@ -239,26 +254,20 @@ void playerobj_update_movement()
 
 }
 
-void player_update_current_tile()
-{
-	// free players old tile
-	remove_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
 
-	if((player_obj->pixel_pos.x >= GAME_TILE_SIZE) || (player_obj->pixel_pos.x <= -GAME_TILE_SIZE))
-	{
-		player_obj->tile_pos.x += (player_obj->pixel_pos.x / GAME_TILE_SIZE);
-		player_obj->pixel_pos.x %= GAME_TILE_SIZE;
-	}
-	if((player_obj->pixel_pos.y >= GAME_TILE_SIZE) || (player_obj->pixel_pos.y <= -GAME_TILE_SIZE))
-	{
-		player_obj->tile_pos.y += (player_obj->pixel_pos.y / GAME_TILE_SIZE);
-		player_obj->pixel_pos.y %= GAME_TILE_SIZE;
-	}
-	
-	
-	// claim new tile
-	set_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
+
+
+void playerobj_action_primary()
+{
+	tongue_extend();
 }
+
+// perform the B press action
+void playerobj_action_secondary()
+{
+	tongue_retract();
+}
+
 
 
 

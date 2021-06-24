@@ -3,19 +3,41 @@
 #include "regmem.h"
 #include "layers.h"
 
-static int free_pal = 0;		//marker of first free palette in VRAM
+#define PAL_COUNT 16
+
+int get_free_pal_id();
+
+static int used_pals = 0;		//each bit corresponds to whether one of the 16 available sprite palettes is used or not
 static int free_tile = 0;		//marker of first free tile in VRAM
 
 ////////////////////////
 /// MEMORY FUNCTIONS ///
 ////////////////////////
 
+int get_free_pal_id()
+{
+	for(int i = 0; i < PAL_COUNT; i++)
+	{
+		if((used_pals & (1<<i)) == 0)
+		{
+			used_pals |= (1<<i);
+			return i;
+		}
+	}
+	// no free palettes
+	return -1;
+}
+
 int mem_load_palette(const ushort *pal_data)
 {
-	int pal_id = free_pal;
+	int pal_id = get_free_pal_id();
 	memcpy(pal_obj_mem + (pal_id*16), pal_data, 32);	// 16 colors per palette, 2 bytes per color
-	free_pal++;
 	return pal_id;
+}
+
+void mem_free_palette(int pal_id)
+{
+	used_pals &= ~(1<<pal_id);
 }
 
 int mem_load_tiles(const ushort *tile_data, int data_len)
@@ -30,7 +52,7 @@ int mem_load_tiles(const ushort *tile_data, int data_len)
 void mem_clear_palettes()
 {
 	//memset(pal_obj_mem, 0, PAL_OBJ_SIZE);
-	free_pal = 0;
+	used_pals = 0;
 }
 
 void mem_clear_tiles()

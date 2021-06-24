@@ -7,13 +7,13 @@ void audio_init()
 {
 	// Initialize maxmod with default settings
 	// pass soundbank address, and allocate 8 channels.
-	mmInitDefault(soundbank_bin, 8);
+	mmInitDefault((mm_addr)soundbank_bin, 8);
 }
 
 
 void audio_update()
 {
-	
+	//test
 }
 
 

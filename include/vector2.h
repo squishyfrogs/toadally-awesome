@@ -6,4 +6,6 @@ typedef struct struct_Vector2 {
 	int y;
 } Vector2;
 
+inline void vec2_set(Vector2 *v, int x, int y) { v->x = x; v->y = y; }
+
 #endif //VECTOR2_H

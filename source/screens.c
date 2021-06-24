@@ -7,7 +7,7 @@
 
 #include "sprites/screens/logo.h"
 #include "sprites/screens/titleScreen.h"
-#include "sprites/screens/levelSelect.h"
+#include "sprites/screens/levelSelectScreen.h"
 
 // levelselect.c
 extern void level_select_init();
@@ -73,13 +73,13 @@ void title_display()
 
 void lev_sel_load()
 {
-	load_screen_pal(levelSelectPal);
-	load_screen_tiles(levelSelectTiles, levelSelectTilesLen);
+	load_screen_pal(levelSelectScreenPal);
+	load_screen_tiles(levelSelectScreenTiles, levelSelectScreenTilesLen);
 }
 
 void lev_sel_unload()
 {
-	unload_screen_tiles(levelSelectTilesLen);
+	unload_screen_tiles(levelSelectScreenTilesLen);
 	level_select_clear();
 }
 
@@ -87,7 +87,7 @@ void lev_sel_display()
 {
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
-	load_screen(levelSelectMap, levelSelectMapLen);
+	load_screen(levelSelectScreenMap, levelSelectScreenMapLen);
 	level_select_init();
 }
 

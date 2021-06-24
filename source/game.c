@@ -8,31 +8,24 @@
 #include "map.h"
 #include "objhistory.h"
 #include "sprites.h"
-#include "maps.h"
 #include "input.h"
 
 
 
 
 void init_objs_temp();
-void init_map();
-void init_map_temp();
 void game_update_main();
 void game_update_main_temp();
+void set_map_data_temp();
+
 void set_world_offset(int off_x, int off_y);
 Vector2 get_world_offset();
 void update_world_pos();
 
 
+
 int world_offset_x;
 int world_offset_y;
-
-
-
-void init_map()
-{
-	init_map_temp();
-}
 
 
 void game_update_main()
@@ -70,22 +63,7 @@ GameObj *kirby2;
 GameObj *crate;
 //////
 
-void init_map_temp()
-{
-	// Load palette
-	load_map_palette(testmapPal);
-	//load_map_palette(fe_mapPal);
-	
-	//memcpy(&tile_mem[1][start], fe_mapTiles, fe_mapTilesLen);
-	//load_map_tiles(fe_mapTiles, fe_mapTilesLen);
-	load_map_tiles(testmapTiles, testmapTilesLen);
-	
-	//load_map(fe_mapMap, fe_mapMapLen);
-	load_map(testmapMap, testmapMapLen);
-	load_map_col_info(testmapCol);
 
-
-}
 
 
 void init_objs_temp()

@@ -1,9 +1,28 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <tonc.h>
+
 #define MAP_SIZE_X 16
 #define MAP_SIZE_Y 16
 #define MAP_SIZE MAP_SIZE_X*MAP_SIZE_Y
+
+
+typedef struct struct_MapData{
+	const unsigned short *palette;
+	const unsigned short *tiles;
+	int tile_len;
+	const unsigned short *map;
+	int map_len;
+	const unsigned short *col_info;
+} MapData;
+
+
+void load_level_data(int level_id);
+void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info);
+void load_map_from_current_data();
+void load_map_from_data(MapData *map_data);
+
 
 void load_map_palette(const unsigned short *map_palette);
 void load_map_tiles(const unsigned short *map_tiles, int tiles_len);

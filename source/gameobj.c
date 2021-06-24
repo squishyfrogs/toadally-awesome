@@ -233,6 +233,7 @@ GameObj *gameobj_clone(GameObj *dest, GameObj *src)
 // wipe all attributes of a GameObj and mark it as unused
 void gameobj_erase(GameObj *obj)
 {
+	obj_hide(&objattr_buffer[obj->obj_id]);
 	obj_set_attr(&objattr_buffer[obj->obj_id], 0, 0, 0);
 	obj->in_use = 0;
 	obj->obj_id = 0;
@@ -245,11 +246,11 @@ void gameobj_erase(GameObj *obj)
 	obj->tile_pos.x = 0;
 	obj->tile_pos.y = 0;
 
-
 	if(obj->hist != NULL)
 		clear_obj_history(obj->hist);
 	obj->hist = NULL;
 	anim_clear(&obj->anim);
+	
 }
 
 

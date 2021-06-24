@@ -20,11 +20,14 @@ extern void ui_init();					// ui.c
 extern void map_init();					// map.c
 // game.c
 extern void init_objs_temp();	//temp
-extern void init_map();
 extern void game_update_main();
 extern void update_world_pos();
+// level.c
+extern void load_level_data(int level_id);
 // levelselect.c
 extern void level_select_update();
+// map.c
+extern void load_map_from_current_data();
 // effects.c
 extern void effects_init();
 extern void effects_anim_update();
@@ -51,6 +54,7 @@ extern void turn_count_increment();
 extern void turn_count_decrement();
 
 
+
 void main_game_loop();
 
 // init functions
@@ -63,6 +67,7 @@ void global_soft_reset();
 void go_to_logo();									// go to the logo screen (the first scene upon game startup)
 void go_to_title();									// go to the title screen
 void go_to_level_select();
+void go_to_main_game();
 void main_game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
@@ -112,8 +117,14 @@ int main(void)
 {
 	global_init();
 	
-
-	go_to_logo();
+	if(DEBUG_SKIP_INTROS)
+	{
+		main_game_init();
+		load_level_data(0);
+		go_to_main_game();
+	}
+	else
+		go_to_logo();
 
 	
 	//main_game_start();
@@ -208,9 +219,9 @@ void main_game_init()
 
 	// temp
 	init_objs_temp();
-	init_map();
-	test_init_tte_se4();
-	test_run_tte_se4();
+	
+	//test_init_tte_se4();
+	//test_run_tte_se4();
 	//
 }
 
@@ -261,14 +272,19 @@ void go_to_level_select()
 	lev_sel_display();
 }
 
+void go_to_main_game()
+{
+	unload_current_screen();
+	set_game_state(GS_MAIN_GAME);
+	main_game_start();
+}
+
 
 void main_game_start()
 {
 	input_lock_sys();
-	set_game_state(GS_MAIN_GAME);
-	main_game_init();
-
-
+	
+	load_map_from_current_data();
 
 	turn_count_set(0);
 	game_paused = false;
