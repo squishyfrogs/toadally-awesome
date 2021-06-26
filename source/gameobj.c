@@ -8,6 +8,10 @@
 #include "animation.h"
 #include "map.h"
 
+
+#define ATTR_COUNT 128			// max number of attrs 
+#define OBJ_COUNT 128			// max number of objs
+
 #define SPR_OFF_Y_DEFAULT 2		// default sprite offset (to make sprites sit on bg)
 
 
@@ -46,7 +50,7 @@ void gameobj_init_all()
 {
 	
 	//hides all sprites
-	oam_init(objattr_buffer, 128);
+	oam_init(objattr_buffer, ATTR_COUNT);
 
 	obj_history_init();
 }
@@ -101,7 +105,7 @@ void gameobj_push_all_updates()
 	}
 
 	// copy all changes into oam memory
-	oam_copy(oam_mem, objattr_buffer, OBJ_COUNT);		// copy changes up to obj count
+	oam_copy(oam_mem, objattr_buffer, ATTR_COUNT);		// copy changes up to obj count
 }
 
 

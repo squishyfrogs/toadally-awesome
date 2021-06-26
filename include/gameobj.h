@@ -6,7 +6,6 @@
 #include "animation.h"
 #include "regmem.h"
 
-#define OBJ_COUNT 128
 
 
 

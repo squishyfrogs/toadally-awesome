@@ -116,15 +116,19 @@ void move_playerobj(int input_x, int input_y)
 	if(!ALLOW_DIAGONAL && input_x != 0)
 		input_y = 0;
 	
+
 	// update player facing direction
-	if(input_x > 0)
-		gameobj_set_facing(player_obj, DIRECTION_EAST);
-	else if(input_x < 0)
-		gameobj_set_facing(player_obj, DIRECTION_WEST);
-	else if(input_y > 0)
-		gameobj_set_facing(player_obj, DIRECTION_SOUTH);
-	else if(input_y < 0)
-		gameobj_set_facing(player_obj, DIRECTION_NORTH);
+	if(!check_tongue_out())
+	{
+		if(input_x > 0)
+			gameobj_set_facing(player_obj, DIRECTION_EAST);
+		else if(input_x < 0)
+			gameobj_set_facing(player_obj, DIRECTION_WEST);
+		else if(input_y > 0)
+			gameobj_set_facing(player_obj, DIRECTION_SOUTH);
+		else if(input_y < 0)
+			gameobj_set_facing(player_obj, DIRECTION_NORTH);
+	}
 	
 	// update tile start and tile end 
 	start_tile.x = player_obj->tile_pos.x;
