@@ -211,7 +211,14 @@ void move_playerobj(int input_x, int input_y)
 	// set the turn active
 	set_turn_active();
 	// mark player as moving
-	gameobj_set_moving(player_obj, true, ints_to_dir(input_x, input_y));
+	int mov_dir = ints_to_dir(input_x, input_y);
+	gameobj_set_moving(player_obj, true, mov_dir);
+	// move the attached tongue obj if applicable
+	GameObj *obj_att = tongue_get_attached_object();
+	if(obj_att != NULL)
+	{
+		gameobj_set_moving(obj_att, true, mov_dir);
+	}
 	// player_moving = true;
 	// perform an action update
 	action_update();

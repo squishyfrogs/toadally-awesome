@@ -14,6 +14,8 @@ extern void set_action_count(int count);
 extern void set_action_count_immediate(int count);
 // map.c
 extern void map_clear_contents();
+// frogtongue.c
+extern void tongue_store();
 
 
 void set_game_to_turn(int new_turns_ago);
@@ -202,6 +204,7 @@ void history_return_to_present()
 void set_game_to_turn(int turns_ago)
 {
 	//map_clear_contents();
+	tongue_store();
 
 	// move all objects to their proper positions for the selected turn
 	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
