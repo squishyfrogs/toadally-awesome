@@ -7,6 +7,7 @@
 #include "objhistory.h"
 #include "playerobj.h"
 #include "frogtongue.h"
+#include "objinteract.h"
 #include "map.h"
 
 
@@ -26,8 +27,6 @@ extern void set_camera_pos(int target_x, int target_y);
 extern void create_effect_at_position(int tile_x, int tile_y);
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
-// objinteract.c
-extern void push_gameobj(GameObj *obj, int push_dir);
 
 void playerobj_init();
 void playerobj_update();
@@ -36,7 +35,7 @@ void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
 void player_set_tile_by_id(int tile_id);
 
-void push_gameobj(GameObj *obj, int push_dir);		// push a game object
+void objint_push_gameobj(GameObj *obj, int push_dir);		// push a game object
 
 
 static GameObj *player_obj;
@@ -173,13 +172,13 @@ void move_playerobj(int input_x, int input_y)
 	if(contents != NULL)
 	{
 		// attempt to move object
-		if(contents->obj_properties & OBJPROP_MOVABLE)
+		if(gameobj_check_properties(contents, OBJPROP_MOVABLE))
 		{
 			// check tile past obj
 			if(check_tile_free(end_tile.x + input_x, end_tile.y + input_y))
 			{
 				// if tile beyond push obj is free, valid to push object
-				push_gameobj(contents, ints_to_dir(input_x, input_y));
+				objint_push_gameobj(contents, ints_to_dir(input_x, input_y));
 				//gameobj_set_moving(contents, true, ints_to_dir(input_x, input_y));
 				//create_effect_at_position(end_tile.x, end_tile.y);
 				input_lock_player();
@@ -190,11 +189,12 @@ void move_playerobj(int input_x, int input_y)
 			return;
 		}
 		// if immovable and solid
-		else if(contents->obj_properties & OBJPROP_SOLID)
+		else if(gameobj_check_properties(contents, OBJPROP_SOLID))
 		{
 			// TODO: play bonk sound
 			return;
 		}
+		
 	}
 
 	// reset offsets (should already be 0 but just in case)
@@ -219,7 +219,6 @@ void move_playerobj(int input_x, int input_y)
 	{
 		gameobj_set_moving(obj_att, true, mov_dir);
 	}
-	// player_moving = true;
 	// perform an action update
 	action_update();
 }
@@ -252,7 +251,7 @@ void playerobj_update_movement()
 	gameobj_set_pixel_pos(player_obj, offset.x, offset.y - hop_offset);		// subtract hop_offset to show verticality
 
 	Vector2 v = gameobj_get_pixel_pos(player_obj);
-	set_camera_pos(v.x, v.y + hop_offset);
+	set_camera_pos(v.x, v.y + hop_offset);									// add hop_offset back in to keep camera smooth
 
 	
 	
@@ -271,12 +270,16 @@ void playerobj_update_movement()
 void playerobj_action_primary()
 {
 	tongue_extend();
+	// perform an action update
+	action_update();
 }
 
 // perform the B press action
 void playerobj_action_secondary()
 {
 	tongue_retract();
+	// perform an action update
+	action_update();
 }
 
 

@@ -17,6 +17,8 @@
 		"smoke.h": "c",
 		"soundbank.h": "c",
 		"soundbank_bin.h": "c",
-		"map.h": "c"
+		"map.h": "c",
+		"gear.h": "c",
+		"coin.h": "c"
 	}
 }

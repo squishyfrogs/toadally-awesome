@@ -2,6 +2,7 @@
 #include "input.h"
 #include "direction.h"
 #include "map.h"
+#include "effects.h"
 #include "sprites/tongue.h"
 
 #define TSPR_PIECE_H	0
@@ -14,7 +15,8 @@ typedef enum TongueState_T{
 	TS_EXTENDING,		// tongue extending from mouth
 	TS_ATTACHED,		// tongue extended and attached to an object
 	TS_RETRACTING,		// tongue returning to mouth
-	TS_PULLING			// tongue returning to mouth, but dragging player or attached obj with it
+	TS_PULLING_OBJ,		// tongue returning to mouth, but dragging an attached obj with it
+	TS_PULLING_PL		// tongue returning to mouth, but dragging the player toward the attached obj
 } TongueState;
 
 #define TONGUE_EXT_TL	2	// how many tiles forward the tongue can reach
@@ -23,6 +25,8 @@ typedef enum TongueState_T{
 
 // objhistory.c
 extern void history_update_all();
+// camera.c
+extern void camera_update_pos();
 
 void tongue_check();						// check for objects at the apex of tongue stretching
 void tongue_attach_obj(GameObj *target);	// attach the tongue to a valid target
@@ -94,7 +98,7 @@ void tongue_update()
 			tongue_store();
 		}
 		break;
-	case TS_PULLING:
+	case TS_PULLING_OBJ:
 		if(tongue_extension > 8)
 		{
 			if(tongue_extension - EXT_SPD <= 8)
@@ -106,15 +110,34 @@ void tongue_update()
 			}
 			else
 				gameobj_change_pixel_pos(attached_obj, dir.x * -EXT_SPD, dir.y * -EXT_SPD);
-			
 		}
-
 		tongue_extension -= EXT_SPD;
 		if(tongue_extension <= 0)
 		{
 			tongue_extension = 0;
 			tongue_store();
 		}
+		break;
+	case TS_PULLING_PL:
+		if(tongue_extension > 8)
+		{
+			if(tongue_extension - EXT_SPD <= 8)
+			{
+
+				gameobj_change_pixel_pos(tongue_owner, dir.x * (tongue_extension - 8), dir.y * (tongue_extension - 8));
+				gameobj_update_current_tile(tongue_owner);
+				history_update_all();
+			}
+			else
+				gameobj_change_pixel_pos(tongue_owner, dir.x * EXT_SPD, dir.y * EXT_SPD);
+		}
+		tongue_extension -= EXT_SPD;
+		if(tongue_extension <= 0)
+		{
+			tongue_extension = 0;
+			tongue_store();
+		}
+		camera_update_pos();
 		break;
 	default:
 		break;
@@ -198,7 +221,9 @@ void tongue_retract()
 {
 	if(attached_obj != NULL)
 	{
-		tongue_state = TS_PULLING;
+		// pull the attached object
+		create_effect_at_position(ET_SMOKE, attached_obj->tile_pos.x, attached_obj->tile_pos.y);
+		tongue_state = TS_PULLING_PL;
 		input_lock_tongue();
 	}
 	else

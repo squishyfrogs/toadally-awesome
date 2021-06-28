@@ -1,6 +1,7 @@
 #include <string.h>
 #include <tonc.h>
 #include "gameobj.h"
+#include "objinteract.h"
 #include "memory.h"
 #include "game.h"
 #include "direction.h"
@@ -299,6 +300,14 @@ void gameobj_set_property_flags(GameObj *obj, u16 properties)
 	obj->obj_properties = properties;
 }
 
+// return the matching bits in a GameObj's property flags
+u16 gameobj_check_properties(GameObj *obj, u16 properties)
+{
+	if(obj == NULL)
+		return 0;
+	return obj->obj_properties & properties;
+}
+
 // unhide a GameObj
 void gameobj_unhide(GameObj *obj)
 {
@@ -424,6 +433,12 @@ void gameobj_update_current_tile(GameObj *obj)
 	obj->tile_pos.y += y;
 	obj->pixel_pos.y -= (y * GAME_TILE_SIZE);
 
+	GameObj *contents = get_tile_contents(obj->tile_pos.x, obj->tile_pos.y);
+
+	if(gameobj_check_properties(contents, OBJPROP_PICKUP))
+	{
+		objint_collect(contents);
+	}
 	
 	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
 }

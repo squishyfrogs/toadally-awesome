@@ -9,7 +9,7 @@
 #include "objhistory.h"
 #include "sprites.h"
 #include "input.h"
-
+#include "objinteract.h"
 
 
 
@@ -95,11 +95,9 @@ void init_objs_temp()
 	gameobj_play_anim(mario);
 
 	// init crate
-	int c_pal = mem_load_palette(cratePal);
-	int c_tile = mem_load_tiles(crateTiles, crateTilesLen);
-	crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
-	gameobj_set_sprite_offset(crate,0,8);
-	place_obj_in_tile(crate, 6, 12);
+	intobj_create_crate_at_position(6,12);
+	intobj_create_coin_at_position(8,10);
+	
 }
 
 void game_update_main_temp()
