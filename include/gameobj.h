@@ -77,40 +77,42 @@ void gameobj_set_property_flags(GameObj *obj, u16 properties);
 u16 gameobj_check_properties(GameObj *obj, u16 properties);
 void gameobj_unhide(GameObj *obj);
 void gameobj_hide(GameObj *obj);
+
+// Graphics Functions
 void gameobj_set_anim_data(GameObj *obj, AnimationData *anim_data, u8 flags);
 void gameobj_play_anim(GameObj *obj);
-//void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping);
-
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y);
+void gameobj_flip_h(GameObj *obj);														// flip an object horizontally across the vertical axis
+void gameobj_flip_v(GameObj *obj);														// flip an object vertically across the horizontal axis
+void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v);							// set the horizontal and vertical flip state
+void gameobj_set_flip_h(GameObj *obj, bool flip_h);										// set the horizontal flip state
+void gameobj_set_flip_v(GameObj *obj, bool flip_v);										// set the vertical flip state
+
+// Position Functions
 void gameobj_set_tile_pos(GameObj *obj, int x, int y);
 void gameobj_set_tile_pos_by_id(GameObj *obj, int tile_id);
 void gameobj_set_pixel_pos(GameObj *obj, int x, int y);
-void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);
-Vector2 gameobj_get_pixel_pos(GameObj *obj);														// get the pixel position of a GameObj as a Vector2
-void gameobj_update_current_tile(GameObj *obj);														// remove obj from old tile, update tile + pixel vectors, assign obj to new tile
+void gameobj_change_pixel_pos(GameObj *obj, int move_x, int move_y);					// move a GameObj by (x,y) pixels
+Vector2 gameobj_get_pixel_pos(GameObj *obj);											// get the pixel position of a GameObj as a Vector2
+void gameobj_update_current_tile(GameObj *obj);											// remove obj from old tile, update tile + pixel vectors, assign obj to new tile
 
-
+// Facing Functions
 void gameobj_set_facing(GameObj *obj, int facing);
 int gameobj_get_facing(GameObj *obj);
 
+// Movement  Functions
 void gameobj_set_move_dir(GameObj *obj, int move_dir);
 int gameobj_get_move_dir(GameObj *obj);
 void gameobj_set_moving(GameObj *obj, bool moving, int move_dir);
 void gameobj_set_moving_vec(GameObj *obj, bool moving, Vector2 move_dir);
-bool gameobj_is_moving(GameObj *obj);
-bool gameobj_all_at_rest();
+bool gameobj_is_moving(GameObj *obj);													
+bool gameobj_all_at_rest();																// returns true when all GameObjs have finished moving
 
-
-void gameobj_flip_h(GameObj *obj);																	// flip an object horizontally across the vertical axis
-void gameobj_flip_v(GameObj *obj);																	// flip an object vertically across the horizontal axis
-void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v);										// set the horizontal and vertical flip state
-void gameobj_set_flip_h(GameObj *obj, bool flip_h);													// set the horizontal flip state
-void gameobj_set_flip_v(GameObj *obj, bool flip_v);													// set the vertical flip state
 
 
 void gameobj_hide_all();
 void gameobj_unhide_all();
 
-bool gameobj_is_player(GameObj *obj);																// checks whether or not a given GameObj is the PlayerObj
+bool gameobj_is_player(GameObj *obj);													// checks whether or not a given GameObj is the PlayerObj
 
 #endif //GAMEOBJ_H

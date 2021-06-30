@@ -1,4 +1,5 @@
 #include "frogtongue.h"
+#include "playerobj.h"
 #include "input.h"
 #include "direction.h"
 #include "map.h"
@@ -15,6 +16,7 @@ typedef enum TongueState_T{
 	TS_EXTENDING,		// tongue extending from mouth
 	TS_ATTACHED,		// tongue extended and attached to an object
 	TS_RETRACTING,		// tongue returning to mouth
+	TS_CONTRACTING,		// tongue contracting because the player is moving toward it 
 	TS_PULLING_OBJ,		// tongue returning to mouth, but dragging an attached obj with it
 	TS_PULLING_PL		// tongue returning to mouth, but dragging the player toward the attached obj
 } TongueState;
@@ -27,10 +29,14 @@ typedef enum TongueState_T{
 extern void history_update_all();
 // camera.c
 extern void camera_update_pos();
+// player.c
+extern int playerobj_current_hop_height();
+
 
 void tongue_check();						// check for objects at the apex of tongue stretching
 void tongue_attach_obj(GameObj *target);	// attach the tongue to a valid target
 void tongue_update_length();				// handles extending/retracting
+void tongue_update_sprites();
 
 
 int tongue_max_tl;		// max tile length of tongue extension (accounting for objects)
@@ -74,87 +80,141 @@ void tongue_set_owner(GameObj *owner)
 }
 
 
-// handles extending/retracting
 void tongue_update()
 {
-	Vector2 t = tongue_owner->tile_pos;
-	Vector2 p = tongue_owner->pixel_pos;
-	Vector2 dir = dir_to_vec(gameobj_get_facing(tongue_owner));
+	tongue_update_length();
+	tongue_update_sprites();
+}
+
+
+// handles extending/retracting
+void tongue_update_length()
+{
+	Vector2 owner_facing = dir_to_vec(gameobj_get_facing(tongue_owner));
 	switch (tongue_state)
 	{
-	case TS_EXTENDING:
-		tongue_extension += EXT_SPD;
-		if(tongue_extension >= tongue_len_px(tongue_max_tl))
-		{
-			tongue_extension = tongue_len_px(tongue_max_tl);
-			tongue_check();
-		}
-		break;
-	case TS_RETRACTING:
-		tongue_extension -= EXT_SPD;
-		if(tongue_extension <= 0)
-		{
-			tongue_extension = 0;
-			tongue_store();
-		}
-		break;
-	case TS_PULLING_OBJ:
-		if(tongue_extension > 8)
-		{
-			if(tongue_extension - EXT_SPD <= 8)
+		case TS_EXTENDING:
+			tongue_extension += EXT_SPD;
+			if(tongue_extension >= tongue_len_px(tongue_max_tl))
 			{
-
-				gameobj_change_pixel_pos(attached_obj, dir.x * (8 - tongue_extension), dir.y * (8 - tongue_extension));
-				gameobj_update_current_tile(attached_obj);
-				history_update_all();
+				tongue_extension = tongue_len_px(tongue_max_tl);
+				tongue_check();
+				if(tongue_max_tl == 0)
+				{
+					// TODO: play bonk
+					tongue_retract();
+				}
 			}
-			else
-				gameobj_change_pixel_pos(attached_obj, dir.x * -EXT_SPD, dir.y * -EXT_SPD);
-		}
-		tongue_extension -= EXT_SPD;
-		if(tongue_extension <= 0)
-		{
-			tongue_extension = 0;
-			tongue_store();
-		}
-		break;
-	case TS_PULLING_PL:
-		if(tongue_extension > 8)
-		{
-			if(tongue_extension - EXT_SPD <= 8)
+			break;
+		case TS_RETRACTING:
+			tongue_extension -= EXT_SPD;
+			if(tongue_extension <= 0)
 			{
-
-				gameobj_change_pixel_pos(tongue_owner, dir.x * (tongue_extension - 8), dir.y * (tongue_extension - 8));
-				gameobj_update_current_tile(tongue_owner);
-				history_update_all();
+				tongue_extension = 0;
+				tongue_store();
 			}
-			else
-				gameobj_change_pixel_pos(tongue_owner, dir.x * EXT_SPD, dir.y * EXT_SPD);
-		}
-		tongue_extension -= EXT_SPD;
-		if(tongue_extension <= 0)
-		{
-			tongue_extension = 0;
-			tongue_store();
-		}
-		camera_update_pos();
-		break;
-	default:
-		break;
+			break;
+		case TS_CONTRACTING:
+			tongue_extension -= PLAYER_MOVE_SPEED;
+			if(tongue_extension <= tongue_len_px(tongue_max_tl))
+			{
+				tongue_extension = tongue_len_px(tongue_max_tl);
+				if(tongue_max_tl <= 0)
+					tongue_store();
+			}
+			break;
+		case TS_PULLING_OBJ:
+			if(tongue_extension > 8)
+			{
+				if(tongue_extension - EXT_SPD <= 8)
+				{
+
+					gameobj_change_pixel_pos(attached_obj, owner_facing.x * (8 - tongue_extension), owner_facing.y * (8 - tongue_extension));
+					gameobj_update_current_tile(attached_obj);
+					history_update_all();
+				}
+				else
+					gameobj_change_pixel_pos(attached_obj, owner_facing.x * -EXT_SPD, owner_facing.y * -EXT_SPD);
+			}
+			tongue_extension -= EXT_SPD;
+			if(tongue_extension <= 0)
+			{
+				tongue_extension = 0;
+				tongue_store();
+			}
+			break;
+		case TS_PULLING_PL:
+			if(tongue_extension > 8)
+			{
+				if(tongue_extension - EXT_SPD <= 8)
+				{
+
+					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * (tongue_extension - 8), owner_facing.y * (tongue_extension - 8));
+					gameobj_update_current_tile(tongue_owner);
+					history_update_all();
+				}
+				else
+					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * EXT_SPD, owner_facing.y * EXT_SPD);
+			}
+			tongue_extension -= EXT_SPD;
+			if(tongue_extension <= 0)
+			{
+				tongue_extension = 0;
+				tongue_store();
+			}
+			camera_update_pos();
+			break;
+		default:
+			break;
 	}
-		
-	
+	tongue_update_sprites();
+}
+
+
+void tongue_update_sprites()
+{
+	Vector2 owner_facing = dir_to_vec(gameobj_get_facing(tongue_owner));
+	Vector2 p = tongue_owner->pixel_pos;
+
+	if(owner_facing.y == 0)
+		p.y = 0;
+//	if(owner_facing.x == 0 && attached_obj != NULL)
+//		p.y = attached_obj->pixel_pos.y;
+	//find distance between tip and owner
+	int tonglen = tongue_extension;
+	if(attached_obj != NULL)
+	{	
+		if(owner_facing.x == 0)
+			p.y += playerobj_current_hop_height();
+		if(owner_facing.y < 0)		// facing north, player below target, shorter len than normal
+		{
+			tonglen -= playerobj_current_hop_height();
+		}
+		if(owner_facing.y > 0)		// facing south, player above target, longer len than normal
+		{
+			tonglen += playerobj_current_hop_height();
+		}
+	}
 
 	if(tongue_extension > 0)
 	{
-		p.x += (tongue_extension * dir.x);
-		p.y += (tongue_extension * dir.y);
+		p.x += (tongue_extension * owner_facing.x);
+		p.y += (tongue_extension * owner_facing.y);
 	}
 
+
+	Vector2 t = tongue_owner->tile_pos;
 	gameobj_set_tile_pos(tongue_tip, t.x, t.y);
+
 	gameobj_set_pixel_pos(tongue_tip, p.x, p.y);
-	int increment = (tongue_extension + 2) / TONGUE_PIECES;
+
+	// update tongue pieces 
+
 	
+
+
+	// split into an increment length for each piece of tongue
+	int increment = (tonglen + 2) / TONGUE_PIECES;
 	for(int i = 0; i < TONGUE_PIECES; i++)
 	{
 		if(tongue_extension > 12)
@@ -166,12 +226,19 @@ void tongue_update()
 			continue;
 		}
 		Vector2 inc = tongue_owner->pixel_pos;
+		
 		int spr_off = 2;
-		inc.x += (((increment * i) + spr_off) * dir.x);
-		inc.y += (((increment * i) + spr_off) * dir.y);
+		inc.x += (((increment * i) + spr_off) * owner_facing.x);
+		inc.y += (((increment * i) + spr_off) * owner_facing.y);
+		if(owner_facing.y == 0)
+		{
+			int yinc = ((ABS(inc.y) - ABS(p.y)) * i)/ TONGUE_PIECES;
+			inc.y += yinc; 	
+		}
 		gameobj_set_tile_pos(tongue_pieces[i], t.x, t.y);
 		gameobj_set_pixel_pos(tongue_pieces[i], inc.x, inc.y);
 	}
+
 }
 
 
@@ -189,7 +256,10 @@ void tongue_extend()
 		v.x += (1 + tmax) * dir.x;
 		v.y += (1 + tmax) * dir.y;
 		if(!check_tile_free(v.x, v.y))
-			break;
+		{
+			if(gameobj_check_properties(get_tile_contents(v.x, v.y), OBJPROP_SOLID))
+				break;
+		}
 	}
 	tongue_max_tl = tmax;
 	tongue_extension = 0;
@@ -222,8 +292,8 @@ void tongue_retract()
 	if(attached_obj != NULL)
 	{
 		// pull the attached object
-		create_effect_at_position(ET_SMOKE, attached_obj->tile_pos.x, attached_obj->tile_pos.y);
-		tongue_state = TS_PULLING_PL;
+		//create_effect_at_position(ET_SMOKE, attached_obj->tile_pos.x, attached_obj->tile_pos.y);
+		tongue_state = TS_PULLING_OBJ;
 		input_lock_tongue();
 	}
 	else
@@ -232,6 +302,15 @@ void tongue_retract()
 		tongue_detach_obj();
 		input_lock_tongue();
 	}
+}
+
+
+void tongue_contract()
+{
+	tongue_state = TS_CONTRACTING;
+	tongue_max_tl -= 1;
+	if(tongue_max_tl < 0)
+		tongue_max_tl = 0;
 }
 
 

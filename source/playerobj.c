@@ -33,10 +33,8 @@ void playerobj_update();
 
 void move_playerobj(int input_x, int input_y);
 void playerobj_update_movement();
-void player_set_tile_by_id(int tile_id);
 
-void objint_push_gameobj(GameObj *obj, int push_dir);		// push a game object
-
+int playerobj_current_hop_height();
 
 static GameObj *player_obj;
 
@@ -106,17 +104,41 @@ void playerobj_update()
 // apply dpad inputs to the player and attempt to move them
 void move_playerobj(int input_x, int input_y)
 {
+	// can't move if already moving
 	if(gameobj_is_moving(player_obj))
 		return;
+	
+	// check for an object attached to the tongue 
+	GameObj *obj_att = tongue_get_attached_object();
+	// if one exists, disable movement perpendicular to the facing dir
+	if(obj_att != NULL)
+	{
+		switch(gameobj_get_facing(player_obj))
+		{
+			case DIRECTION_NORTH:
+			case DIRECTION_SOUTH:
+				input_x = 0;
+				break;
+			case DIRECTION_WEST:
+			case DIRECTION_EAST:
+				input_y = 0;
+				break;
+			default:
+				break;
+		}
+	}
+
+
+	// can't move if no inputs
 	if(input_x == 0 && input_y == 0)
 		return;
 
-	//zero out y movement if diagonals are banned (clunky, replace with smart movement later maybe)
+	//zero out y movement if diagonals are banned (clunky, replace with smart diagonal reading later maybe)
 	if(!ALLOW_DIAGONAL && input_x != 0)
 		input_y = 0;
 	
 
-	// update player facing direction
+	// update player facing direction if tongue is not extended
 	if(!check_tongue_out())
 	{
 		if(input_x > 0)
@@ -128,6 +150,7 @@ void move_playerobj(int input_x, int input_y)
 		else if(input_y < 0)
 			gameobj_set_facing(player_obj, DIRECTION_NORTH);
 	}
+	
 	
 	// update tile start and tile end 
 	start_tile.x = player_obj->tile_pos.x;
@@ -214,10 +237,14 @@ void move_playerobj(int input_x, int input_y)
 	int mov_dir = ints_to_dir(input_x, input_y);
 	gameobj_set_moving(player_obj, true, mov_dir);
 	// move the attached tongue obj if applicable
-	GameObj *obj_att = tongue_get_attached_object();
 	if(obj_att != NULL)
 	{
-		gameobj_set_moving(obj_att, true, mov_dir);
+		// if moving away from obj_att, pull it
+		if(gameobj_get_facing(player_obj) != mov_dir)
+			gameobj_set_moving(obj_att, true, mov_dir);
+		// if moving toward obj_att, contract tongue
+		else
+			tongue_contract();
 	}
 	// perform an action update
 	action_update();
@@ -283,7 +310,11 @@ void playerobj_action_secondary()
 }
 
 
-
+// returns the current height of the player's hop arc
+int playerobj_current_hop_height()
+{
+	return hop_offset;
+}
 
 // checks whether or not a given GameObj is the PlayerObj
 bool gameobj_is_player(GameObj *obj)

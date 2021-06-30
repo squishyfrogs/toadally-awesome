@@ -322,6 +322,11 @@ void gameobj_hide(GameObj *obj)
 	obj_hide(obj->attr);
 }
 
+
+////////////////
+/// Graphics ///
+////////////////
+
 // set a GameObj's animation info
 void gameobj_set_anim_data(GameObj *obj, AnimationData *anim_data, u8 flags)
 {
@@ -334,19 +339,6 @@ void gameobj_play_anim(GameObj *obj)
 	anim_play(&obj->anim);
 }
 
-/*void gameobj_set_anim_info(GameObj *obj, u16 frame_count, short tile_offset, int facing_offset, bool looping)
-{
-	u8 flags = 0;
-	if(looping)
-		flags |= ANIM_FLAG_LOOPING;
-	if(obj->anim == NULL)
-		obj->anim = anim_create(obj->spr_tile_id, tile_offset, frame_count, facing_offset, flags);
-	else
-		anim_set_info(obj->anim, obj->spr_tile_id, tile_offset, frame_count, facing_offset, flags);
-}*/
-
-
-
 // set a GameObj's sprite offset
 void gameobj_set_sprite_offset(GameObj *obj, int x, int y)
 {
@@ -354,6 +346,55 @@ void gameobj_set_sprite_offset(GameObj *obj, int x, int y)
 	obj->spr_off.y = y;
 	gameobj_update_pos(obj);
 }
+
+// flip an object horizontally across the vertical axis
+void gameobj_flip_h(GameObj *obj)
+{
+	obj->attr->attr1 ^= ATTR1_HFLIP;
+}
+
+// flip an object vertically across the horizontal axis
+void gameobj_flip_v(GameObj *obj)
+{
+	obj->attr->attr1 ^= ATTR1_VFLIP;
+}
+
+// set the horizontal and vertical flip state 
+void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
+{
+	if(flip_h)
+		obj->attr->attr1 |= ATTR1_HFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_HFLIP;
+
+	if(flip_v)
+		obj->attr->attr1 |= ATTR1_VFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_VFLIP;
+}
+
+// set the horizontal flip state
+void gameobj_set_flip_h(GameObj *obj, bool flip_h)
+{
+	if(flip_h)
+		obj->attr->attr1 |= ATTR1_HFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_HFLIP;
+}
+
+// set the vertical flip state
+void gameobj_set_flip_v(GameObj *obj, bool flip_v)
+{
+	if(flip_v)
+		obj->attr->attr1 |= ATTR1_VFLIP;
+	else
+		obj->attr->attr1 &= ~ATTR1_VFLIP;
+}
+
+
+////////////////
+/// Position ///
+////////////////
 
 // set a GameObj's tile position
 void gameobj_set_tile_pos(GameObj *obj, int x, int y)
@@ -406,7 +447,7 @@ void gameobj_update_pos(GameObj *obj)
 Vector2 gameobj_get_pixel_pos(GameObj *obj)
 {
 	Vector2 v;
-	if(obj->obj_properties & OBJPROP_FIXED_POS)
+	if(gameobj_check_properties(obj, OBJPROP_FIXED_POS))
 	{
 		v.x = obj->pixel_pos.x;
 		v.y = obj->pixel_pos.y;
@@ -433,12 +474,20 @@ void gameobj_update_current_tile(GameObj *obj)
 	obj->tile_pos.y += y;
 	obj->pixel_pos.y -= (y * GAME_TILE_SIZE);
 
-	GameObj *contents = get_tile_contents(obj->tile_pos.x, obj->tile_pos.y);
 
+	// check tile for collectibles
+	GameObj *contents = get_tile_contents(obj->tile_pos.x, obj->tile_pos.y);
 	if(gameobj_check_properties(contents, OBJPROP_PICKUP))
 	{
-		objint_collect(contents);
+		objint_collect(contents, obj);
 	}
+	// check tile for floor objs
+	GameObj *floor_obj = get_tile_floor_contents(obj->tile_pos.x, obj->tile_pos.y);
+	if(floor_obj != NULL)
+	{
+		objint_step_on(floor_obj, obj);
+	}
+
 	
 	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
 }
@@ -577,53 +626,7 @@ bool gameobj_all_at_rest()
 }
 
 
-/////////////
-/// Flips ///
-/////////////
 
-// flip an object horizontally across the vertical axis
-void gameobj_flip_h(GameObj *obj)
-{
-	obj->attr->attr1 ^= ATTR1_HFLIP;
-}
-
-// flip an object vertically across the horizontal axis
-void gameobj_flip_v(GameObj *obj)
-{
-	obj->attr->attr1 ^= ATTR1_VFLIP;
-}
-
-// set the horizontal and vertical flip state
-void gameobj_set_flip(GameObj *obj, bool flip_h, bool flip_v)
-{
-	if(flip_h)
-		obj->attr->attr1 |= ATTR1_HFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_HFLIP;
-
-	if(flip_v)
-		obj->attr->attr1 |= ATTR1_VFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_VFLIP;
-}
-
-// set the horizontal flip state
-void gameobj_set_flip_h(GameObj *obj, bool flip_h)
-{
-	if(flip_h)
-		obj->attr->attr1 |= ATTR1_HFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_HFLIP;
-}
-
-// set the vertical flip state
-void gameobj_set_flip_v(GameObj *obj, bool flip_v)
-{
-	if(flip_v)
-		obj->attr->attr1 |= ATTR1_VFLIP;
-	else
-		obj->attr->attr1 &= ~ATTR1_VFLIP;
-}
 
 
 

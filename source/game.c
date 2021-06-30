@@ -98,6 +98,7 @@ void init_objs_temp()
 	intobj_create_crate_at_position(6,12);
 	intobj_create_coin_at_position(8,10);
 	
+	floorobj_create_spikes_at_position(4,11);
 }
 
 void game_update_main_temp()

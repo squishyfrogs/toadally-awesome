@@ -5,7 +5,22 @@
 #include "sprites/objects/coin.h"
 #include "sprites/objects/crate.h"
 
+#include "sprites/objects/spikes.h"
 
+
+
+
+
+void objint_init();
+
+////////////////////////
+/// Global Functions ///
+////////////////////////
+
+void objint_init()
+{
+
+}
 
 
 
@@ -24,17 +39,24 @@ void objint_push_gameobj(GameObj *obj, int push_dir)
 }
 
 // collect a (valid) game object
-void objint_collect(GameObj *obj)
+void objint_collect(GameObj *target, GameObj *instigator)
 {
-	if(gameobj_check_properties(obj, OBJPROP_PICKUP) != OBJPROP_PICKUP)
+	if(target == NULL) return;
+	if(gameobj_check_properties(target, OBJPROP_PICKUP) != OBJPROP_PICKUP)
 		return;
 	// TODO: Apply Collect Effect
-	create_effect_at_position(ET_SMOKE, obj->tile_pos.x, obj->tile_pos.y);
-	remove_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
-	gameobj_erase(obj);
+	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
+	remove_tile_contents(target, target->tile_pos.x, target->tile_pos.y);
+	gameobj_erase(target);
 }
 
+// step on a floor object
+void objint_step_on(GameObj *target, GameObj *instigator)
+{
+	if(target == NULL) return;
 
+	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
+}
 
 
 ////////////////////////////
@@ -64,4 +86,23 @@ GameObj *intobj_create_coin_at_position(int x, int y)
 	gameobj_set_anim_data(coin, coin_anim, ANIM_FLAG_LOOPING);
 	gameobj_play_anim(coin);
 	return coin;
+}
+
+
+
+
+
+/////////////////////
+/// Floor Objects ///
+/////////////////////
+
+
+GameObj *floorobj_create_spikes_at_position(int x, int y)
+{
+	int s_pal = mem_load_palette(spikesPal);
+	int s_tile = mem_load_tiles(spikesTiles, spikesTilesLen);
+	GameObj *spikes = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, s_pal, s_tile, 0, 0, 0);
+	place_obj_in_tile_floor(spikes, x, y);
+	
+	return spikes;
 }

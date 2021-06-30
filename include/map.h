@@ -38,15 +38,23 @@ void map_clear();																	// clear all aspects of a map
 int get_tile_id(int x, int y);														// converts an x,y position to a tile number
 
 ushort get_tile_col_info(int tile_x, int tile_y);									// get the collision info of a given tile
-struct struct_GameObj *get_tile_contents(int tile_x, int tile_y);					// get the contents of a given tile, or NULL if tile is empty
 bool check_tile_free(int tile_x, int tile_y);										// returns true if the tile is within map bounds and can be entered
-bool set_tile_contents(struct struct_GameObj *obj, int tile_x, int tile_y);			// set the contents of a given tile, only succeeds if tile is empty
-bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id);				// set the contents of a given tile, only succeeds if tile is empty
+struct struct_GameObj *get_tile_contents(int tile_x, int tile_y);					// get the contents of a given tile, or NULL if tile is empty
+struct struct_GameObj *get_tile_floor_contents(int tile_x, int tile_y);				// get the contents of a given tile floor, or NULL if tile is empty
+
 bool place_obj_in_tile(struct struct_GameObj *obj, int tile_x, int tile_y);			// sets a tile's contents, and moves the object to that tile
 bool place_obj_in_tile_by_id(struct struct_GameObj *obj, int tile_id);				// sets a tile's contents, and moves the object to that tile
+bool set_tile_contents(struct struct_GameObj *obj, int tile_x, int tile_y);			// set the contents of a given tile, only succeeds if tile is empty
+bool set_tile_contents_by_id(struct struct_GameObj *obj, int tile_id);				// set the contents of a given tile, only succeeds if tile is empty
 void remove_tile_contents(struct struct_GameObj *obj, int tile_x, int tile_y);		// clear the contents of a given tile and free it for use
 void remove_tile_contents_by_id(struct struct_GameObj *obj, int tile_id);			// clear the contents of a given tile and free it for use
 
+bool place_obj_in_tile_floor(struct struct_GameObj *obj, int tile_x, int tile_y);			// sets a tile's floor contents, and moves the object to that tile
+bool place_obj_in_tile_floor_by_id(struct struct_GameObj *obj, int tile_id);				// sets a tile's floor contents, and moves the object to that tile
+bool set_floor_contents(struct struct_GameObj *obj, int tile_x, int tile_y);		// set the floor contents of a given tile, only succeeds if tile is empty
+bool set_floor_contents_by_id(struct struct_GameObj *obj, int tile_id);				// set the floor contents of a given tile, only succeeds if tile is empty
+void remove_floor_contents(struct struct_GameObj *obj, int tile_x, int tile_y);		// clear the floor contents of a given tile and free it for use
+void remove_floor_contents_by_id(struct struct_GameObj *obj, int tile_id);			// clear the floor contents of a given tile and free it for use
 
 
 #endif //MAP_H

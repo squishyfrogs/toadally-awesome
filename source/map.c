@@ -217,32 +217,6 @@ bool check_tile_free(int tile_x, int tile_y)
 	return (map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents == NULL);
 }
 
-// set the contents of a given tile, only succeeds if tile is empty
-bool set_tile_contents(GameObj *obj, int tile_x, int tile_y)
-{
-	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
-		return false;
-
-	if(map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents != NULL)
-		return false;
-	
-	map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents = obj;
-	return true;
-}
-
-// set the contents of a given tile, only succeeds if tile is empty
-bool set_tile_contents_by_id(GameObj *obj, int tile_id)
-{
-	if(tile_id < 0 || tile_id >= MAP_SIZE)
-		return false;
-
-	if(map_tiles[tile_id].tile_contents != NULL)
-		return false;
-
-	map_tiles[tile_id].tile_contents = obj;
-	return true;
-}
-
 // sets a tile's contents, and moves the object to that tile
 bool place_obj_in_tile(GameObj *obj, int tile_x, int tile_y)
 {
@@ -261,13 +235,37 @@ bool place_obj_in_tile_by_id(GameObj *obj, int tile_id)
 	return success;
 }
 
+
+
+// set the contents of a given tile, only succeeds if tile is empty
+bool set_tile_contents(GameObj *obj, int tile_x, int tile_y)
+{
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return false;
+
+	return set_tile_contents_by_id(obj, (tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X));
+}
+
+// set the contents of a given tile, only succeeds if tile is empty
+bool set_tile_contents_by_id(GameObj *obj, int tile_id)
+{
+	if(tile_id < 0 || tile_id >= MAP_SIZE)
+		return false;
+
+	if(map_tiles[tile_id].tile_contents != NULL)
+		return false;
+
+	map_tiles[tile_id].tile_contents = obj;
+	return true;
+}
+
 // clear the contents of a given tile and free it for use
 void remove_tile_contents(GameObj *obj, int tile_x, int tile_y)
 {
 	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
 		return;
-	if(map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents == obj)
-		map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents = NULL;
+	
+	return remove_tile_contents_by_id(obj, (tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X));
 }
 
 // clear the contents of a given tile and free it for use
@@ -277,4 +275,69 @@ void remove_tile_contents_by_id(GameObj *obj, int tile_id)
 		return;
 	if(map_tiles[tile_id].tile_contents == obj)
 		map_tiles[tile_id].tile_contents = NULL;
+}
+
+
+
+///////////////////
+/// Tile Floors ///
+///////////////////
+
+// sets a tile's contents, and moves the object to that tile
+bool place_obj_in_tile_floor(GameObj *obj, int tile_x, int tile_y)
+{
+	bool success = set_floor_contents(obj, tile_x, tile_y);
+	if(success)
+		gameobj_set_tile_pos(obj, tile_x, tile_y);
+	return success;
+}
+
+// sets a tile's contents, and moves the object to that tile
+bool place_obj_in_tile_floor_by_id(GameObj *obj, int tile_id)
+{
+	bool success = set_floor_contents_by_id(obj, tile_id);
+	if(success)
+		gameobj_set_tile_pos_by_id(obj, tile_id);
+	return success;
+}
+
+
+// set the contents of a given tile, only succeeds if tile is empty
+bool set_floor_contents(GameObj *obj, int tile_x, int tile_y)
+{
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return false;
+
+	return set_floor_contents_by_id(obj, (tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X));
+}
+
+// set the contents of a given tile, only succeeds if tile is empty
+bool set_floor_contents_by_id(GameObj *obj, int tile_id)
+{
+	if(tile_id < 0 || tile_id >= MAP_SIZE)
+		return false;
+
+	if(map_tiles[tile_id].floor_contents != NULL)
+		return false;
+
+	map_tiles[tile_id].floor_contents = obj;
+	return true;
+}
+
+// clear the contents of a given tile and free it for use
+void remove_floor_contents(GameObj *obj, int tile_x, int tile_y)
+{
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return;
+	
+	return remove_floor_contents_by_id(obj, (tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X));
+}
+
+// clear the contents of a given tile and free it for use
+void remove_floor_contents_by_id(GameObj *obj, int tile_id)
+{
+	if(tile_id < 0 || tile_id >= MAP_SIZE)
+		return;
+	if(map_tiles[tile_id].floor_contents == obj)
+		map_tiles[tile_id].floor_contents = NULL;
 }
