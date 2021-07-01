@@ -10,6 +10,7 @@
 #include "frogtongue.h"
 #include "objinteract.h"
 #include "map.h"
+#include "audio.h"
 
 
 #define PLAYER_START_X			5		// player starting location (temp)
@@ -239,6 +240,8 @@ void move_playerobj(int input_x, int input_y)
 	// mark player as moving
 	int mov_dir = ints_to_dir(input_x, input_y);
 	gameobj_set_moving(player_obj, true, mov_dir);
+	// play hop sfx
+	audio_play_sound(SFX_FROGHOP);
 	// move the attached tongue obj if applicable
 	if(obj_att != NULL)
 	{

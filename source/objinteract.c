@@ -2,6 +2,7 @@
 #include "objhistory.h"
 #include "effects.h"
 #include "map.h"
+#include "audio.h"
 
 #include "sprites/objects/coin.h"
 #include "sprites/objects/crate.h"
@@ -35,6 +36,7 @@ void objint_push_gameobj(GameObj *obj, int push_dir)
 	if(gameobj_check_properties(obj, OBJPROP_MOVABLE) != OBJPROP_MOVABLE)
 		return;
 	gameobj_set_moving(obj, true, push_dir);
+	audio_play_sound(SFX_PUSH_BLOCK);
 	create_effect_at_position(ET_SMOKE, obj->tile_pos.x, obj->tile_pos.y);
 	//create_effect_at_position(obj->tile_pos.x, obj->tile_pos.y);
 }
@@ -46,6 +48,7 @@ void objint_collect(GameObj *target, GameObj *instigator)
 	if(gameobj_check_properties(target, OBJPROP_PICKUP) != OBJPROP_PICKUP)
 		return;
 	// TODO: Apply Collect Effect
+	audio_play_sound(SFX_COLLECTCOIN);
 	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
 	remove_tile_contents(target, target->tile_pos.x, target->tile_pos.y);
 	gameobj_erase(target);

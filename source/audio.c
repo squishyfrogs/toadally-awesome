@@ -1,7 +1,5 @@
 #include <maxmod.h>
 #include "audio.h"
-#include "soundbank.h"
-#include "soundbank_bin.h"
 
 void audio_init()
 {
@@ -26,4 +24,12 @@ void play_dummy_track()
 void play_dummy_sound()
 {
 	mmEffect( SFX_SWITCH );
+}
+
+void audio_play_sound(int sound_id)
+{
+	if(sound_id < 0 || sound_id >= MSL_NSAMPS)
+		sound_id = 0;
+
+	mmEffect(sound_id);
 }

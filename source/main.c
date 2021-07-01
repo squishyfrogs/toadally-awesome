@@ -149,10 +149,6 @@ void main_game_loop()
 		VBlankIntrWait();	//slower but saves power
 		key_poll();
 
-		if(key_hit(KEY_B))
-		{
-			play_dummy_sound();
-		}
 
 		//if(key_is_down(KEY_SELECT))
 		if(key_is_down(KEY_RESET) == KEY_RESET)
