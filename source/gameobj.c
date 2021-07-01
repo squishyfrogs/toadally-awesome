@@ -481,15 +481,15 @@ void gameobj_update_current_tile(GameObj *obj)
 	{
 		objint_collect(contents, obj);
 	}
+	
+	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
+
 	// check tile for floor objs
 	GameObj *floor_obj = get_tile_floor_contents(obj->tile_pos.x, obj->tile_pos.y);
 	if(floor_obj != NULL)
 	{
 		objint_step_on(floor_obj, obj);
 	}
-
-	
-	set_tile_contents(obj, obj->tile_pos.x, obj->tile_pos.y);
 }
 
 
@@ -624,10 +624,6 @@ bool gameobj_all_at_rest()
 	}
 	return true;
 }
-
-
-
-
 
 
 

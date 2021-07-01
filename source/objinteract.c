@@ -1,4 +1,5 @@
 #include "objinteract.h"
+#include "objhistory.h"
 #include "effects.h"
 #include "map.h"
 
@@ -7,8 +8,8 @@
 
 #include "sprites/objects/spikes.h"
 
-
-
+// playerhealth.c
+extern void playerhealth_take_damage();
 
 
 void objint_init();
@@ -55,9 +56,22 @@ void objint_step_on(GameObj *target, GameObj *instigator)
 {
 	if(target == NULL) return;
 
+	// if spikes, damage instigator
+	objint_take_damage(instigator, target);
+
 	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
 }
 
+
+// take damage
+void objint_take_damage(GameObj *target, GameObj *instigator)
+{
+	if(target == NULL) return;
+	if(gameobj_is_player(target))
+	{
+		playerhealth_take_damage();
+	}
+}
 
 ////////////////////////////
 /// Interactable Objects ///

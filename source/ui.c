@@ -1,6 +1,7 @@
 #include <tonc.h>
 
 #include "gameobj.h"
+#include "playerhealth.h"
 #include "animation.h"
 #include "layers.h"
 #include "sprites/ui/heart.h"
@@ -55,11 +56,9 @@ GameObj *timeGauge;
 ////////////
 // HP Bar //
 ////////////
-#define HP_MAX 6
-GameObj *hearts[HP_MAX];	//health bar 
+GameObj *hearts[PLAYER_HP_MAX];	//health bar 
 int h_tile;
 
-int player_health = 3;
 
 
 //////////
@@ -95,7 +94,7 @@ void ui_init()
 
 	// init hp bar
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
-	for(int i = 0; i < HP_MAX; i++)
+	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
 		int h_x = 4+i*8;
 		int h_y = 0;
@@ -126,14 +125,10 @@ void ui_start()
 // gameplay update
 void ui_update()
 {
-//	if(key_hit(KEY_R))
-//		increment_action_counter();
-//	if(key_hit(KEY_L))
-//		decrement_action_counter();
 
-	
+	int player_health = playerhealth_get();
 
-	for(int i = 0; i < HP_MAX; i++)
+	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
 		if(i >= player_health)
 			hearts[i]->spr_tile_id = h_tile + 2;

@@ -33,6 +33,9 @@ extern void effects_init();
 extern void effects_anim_update();
 // playerobj.c
 extern void playerobj_update();
+// playerhealth.c
+extern void playerhealth_damage_check();
+extern void playerhealth_death_check();
 // ui.c
 extern void ui_start();
 extern void ui_update();
@@ -403,7 +406,12 @@ void finalize_turn()
 	// update all obj histories
 	history_update_all();
 
-	//turn_count_increment();
+	// check if the player has been damaged this turn, and apply damage if so
+	playerhealth_damage_check();
+	// check if the player has died 
+	playerhealth_death_check();
+
+	// turn_count_increment();
 	input_unlock_player();
 }
 

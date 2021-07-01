@@ -6,6 +6,7 @@
 #include "gameobj.h"
 #include "objhistory.h"
 #include "playerobj.h"
+#include "playerhealth.h"
 #include "frogtongue.h"
 #include "objinteract.h"
 #include "map.h"
@@ -79,6 +80,8 @@ void playerobj_init()
 
 	// initialize tongue 
 	tongue_init(player_obj);
+	// initialize health
+	playerhealth_init();
 }
 
 // main PlayerObj update

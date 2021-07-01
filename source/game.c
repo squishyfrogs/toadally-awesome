@@ -110,16 +110,16 @@ void game_update_main_temp()
 	// increment/decrement starting tile with R/L
 	// tid += bit_tribool(key_hit(-1), KI_R, KI_L);
 
-	if(key_hit(KEY_START))
-	{
-		//hide/unhide sprites
-		static bool spr_hidden;
-		if(spr_hidden)
-			gameobj_unhide_all();
-		else
-			gameobj_hide_all();
-		spr_hidden = !spr_hidden;
-	}
+//	if(key_hit(KEY_START))
+//	{
+//		//hide/unhide sprites
+//		static bool spr_hidden;
+//		if(spr_hidden)
+//			gameobj_unhide_all();
+//		else
+//			gameobj_hide_all();
+//		spr_hidden = !spr_hidden;
+//	}
 	
 
 	// flip
@@ -138,7 +138,7 @@ void game_update_main_temp()
 	//if(key_hit(KEY_START))
 	//	REG_DISPCNT ^= DCNT_OBJ_1D;
 
-	//ofsett bg based on movement
+	//offset bg based on movement
 	//world_offset_x = kirby->pos_x/2;
 	//world_offset_y = kirby->pos_y/2;
 
