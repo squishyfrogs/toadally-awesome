@@ -48,7 +48,7 @@ void objint_collect(GameObj *target, GameObj *instigator)
 	if(gameobj_check_properties(target, OBJPROP_PICKUP) != OBJPROP_PICKUP)
 		return;
 	// TODO: Apply Collect Effect
-	audio_play_sound(SFX_COLLECTCOIN);
+	audio_play_sound(SFX_COLLECT_COIN);
 	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
 	remove_tile_contents(target, target->tile_pos.x, target->tile_pos.y);
 	gameobj_erase(target);

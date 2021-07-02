@@ -8,7 +8,6 @@ void audio_init();
 void audio_update();
 
 void play_dummy_track();
-void play_dummy_sound();
 
 void audio_play_sound(int sound_id);
 

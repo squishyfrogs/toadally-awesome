@@ -260,7 +260,7 @@ void move_playerobj(int input_x, int input_y)
 	if(!check_tongue_out())
 		playerobj_play_anim(PAI_HOP);
 	// play hop sfx
-	audio_play_sound(SFX_FROGHOP);
+	audio_play_sound(SFX_FROG_HOP);
 	// move the attached tongue obj if applicable
 	if(obj_att != NULL)
 	{

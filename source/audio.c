@@ -21,10 +21,6 @@ void play_dummy_track()
 	
 }
 
-void play_dummy_sound()
-{
-	mmEffect( SFX_SWITCH );
-}
 
 void audio_play_sound(int sound_id)
 {

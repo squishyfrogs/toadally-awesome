@@ -36,7 +36,7 @@ void playerhealth_damage_check()
 	if(player_damaged)
 	{
 		player_health--;
-		audio_play_sound(SFX_FROGHIT);
+		audio_play_sound(SFX_FROG_HIT);
 		// TODO: maybe change this to not rewind? 
 		history_step_back(1);
 	}
