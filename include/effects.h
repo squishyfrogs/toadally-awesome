@@ -5,6 +5,8 @@
 typedef enum EffectType_T {
 	ET_DUST,
 	ET_SMOKE,
+	ET_SPARKLE,
+	ET_TELEPORT,
 	ET_COUNT							// NOT an actual effect, used to get the number of different effect types
 } EffectType;
 

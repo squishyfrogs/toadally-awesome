@@ -53,12 +53,14 @@ void playerhealth_death_check()
 
 void playerhealth_die()
 {
-
+	// play sound effect + anim, set timer, then reset level when timer expires
 }
 
 
 void playerhealth_heal(int heal_amt)
 {
-
-
+	// show a sparkle, increase health
+	player_health += heal_amt;
+	if(player_health > PLAYER_HP_MAX)
+		player_health = PLAYER_HP_MAX;
 }

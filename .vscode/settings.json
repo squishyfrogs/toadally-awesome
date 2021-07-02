@@ -19,6 +19,7 @@
 		"soundbank_bin.h": "c",
 		"map.h": "c",
 		"gear.h": "c",
-		"coin.h": "c"
+		"coin.h": "c",
+		"playerobj.h": "c"
 	}
 }

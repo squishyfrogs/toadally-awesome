@@ -27,7 +27,7 @@ void gameobj_push_all_updates();
 void gameobj_init_all();
 
 void gameobj_update_pos(GameObj *obj);
-void gameobj_update_sprite_facing(GameObj *obj);							// updates a GameObj's sprite after changing direction
+void gameobj_update_spr_tile_id(GameObj *obj);
 void gameobj_push_changes(GameObj *obj);
 
 extern void obj_history_init();
@@ -330,7 +330,11 @@ void gameobj_hide(GameObj *obj)
 // set a GameObj's animation info
 void gameobj_set_anim_data(GameObj *obj, AnimationData *anim_data, u8 flags)
 {
+	
 	anim_init(&obj->anim, anim_data, flags);
+	
+	gameobj_update_spr_tile_id(obj);
+	
 }
 
 
@@ -389,6 +393,31 @@ void gameobj_set_flip_v(GameObj *obj, bool flip_v)
 		obj->attr->attr1 |= ATTR1_VFLIP;
 	else
 		obj->attr->attr1 &= ~ATTR1_VFLIP;
+}
+
+
+// updates a GameObj's sprite after changing animation or direction
+void gameobj_update_spr_tile_id(GameObj *obj)
+{
+	if(obj == NULL || obj->anim.anim_data == NULL)
+		return;
+	int dir = gameobj_get_facing(obj);
+	if(!(obj->anim.flags & ANIM_FLAG_ASYMMETRIC))
+	{
+		if(dir == DIRECTION_WEST)
+		{
+			dir = DIRECTION_EAST;
+			gameobj_set_flip_h(obj, true);
+		}
+		else
+		{
+			gameobj_set_flip_h(obj, false);
+		}
+	}
+	
+	//obj->spr_tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
+	obj->spr_tile_id = obj->anim.anim_data->tile_start + (dir * obj->anim.anim_data->facing_offset * obj->anim.anim_data->tile_offset);
+	gameobj_push_changes(obj);
 }
 
 
@@ -503,7 +532,7 @@ void gameobj_set_facing(GameObj *obj, int facing)
 	obj->obj_properties = obj->obj_properties & ~(0x0003 << OBJPROP_FACING_BIT_OFFSET);
 	obj->obj_properties = obj->obj_properties | facing;
 
-	gameobj_update_sprite_facing(obj);
+	gameobj_update_spr_tile_id(obj);
 }
 
 int gameobj_get_facing(GameObj *obj)
@@ -513,29 +542,6 @@ int gameobj_get_facing(GameObj *obj)
 	return props;
 }
 
-// updates a GameObj's sprite after changing direction
-void gameobj_update_sprite_facing(GameObj *obj)
-{
-	if(obj == NULL || obj->anim.anim_data == NULL)
-		return;
-	int dir = gameobj_get_facing(obj);
-	if(!(obj->anim.flags & ANIM_FLAG_ASYMMETRIC))
-	{
-		if(dir == DIRECTION_WEST)
-		{
-			dir = DIRECTION_EAST;
-			gameobj_set_flip_h(obj, true);
-		}
-		else
-		{
-			gameobj_set_flip_h(obj, false);
-		}
-	}
-	
-	//obj->spr_tile_id = obj->anim->tile_start + (obj->anim->cur_frame * obj->anim->tile_offset) + (dir * obj->anim->facing_offset * obj->anim->tile_offset);
-	obj->spr_tile_id = obj->anim.anim_data->tile_start + (dir * obj->anim.anim_data->facing_offset * obj->anim.anim_data->tile_offset);
-	gameobj_push_changes(obj);
-}
 
 
 ////////////////
@@ -548,7 +554,7 @@ void gameobj_set_move_dir(GameObj *obj, int move_dir)
 	obj->obj_properties = obj->obj_properties & ~(0x0003 << OBJPROP_MOVING_BIT_OFFSET);
 	obj->obj_properties = obj->obj_properties | move_dir;
 
-	gameobj_update_sprite_facing(obj);
+	gameobj_update_spr_tile_id(obj);
 }
 
 int gameobj_get_move_dir(GameObj *obj)

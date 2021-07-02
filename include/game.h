@@ -18,7 +18,7 @@ typedef enum GameState_T{
 #define UI_ANIM_SPEED	3			// 60/speed = anim fps 
 #define GAME_TILE_SIZE	16			// tile size in pixels
 
-#define DEBUG_SKIP_INTROS 1			// whether or not to skip straight to gameplay
+#define DEBUG_SKIP_INTROS 0			// whether or not to skip straight to gameplay
 
 void set_game_state(GameState state);
 GameState get_game_state();

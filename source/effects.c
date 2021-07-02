@@ -3,7 +3,9 @@
 #include "game.h"
 #include "gameobj.h"
 #include "sprites/effects/dustcloud.h"
-#include "sprites/effects/smoke.h"
+#include "sprites/effects/eff_smoke.h"
+#include "sprites/effects/eff_sparkle.h"
+#include "sprites/effects/eff_teleport.h"
 
 typedef struct struct_Effect {
 	bool in_use;						// is this effect currently in use?
@@ -42,12 +44,28 @@ void effects_init()
 	gameobj_hide(eff_templates[ET_DUST]);
 
 	// init smoke_cloud
-	int smoke_tile = mem_load_tiles(smokeTiles, smokeTilesLen);
+	int smoke_tile = mem_load_tiles(eff_smokeTiles, eff_smokeTilesLen);
 	eff_templates[ET_SMOKE] = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, smoke_tile, 0, 0, 0);
 	gameobj_set_sprite_offset(eff_templates[ET_SMOKE], 0, 0);
-	AnimationData *smoke_data = animdata_create(smoke_tile, ANIM_OFFSET_16x16, 4, 0);
-	gameobj_set_anim_data(eff_templates[ET_SMOKE], smoke_data, 0);
+	AnimationData *smoke_animdata = animdata_create(smoke_tile, ANIM_OFFSET_16x16, 4, 0);
+	gameobj_set_anim_data(eff_templates[ET_SMOKE], smoke_animdata, 0);
 	gameobj_hide(eff_templates[ET_SMOKE]);
+
+	// init sparkle
+	int sparkle_tile = mem_load_tiles(eff_sparkleTiles, eff_sparkleTilesLen);
+	eff_templates[ET_SPARKLE] = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, sparkle_tile, 0, 0, 0);
+	gameobj_set_sprite_offset(eff_templates[ET_SPARKLE], 0, 0);
+	AnimationData *sparkle_animdata = animdata_create(sparkle_tile, ANIM_OFFSET_16x16, 4, 0);
+	gameobj_set_anim_data(eff_templates[ET_SPARKLE], sparkle_animdata, 0);
+	gameobj_hide(eff_templates[ET_SPARKLE]);
+
+	// init teleport
+	int tele_tile = mem_load_tiles(eff_teleportTiles, eff_teleportTilesLen);
+	eff_templates[ET_TELEPORT] = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, effects_pal, tele_tile, 0, 0, 0);
+	gameobj_set_sprite_offset(eff_templates[ET_TELEPORT], 0, 0);
+	AnimationData *tele_animdata = animdata_create(tele_tile, ANIM_OFFSET_16x16, 4, 0);
+	gameobj_set_anim_data(eff_templates[ET_TELEPORT], tele_animdata, 0);
+	gameobj_hide(eff_templates[ET_TELEPORT]);
 }
 
 

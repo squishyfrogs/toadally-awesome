@@ -31,6 +31,8 @@ extern void create_effect_at_position(int tile_x, int tile_y);
 extern void gameobj_push_changes(GameObj *obj);
 
 void playerobj_init();
+void player_anim_init();		// initialize anims
+void player_anim_create(PlayerAnimID pid, int offset, int len);
 void playerobj_update();
 
 void move_playerobj(int input_x, int input_y);
@@ -39,6 +41,7 @@ void playerobj_update_movement();
 int playerobj_current_hop_height();
 
 static GameObj *player_obj;
+static AnimationData *player_anims[PAI_COUNT];
 
 static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
@@ -59,8 +62,8 @@ GameObj *get_player_obj()
 void playerobj_init()
 {
 
-	p_palette = mem_load_palette(playerPal);
-	p_tile_start = mem_load_tiles(playerTiles, playerTilesLen);
+	p_palette = mem_load_palette(spr_playerPal);
+	p_tile_start = mem_load_tiles(spr_playerTiles, spr_playerTilesLen);
 	player_obj = gameobj_init_full(
 		LAYER_GAMEOBJ, 
 		ATTR0_SQUARE, 
@@ -70,19 +73,32 @@ void playerobj_init()
 		PLAYER_START_X, PLAYER_START_Y,
 		OBJPROP_SOLID
 		);
-	AnimationData *player_anim = animdata_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET);
-	gameobj_set_anim_data(player_obj, player_anim, ANIM_FLAG_LOOPING);
-	//player_obj->anim = anim_create(p_tile_start, ANIM_OFFSET_16x16, 2, PLAYER_FACING_OFFSET, ANIM_FLAG_LOOPING);
-	//player_update_current_tile();
+
+	player_anim_init();
 	gameobj_update_current_tile(player_obj);
-	//push_obj = NULL;
 	camera_set_target(player_obj);
+	playerobj_play_anim(PAI_IDLE);
 	gameobj_play_anim(player_obj);
 
 	// initialize tongue 
 	tongue_init(player_obj);
 	// initialize health
 	playerhealth_init();
+}
+
+// initialize anims
+void player_anim_init()
+{
+	player_anim_create(PAI_IDLE, 0, 2);
+	player_anim_create(PAI_HOP, 1, 1);
+	player_anim_create(PAI_TONGUE, 2, 1);
+	player_anim_create(PAI_NOM, 1, 1);
+}
+
+void player_anim_create(PlayerAnimID pid, int offset, int len)
+{
+	offset *= ANIM_OFFSET_16x16;
+	player_anims[pid] = animdata_create(p_tile_start + offset, ANIM_OFFSET_16x16, len, PLAYER_FACING_OFFSET);
 }
 
 // main PlayerObj update
@@ -240,6 +256,9 @@ void move_playerobj(int input_x, int input_y)
 	// mark player as moving
 	int mov_dir = ints_to_dir(input_x, input_y);
 	gameobj_set_moving(player_obj, true, mov_dir);
+	// play hop anim
+	if(!check_tongue_out())
+		playerobj_play_anim(PAI_HOP);
 	// play hop sfx
 	audio_play_sound(SFX_FROGHOP);
 	// move the attached tongue obj if applicable
@@ -293,11 +312,20 @@ void playerobj_update_movement()
 		//player_update_current_tile();
 		gameobj_update_current_tile(player_obj);
 		gameobj_set_moving(player_obj,false, 0);
+		if(!check_tongue_out())
+			playerobj_play_anim(PAI_IDLE);
 	}
 
 }
 
+// play one of the player's animations
+void playerobj_play_anim(PlayerAnimID pid) 
+{
 
+	int anim_flags = ANIM_FLAG_LOOPING;
+	gameobj_set_anim_data(player_obj, player_anims[pid], anim_flags);
+	gameobj_play_anim(player_obj);
+}
 
 
 void playerobj_action_primary()

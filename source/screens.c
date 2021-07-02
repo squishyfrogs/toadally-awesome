@@ -4,6 +4,7 @@
 #include "screens.h"
 #include "game.h"
 #include "layers.h"
+#include "audio.h"
 
 #include "sprites/screens/logo.h"
 #include "sprites/screens/titleScreen.h"
@@ -41,6 +42,7 @@ void logo_display()
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
 	load_screen(logoMap, logoMapLen);
+	audio_play_sound(SFX_COLLECTCOIN);
 }
 
 

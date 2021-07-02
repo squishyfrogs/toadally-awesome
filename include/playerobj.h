@@ -2,7 +2,7 @@
 #define PLAYEROBJ_H
 
 #include "gameobj.h"
-#include "sprites/player.h"
+#include "sprites/player/spr_player.h"
 
 
 
@@ -12,7 +12,16 @@
 #define PLAYER_ASYMMETRIC		0		// set 1 if player sheet has unique west-facing sprites
 #define ALLOW_DIAGONAL			0		// set 1 to allow the player to move diagonally
 
+typedef enum PlayerAnimID_T{
+	PAI_IDLE,
+	PAI_HOP,
+	PAI_TONGUE,
+	PAI_NOM,
+	PAI_COUNT				// INVALID
+} PlayerAnimID;
 
+
+void playerobj_play_anim(PlayerAnimID pid);
 void playerobj_action_primary();			// perform the A press action
 void playerobj_action_secondary();			// perform the B press action
 

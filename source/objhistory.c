@@ -240,7 +240,7 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	// create a smoke effect if the object changed positions
 	if(old_tile_id != new_tile_id && old_tile_id >= 0 && new_tile_id >= 0)
 	{
-		create_effect_at_tile(ET_SMOKE, old_tile_id);
+		create_effect_at_tile(ET_TELEPORT, old_tile_id);
 	}
 
 	

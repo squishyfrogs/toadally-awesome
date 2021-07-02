@@ -102,6 +102,7 @@ void anim_play(Animation *anim)
 {
 	if(anim == NULL)
 		return;
+	anim->cur_frame = 0;
 	anim->flags = anim->flags | ANIM_FLAG_PLAYING;
 }
 
