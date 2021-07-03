@@ -4,6 +4,7 @@
 #include <tonc.h>
 
 bool input_locked();
+int input_current_lock();
 void input_unlock_override_all();
 
 void input_lock_sys();

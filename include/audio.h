@@ -6,9 +6,9 @@
 
 void audio_init();
 void audio_update();
+void audio_stop();
 
-void play_dummy_track();
-
+void audio_play_track(int track_id);
 void audio_play_sound(int sound_id);
 
 #endif //AUDIO_H

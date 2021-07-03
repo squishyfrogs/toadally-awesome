@@ -53,6 +53,7 @@ void mem_clear_palettes()
 {
 	//memset(pal_obj_mem, 0, PAL_OBJ_SIZE);
 	used_pals = 0;
+	memset(pal_obj_mem, 0, 512);
 }
 
 void mem_clear_tiles()
@@ -75,7 +76,7 @@ void reg_init_main()
 	//REG_DISPCNT= DCNT_MODE0 | DCNT_BG0;
 }
 
-// initialize the bg + obj registers
+// initialize the bg + obj registers for the title screen
 void reg_init_title()
 {
 	REG_BG2CNT = BG_PRIO(LAYER_BACKGROUND) | BG_CBB(0) | BG_SBB(30) | BG_4BPP | BG_REG_32x32;
@@ -84,6 +85,7 @@ void reg_init_title()
 
 }
 
+// initialize the bg + obj registers for the level select screen
 void reg_init_lev_sel()
 {
 	// set up BG0 for text

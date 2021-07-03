@@ -10,6 +10,7 @@
 // camera.c
 extern void camera_update_pos();
 // ui.c
+extern void reset_action_count();
 extern void set_action_count(int count);
 extern void set_action_count_immediate(int count);
 // map.c
@@ -56,6 +57,7 @@ static int current_turns_ago;						// measure of how far back in time we are cur
 void obj_history_init()
 {
 	clear_all_obj_history();
+	history_reset();
 }
 
 // grabs a free ObjHistory from the list and links it to a provided GameObj
@@ -308,6 +310,14 @@ void history_update_all()
 		update_obj_history(hist, gameobj_get_facing(hist->game_obj), tile_x, tile_y);
 	}
 
+}
+
+// clean up all history-related data
+void history_reset()
+{
+	current_turns_ago = 0;
+	game_turns_elapsed = 0;
+	reset_action_count();
 }
 
 

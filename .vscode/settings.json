@@ -20,6 +20,8 @@
 		"map.h": "c",
 		"gear.h": "c",
 		"coin.h": "c",
-		"playerobj.h": "c"
+		"playerobj.h": "c",
+		"maps.h": "c",
+		"pal_greenmode.h": "c"
 	}
 }

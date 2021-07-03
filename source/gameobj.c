@@ -30,14 +30,15 @@ void gameobj_update_pos(GameObj *obj);
 void gameobj_update_spr_tile_id(GameObj *obj);
 void gameobj_push_changes(GameObj *obj);
 
+// objhistory.c
 extern void obj_history_init();
 extern Vector2 get_world_offset();
+// objinteract.c
+extern void objint_init();
+
 
 GameObj obj_list[OBJ_COUNT];
 OBJ_ATTR objattr_buffer[OBJ_COUNT];
-
-
-
 
 
 
@@ -54,6 +55,7 @@ void gameobj_init_all()
 	oam_init(objattr_buffer, ATTR_COUNT);
 
 	obj_history_init();
+
 }
 
 void gameobj_erase_all()

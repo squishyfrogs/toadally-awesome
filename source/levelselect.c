@@ -1,6 +1,7 @@
 #include <tonc.h>
 #include "regmem.h"
 #include "gameobj.h"
+#include "audio.h"
 #include "sprites/ui/levSelCursor.h"
 
 // main.c
@@ -54,6 +55,7 @@ void level_select_update()
 	}
 	if(key_hit(KEY_ACCEPT))
 	{
+		audio_play_sound(SFX_BLIP_HIGH);
 		main_game_init();
 		load_level_data(cur_lvl_selection);
 		go_to_main_game();
@@ -61,6 +63,7 @@ void level_select_update()
 
 	if(key_hit(KEY_DIR))
 	{
+		audio_play_sound(SFX_BLIP_SOFT);
 		move_level_cursor(key_tri_horz(), key_tri_vert());
 	}
 

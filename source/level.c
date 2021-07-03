@@ -7,6 +7,16 @@ extern void set_map_data_temp();
 void load_level_data(int level_id)
 {
 	set_map_data_temp();
+	switch(level_id)
+	{
+		case 0:
+			
+			break;
+		default:
+			set_map_data(testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
+			break;
+	}
+
 }
 
 

@@ -18,6 +18,11 @@ bool input_locked()
 	return (inp_lck > 0);
 }
 
+int input_current_lock()
+{
+	return inp_lck;
+}
+
 
 void input_unlock_override_all()
 {

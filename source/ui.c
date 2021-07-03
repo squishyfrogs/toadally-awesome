@@ -198,7 +198,9 @@ void reset_action_count()
 		action_counter[i]->spr_tile_id = a_tile;
 		gameobj_update_attr(action_counter[i]);
 	}
+	count_rolling = 0;
 	set_action_count_immediate(0);
+	input_unlock_ui();
 }
 
 void set_action_count_immediate(int count)
@@ -214,6 +216,8 @@ void set_action_count_immediate(int count)
 	// ones digit
 	action_counter[2]->spr_tile_id = a_tile + (DIGIT_ANIM_LENGTH * (count % 10));
 	gameobj_update_attr(action_counter[2]);
+	count_rolling = 0;
+	input_unlock_ui();
 }
 
 void set_action_count(int count)

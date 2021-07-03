@@ -13,6 +13,8 @@
 // levelselect.c
 extern void level_select_init();
 extern void level_select_clear();
+// game.c
+extern void set_world_offset(int off_x, int off_y);
 
 void load_screen_pal(const ushort *scr_palette);
 void load_screen_tiles(const ushort *scr_tiles, int tiles_len);
@@ -39,6 +41,7 @@ void logo_unload()
 
 void logo_display()
 {
+	set_world_offset(0,0);
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
 	load_screen(logoMap, logoMapLen);
@@ -63,6 +66,7 @@ void title_unload()
 
 void title_display()
 {
+	set_world_offset(0,0);
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
 	load_screen(titleScreenMap, titleScreenMapLen);
@@ -87,6 +91,7 @@ void lev_sel_unload()
 
 void lev_sel_display()
 {
+	set_world_offset(0,0);
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
 	load_screen(levelSelectScreenMap, levelSelectScreenMapLen);

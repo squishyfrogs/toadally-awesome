@@ -3,8 +3,9 @@
 #include <maxmod.h>
 
 #include "game.h"
-#include "audio.h"
+#include "debug.h"
 #include "regmem.h"
+#include "audio.h"
 #include "layers.h"
 #include "input.h"
 #include "screens.h"
@@ -22,39 +23,30 @@ extern void map_init();					// map.c
 extern void init_objs_temp();	//temp
 extern void game_update_main();
 extern void update_world_pos();
+// text.c
+extern void textsys_init();
 // level.c
 extern void load_level_data(int level_id);
 // levelselect.c
 extern void level_select_update();
-// map.c
-extern void load_map_from_current_data();
 // effects.c
 extern void effects_init();
 extern void effects_anim_update();
 // playerobj.c
 extern void playerobj_update();
-// playerhealth.c
-extern void playerhealth_damage_check();
-extern void playerhealth_death_check();
 // ui.c
-extern void ui_start();
 extern void ui_update();
 extern void ui_update_anim();
-// camera.c
-extern void camera_update_pos();
 // gameobj.c
 extern void gameobj_update_all();
 extern void gameobj_update_anim_all();
 extern void gameobj_push_all_updates();
 extern bool gameobj_all_at_rest();
-extern void gameobj_erase_all();
-// objhistory.c
-extern void history_clear_future();
-extern void history_update_all();
-extern int turn_count_get();
-extern void turn_count_set(int turn_count);
-extern void turn_count_increment();
-extern void turn_count_decrement();
+// objinteract.c
+extern void objint_init();
+// colors.c
+extern void color_cycle_init();
+extern void color_cycle_update();
 
 
 
@@ -75,17 +67,12 @@ void main_game_start();									// after initializing everything, this is called
 
 // update functions
 void title_update();								// update title screen
-void animations_update();							// update graphics and animation
+void graphics_update();							// update graphics and animation
 void main_game_update();							// update gameplay elements
-void action_update();								// update that occurs when the player takes an action
-void finalize_turn();								// update that occurs after all pieces have settled
 
-void set_turn_active();
 
-static GameState game_state;						// what state the game is currently in
 
-static bool game_paused;							
-static bool turn_active;		
+
 
 // placeholder
 void test_init_tte_se4();
@@ -96,19 +83,6 @@ void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy)
 
 
 
-//////////////////
-/// Game State ///
-//////////////////
-
-void set_game_state(GameState state)
-{
-	game_state = state;
-}
-
-GameState get_game_state()
-{
-	return game_state;
-}
 
 
 ////////////
@@ -141,7 +115,6 @@ int main(void)
 // Where all the magic happens
 void main_game_loop()
 {
-	play_dummy_track();
 	while (1) 
 	{
 		//vid_vsync();		//resource hog
@@ -156,7 +129,7 @@ void main_game_loop()
 			break;		// exit the loop 
 		}
 
-		animations_update();
+		graphics_update();
 
 		switch(get_game_state())
 		{
@@ -169,6 +142,7 @@ void main_game_loop()
 				break;
 			case GS_MAIN_GAME:
 			default:
+				debug_write_int(input_current_lock());
 				main_game_update();
 				break;
 		}
@@ -198,7 +172,8 @@ void global_init()
 	//irq_add(II_VBLANK, NULL);
 	//irq_enable(II_VBLANK);
 	audio_init();
-
+	textsys_init();
+	color_cycle_init();
 	gameobj_init_all();
 }
 
@@ -209,16 +184,19 @@ void main_game_init()
 	reg_init_main();
 	// game setup
 	animdata_init_all();
+	objint_init();
 	//gameobj_init_all();
 
 	map_init();
 	playerobj_init();
 	ui_init();
 	effects_init();
+	
+	textsys_init();		// call in global init should be sufficient, but it isn't and i'm out of time to investigate why lol
+	
 
 	// temp
 	init_objs_temp();
-	
 	//test_init_tte_se4();
 	//test_run_tte_se4();
 	//
@@ -258,6 +236,7 @@ void go_to_title()
 	set_game_state(GS_TITLE);
 	input_lock_sys();
 	title_load();
+	audio_play_track(MOD_TITLE_THEME);
 	title_display();
 }
 
@@ -279,33 +258,8 @@ void go_to_main_game()
 }
 
 
-void main_game_start()
-{
-	input_lock_sys();
-	
-	load_map_from_current_data();
 
-	turn_count_set(0);
-	game_paused = false;
-	turn_active = false;
-	ui_start();
-	
-	// update all obj histories once
-	history_update_all();
-	
-	input_unlock_sys();
-}
 
-void main_game_end()
-{
-	//map_init();
-	//playerobj_init();
-	//ui_init();
-	//effects_init();
-	gameobj_erase_all();
-	mem_clear_palettes();
-	mem_clear_tiles();
-}
 
 /////////////////////////////
 /// Game Update Functions ///
@@ -347,14 +301,13 @@ void main_game_update()
 	gameobj_update_all();			// update gameobj movement
 	game_update_main();				
 	update_world_pos();				// push the map around
-//	camera_update_pos();
+
 	ui_update();
 
 	// finalize the turn when all objects come to rest
-	if(turn_active && gameobj_all_at_rest())
+	if(check_turn_active() && gameobj_all_at_rest())
 	{
 		finalize_turn();
-		turn_active = false;
 		input_unlock_sys();
 	}
 
@@ -366,10 +319,11 @@ void main_game_update()
 
 
 // update graphics and animation
-void animations_update()
+void graphics_update()
 {
 	static uint32_t anim_sync;
 	static uint32_t ui_anim_sync;
+	
 
 	anim_sync++;
 	if(anim_sync > ANIM_SPEED)
@@ -382,6 +336,7 @@ void animations_update()
 	ui_anim_sync++;
 	if(ui_anim_sync > UI_ANIM_SPEED)
 	{
+		color_cycle_update();
 		//ui looked weird at the slower anim speed so it runs on its own cycle
 		ui_update_anim();
 		ui_anim_sync %= UI_ANIM_SPEED;
@@ -389,35 +344,6 @@ void animations_update()
 }
 
 
-// update that occurs when the player takes an action
-void action_update()
-{
-	// if an action was taken in the past, clear the previous future 
-	history_clear_future();
-}
-
-// update that occurs after all pieces have settled
-void finalize_turn()
-{
-	// update all obj histories
-	history_update_all();
-
-	// check if the player has been damaged this turn, and apply damage if so
-	playerhealth_damage_check();
-	// check if the player has died 
-	playerhealth_death_check();
-
-	// turn_count_increment();
-	input_unlock_player();
-}
-
-// set the game state to "objects are moving"
-void set_turn_active()
-{
-	turn_active = true;
-	// start the turn counter animation
-	turn_count_increment();
-}
 
 
 

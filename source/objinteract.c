@@ -12,6 +12,7 @@
 // playerhealth.c
 extern void playerhealth_take_damage();
 
+int oi_pal;
 
 void objint_init();
 
@@ -21,7 +22,7 @@ void objint_init();
 
 void objint_init()
 {
-
+	oi_pal = mem_load_palette(spikesPal);
 }
 
 
@@ -83,9 +84,8 @@ void objint_take_damage(GameObj *target, GameObj *instigator)
 
 GameObj *intobj_create_crate_at_position(int x, int y)
 {
-	int c_pal = mem_load_palette(cratePal);
 	int c_tile = mem_load_tiles(crateTiles, crateTilesLen);
-	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, c_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
+	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, oi_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
 	gameobj_set_sprite_offset(crate,0,8);
 	place_obj_in_tile(crate, x, y);
 	return crate;
@@ -94,9 +94,8 @@ GameObj *intobj_create_crate_at_position(int x, int y)
 
 GameObj *intobj_create_coin_at_position(int x, int y)
 {
-	int c_pal = mem_load_palette(coinPal);
 	int c_tile = mem_load_tiles(coinTiles, coinTilesLen);
-	GameObj *coin = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, c_pal, c_tile, 0, 0, OBJPROP_PICKUP);
+	GameObj *coin = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, oi_pal, c_tile, 0, 0, OBJPROP_PICKUP);
 	gameobj_set_sprite_offset(coin,0,2);
 	place_obj_in_tile(coin, x, y);
 	AnimationData *coin_anim = animdata_create(c_tile, 4, 4, 0);
@@ -116,9 +115,9 @@ GameObj *intobj_create_coin_at_position(int x, int y)
 
 GameObj *floorobj_create_spikes_at_position(int x, int y)
 {
-	int s_pal = mem_load_palette(spikesPal);
+	
 	int s_tile = mem_load_tiles(spikesTiles, spikesTilesLen);
-	GameObj *spikes = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, s_pal, s_tile, 0, 0, 0);
+	GameObj *spikes = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, oi_pal, s_tile, 0, 0, 0);
 	place_obj_in_tile_floor(spikes, x, y);
 	
 	return spikes;
