@@ -96,7 +96,7 @@ void ui_init()
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
 	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
-		int h_x = 4+i*8;
+		int h_x = (i*8) + 2 - (3*(i/2));
 		int h_y = 0;
 		hearts[i] = gameobj_init_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, ui_palette, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
 		if(i % 2)

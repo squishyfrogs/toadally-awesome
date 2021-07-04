@@ -1,20 +1,20 @@
 
-//{{BLOCK(coin)
+//{{BLOCK(spr_coin)
 
 //======================================================================
 //
-//	coin, 16x64@4, 
+//	spr_coin, 16x64@4, 
 //	+ palette 16 entries, not compressed
 //	+ 16 tiles Metatiled by 2x2 not compressed
 //	Total size: 32 + 512 = 544
 //
-//	Time-stamp: 2021-06-27, 23:27:19
+//	Time-stamp: 2021-07-03, 20:33:58
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.6
 //	( http://www.coranac.com/projects/#grit )
 //
 //======================================================================
 
-const unsigned short coinTiles[256] __attribute__((aligned(4)))=
+const unsigned short spr_coinTiles[256] __attribute__((aligned(4)))=
 {
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x1100,
 	0x0000,0x5510,0x0000,0x4451,0x1000,0x4445,0x1000,0x4444,
@@ -53,10 +53,10 @@ const unsigned short coinTiles[256] __attribute__((aligned(4)))=
 	0x0001,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 
-const unsigned short coinPal[16] __attribute__((aligned(4)))=
+const unsigned short spr_coinPal[16] __attribute__((aligned(4)))=
 {
-	0x0000,0x0C21,0x14AD,0x1D11,0x061B,0x3B1F,0x0000,0x0000,
+	0x0000,0x0C23,0x1CCB,0x210F,0x221A,0x26BC,0x0000,0x0000,
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 
-//}}BLOCK(coin)
+//}}BLOCK(spr_coin)

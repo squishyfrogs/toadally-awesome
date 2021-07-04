@@ -6,14 +6,16 @@ extern void set_map_data_temp();
 
 void load_level_data(int level_id)
 {
-	set_map_data_temp();
+	//set_map_data_temp();
 	switch(level_id)
 	{
-		case 0:
-			
+		case 1:
+			set_map_data(map1Pal, map1Tiles, map1TilesLen, map1Map, map1MapLen, map1Col);
+			set_overlay_data(map1overlayTiles, map1overlayTilesLen, map1overlayMap, map1overlayMapLen);
 			break;
 		default:
 			set_map_data(testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
+			overlay_clear();
 			break;
 	}
 

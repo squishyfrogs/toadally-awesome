@@ -146,6 +146,8 @@ void finalize_turn()
 
 	// turn_count_increment();
 	input_unlock_player();
+	// deactivate turn 
+	turn_active = false;
 }
 
 
@@ -204,8 +206,12 @@ Vector2 get_world_offset()
 // push changes to the world offset (done every frame)
 void update_world_pos()
 {
+	// main map
 	REG_BG1HOFS = world_offset_x;
 	REG_BG1VOFS = world_offset_y;
+	// overlay map
+	REG_BG2HOFS = world_offset_x;
+	REG_BG2VOFS = world_offset_y;
 }
 
 // reset all reg bg offsets, in addition to the world offset

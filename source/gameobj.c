@@ -168,12 +168,11 @@ GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 	obj->spr_size = attr1_size;
 	obj->spr_tile_id = spr_tile_id;
 	obj->obj_properties = properties;
+	obj->hist = NULL;
 
 	// if a sprite is FIXED_POS, init differently 
 	if(properties & OBJPROP_FIXED_POS)
 	{
-		// assume it doesn't want an ObjHistory or the default offset, which is mostly intended for the map objs
-		obj->hist = NULL;
 		// FIXED_POS objs only use pixel pos
 		obj->tile_pos.x = -1;
 		obj->tile_pos.y = -1;
@@ -182,14 +181,12 @@ GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 	}
 	else
 	{
-		// history and offset 
-		register_obj_history(obj);
 		gameobj_set_sprite_offset(obj, 0, SPR_OFF_Y_DEFAULT);
 		// set position as tile pos for non-FIXED_POS objs
-		obj->pixel_pos.x = 0;
-		obj->pixel_pos.y = 0;
 		obj->tile_pos.x = x;
 		obj->tile_pos.y = y;
+		obj->pixel_pos.x = 0;
+		obj->pixel_pos.y = 0;
 	}
 
 	obj_set_attr(obj->attr, obj->spr_shape, obj->spr_size, (ATTR2_PALBANK(obj->pal_bank_id) | obj->spr_tile_id));

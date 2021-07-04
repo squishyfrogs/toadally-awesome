@@ -22,18 +22,22 @@ typedef struct struct_MapData{
 
 void load_level_data(int level_id);
 void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info);
+void set_overlay_data(const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len);
 void load_map_from_current_data();
 void load_map_from_data(MapData *map_data);
+void load_overlay_from_data(MapData *overlay_data);
 
 
 void load_map_palette(const unsigned short *map_palette);
 void load_map_tiles(const unsigned short *map_tiles, int tiles_len);
 void load_map(const unsigned short *map, int map_len);
 void load_map_col_info(const unsigned short *map_col);
+void load_overlay_tiles(const unsigned short *overlay_tiles, int tiles_len);
+void load_overlay_map(const unsigned short *overlay_map, int map_len);
 
 void map_init();
 void map_clear();																	// clear all aspects of a map
-
+void overlay_clear();
 
 int get_tile_id(int x, int y);														// converts an x,y position to a tile number
 

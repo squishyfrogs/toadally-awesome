@@ -25,6 +25,7 @@ void map_clear_contents();
 
 // Map Data
 static MapData current_map;
+static MapData current_overlay;
 MapTile map_tiles[MAP_SIZE];
 
 // collision data for map
@@ -57,9 +58,18 @@ void set_map_data(const unsigned short *palette, const unsigned short *tiles, in
 	current_map.col_info = col_info;
 }
 
+void set_overlay_data(const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len)
+{
+	current_overlay.tiles = tiles;
+	current_overlay.tile_len = tile_len;
+	current_overlay.map = map;
+	current_overlay.map_len = map_len; 
+}
+
 void load_map_from_current_data()
 {
 	load_map_from_data(&current_map);
+	load_overlay_from_data(&current_overlay);
 }
 
 void load_map_from_data(MapData *map_data)
@@ -75,6 +85,13 @@ void load_map_from_data(MapData *map_data)
 
 	// load collision info
 	load_map_col_info(map_data->col_info);
+}
+
+void load_overlay_from_data(MapData *overlay_data)
+{
+	load_overlay_tiles(overlay_data->tiles, overlay_data->tile_len);
+
+	load_overlay_map(overlay_data->map, overlay_data->map_len);
 }
 
 
@@ -95,7 +112,7 @@ void load_map_tiles(const ushort *map_tiles, int tiles_len)
 // load a map into memory
 void load_map(const ushort *map, int map_len)
 {
-	// offset by 256 for reasons
+	// offset by 256 for charblock 1
 	u16 map_mem_offset = 256;
 	// divide len by 2 for reasons
 	int half_len = map_len / 2;
@@ -106,20 +123,40 @@ void load_map(const ushort *map, int map_len)
 	}
 }
 
+
+void load_overlay_tiles(const unsigned short *overlay_tiles, int tiles_len)
+{
+	// Load tiles into CBB 0 after map tiles
+	memcpy(&tile_mem[2][0], overlay_tiles, tiles_len);
+}
+
+// load a map's overlay (tiles that display above GameObj layer)
+void load_overlay_map(const ushort *overlay_map, int map_len)
+{
+	// offset by 512 for charblock 2
+	u16 map_mem_offset = 512;
+	// divide len by 2 for reasons
+	int half_len = map_len / 2;
+	// Load map into SBB 28
+	for(int i = 0; i < half_len; i++)
+	{
+		se_mem[28][i] = overlay_map[i] + map_mem_offset;
+	}
+}
+
 // load map collision data into memory
 void load_map_col_info(const unsigned short *map_col)
 {
-	//memcpy(map_collision_info, map_col, sizeof(unsigned short)*MAP_SIZE);
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
 		map_tiles[i].col_info = map_col[i];
 	}
 }
 
+
 // clear map collision data
 void map_clear_col_info()
 {
-	//memset(map_collision_info, 0, sizeof(unsigned short)*MAP_SIZE);
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
 		map_tiles[i].col_info = 0;
@@ -136,6 +173,13 @@ void map_clear()
 	{
 		map_tile_clear(&map_tiles[i]);
 	}
+	overlay_clear();
+}
+
+
+void overlay_clear()
+{
+
 }
 
 // clear a single tile

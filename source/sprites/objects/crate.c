@@ -1,20 +1,20 @@
 
-//{{BLOCK(crate)
+//{{BLOCK(spr_crate)
 
 //======================================================================
 //
-//	crate, 16x32@4, 
+//	spr_crate, 16x32@4, 
 //	+ palette 16 entries, not compressed
 //	+ 8 tiles Metatiled by 2x4 not compressed
 //	Total size: 32 + 256 = 288
 //
-//	Time-stamp: 2021-06-27, 23:28:30
+//	Time-stamp: 2021-07-03, 20:33:32
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.6
 //	( http://www.coranac.com/projects/#grit )
 //
 //======================================================================
 
-const unsigned short crateTiles[128] __attribute__((aligned(4)))=
+const unsigned short spr_crateTiles[128] __attribute__((aligned(4)))=
 {
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 	0x1110,0x1111,0x2221,0x2222,0x1121,0x1111,0x3121,0x3333,
@@ -35,10 +35,10 @@ const unsigned short crateTiles[128] __attribute__((aligned(4)))=
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 
-const unsigned short cratePal[16] __attribute__((aligned(4)))=
+const unsigned short spr_cratePal[16] __attribute__((aligned(4)))=
 {
-	0x0000,0x0C21,0x14AD,0x1D11,0x061B,0x3B1F,0x0000,0x0000,
+	0x0000,0x0C23,0x1CCB,0x210F,0x221A,0x26BC,0x0000,0x0000,
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 
-//}}BLOCK(crate)
+//}}BLOCK(spr_crate)

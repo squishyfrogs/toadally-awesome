@@ -81,7 +81,7 @@ void bg_demo();
 void update_text_temp();
 void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy);
 
-
+extern int history_count();
 
 
 
@@ -142,7 +142,8 @@ void main_game_loop()
 				break;
 			case GS_MAIN_GAME:
 			default:
-				debug_write_int(input_current_lock());
+				//debug_write_int(input_current_lock());
+				//debug_write_int(history_count());
 				main_game_update();
 				break;
 		}

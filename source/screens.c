@@ -134,6 +134,7 @@ void load_screen(const ushort *scr, int scr_len)
 
 void unload_current_screen()
 {
+	audio_stop();
 	switch (get_game_state())
 	{
 	case GS_LOGO:

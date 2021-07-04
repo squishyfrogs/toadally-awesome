@@ -1,4 +1,5 @@
 #include <tonc.h>
+#include "debug.h"
 #include "game.h"
 #include "vector2.h"
 #include "direction.h"
@@ -73,7 +74,7 @@ void playerobj_init()
 		PLAYER_START_X, PLAYER_START_Y,
 		OBJPROP_SOLID
 		);
-
+	register_obj_history(player_obj);
 	player_anim_init();
 	gameobj_update_current_tile(player_obj);
 	camera_set_target(player_obj);
@@ -118,6 +119,7 @@ void playerobj_update()
 		playerobj_update_movement();
 	
 	tongue_update();
+	debug_write_int(player_obj->hist->facing_history);
 }
 
 

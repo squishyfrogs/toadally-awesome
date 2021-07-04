@@ -47,6 +47,20 @@ ObjHistory obj_history_list[OBJ_HISTORY_MAX];		// history of all gameobjs in cur
 static int game_turns_elapsed;						// how many turns have passed since the game started
 static int current_turns_ago;						// measure of how far back in time we are currently rewound
 
+int history_count();
+
+int history_count()
+{
+	int ct = 0;
+	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
+	{
+		if(obj_history_list[i].in_use != 0)
+		{
+			ct++;
+		}
+	}
+	return ct;
+}
 
 
 //////////////////
@@ -237,6 +251,7 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	// enter new tile
 	int new_tile_id = history_get_tile_id_at_time(history, new_turns_ago);
 	//gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
+	debug_write_int(new_tile_id);
 	place_obj_in_tile_by_id(history->game_obj, new_tile_id);
 
 	// create a smoke effect if the object changed positions
@@ -303,13 +318,14 @@ void history_update_all()
 	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
 	{
 		ObjHistory *hist = &obj_history_list[i];
+		if(hist->in_use == 0)
+			continue;
 		if(hist->game_obj == NULL)
 			continue;
 		int tile_x = hist->game_obj->tile_pos.x;
 		int tile_y = hist->game_obj->tile_pos.y;
 		update_obj_history(hist, gameobj_get_facing(hist->game_obj), tile_x, tile_y);
 	}
-
 }
 
 // clean up all history-related data

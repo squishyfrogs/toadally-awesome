@@ -4,7 +4,7 @@
 #include "direction.h"
 #include "map.h"
 #include "effects.h"
-#include "sprites/tongue.h"
+#include "sprites/player/spr_tongue.h"
 
 #define TSPR_PIECE_H	0
 #define TSPR_PIECE_V	1
@@ -59,7 +59,7 @@ void tongue_init(GameObj *owner)
 {
 	Vector2 pos = owner->tile_pos;
 	int pal = owner->pal_bank_id;
-	base_tile = mem_load_tiles(tongueTiles, tongueTilesLen);
+	base_tile = mem_load_tiles(spr_tongueTiles, spr_tongueTilesLen);
 	tongue_tip = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_8x8, pal, base_tile+TSPR_TIP_H, pos.x, pos.y, 0);
 	vec2_set(&tongue_tip->spr_off, -4, 0);
 	tongue_set_owner(owner);
