@@ -119,7 +119,6 @@ void playerobj_update()
 		playerobj_update_movement();
 	
 	tongue_update();
-	debug_write_int(player_obj->hist->facing_history);
 }
 
 

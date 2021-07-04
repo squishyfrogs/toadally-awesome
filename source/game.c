@@ -7,7 +7,6 @@
 #include "layers.h"
 #include "map.h"
 #include "objhistory.h"
-#include "sprites.h"
 #include "input.h"
 #include "objinteract.h"
 #include "audio.h"
@@ -76,6 +75,9 @@ void main_game_end()
 	mem_clear_palettes();
 	mem_clear_tiles();
 	REGBGOFS_reset_all();
+	// wipe all sbb and cbb data
+	//memset16(VRAM, 0, 32768);
+	
 }
 
 
@@ -252,46 +254,37 @@ void REGBGOFS_reset_all()
 /// Testing & Placeholder ///
 /////////////////////////////
 
-///// temp
-GameObj *kirby;
-GameObj *kirby2;
-GameObj *crate;
-//////
-
-
-
-
 void init_objs_temp()
 {
 	//memcpy(&tile_mem[4][0], metrTiles, metrTilesLen);
 	//memcpy(pal_obj_mem, metrPal, metrPalLen);
 	// Places the glyphs of a 4bpp boxed kirby sprite 
 	// into LOW obj memory (cbb == 4)
-
+	///// temp
+	//GameObj *kirby;
+	//GameObj *kirby2;
+	//GameObj *crate;
+	//////
 	
 	
 	// init kirby
-	int k_pal = mem_load_palette(kirbyPal);
-	int k_tile = mem_load_tiles(kirbyTiles, kirbyTilesLen);
-	kirby = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96, 0);
+	//int k_pal = mem_load_palette(kirbyPal);
+	//int k_tile = mem_load_tiles(kirbyTiles, kirbyTilesLen);
+	//kirby = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_32x32, k_pal, k_tile, 96, 96, 0);
+	//kirby2 = gameobj_clone(gameobj_init(), kirby);
+	//gameobj_set_pixel_pos(kirby2, 100, 20);
 
-	kirby2 = gameobj_clone(gameobj_init(), kirby);
-	gameobj_set_pixel_pos(kirby2, 100, 20);
-
-	
-	
 
 	// init crate
-	intobj_create_crate_at_position(6,12);
-	intobj_create_coin_at_position(8,10);
-	
-	floorobj_create_spikes_at_position(4,11);
+	//intobj_create_crate_at_position(6,12);
+	//intobj_create_coin_at_position(8,10);
+	//floorobj_create_spikes_at_position(4,11);
 }
 
 void game_update_main_temp()
 {
 
-	gameobj_change_pixel_pos(kirby, key_tri_horz(), key_tri_vert());
+	//gameobj_change_pixel_pos(kirby, key_tri_horz(), key_tri_vert());
 
 
 	// increment/decrement starting tile with R/L
@@ -312,8 +305,8 @@ void game_update_main_temp()
 	// flip
 	//if(key_hit(KEY_A))	// horizontally
 	//	gameobj_flip_h(kirby);
-	if(key_hit(KEY_B))	// vertically
-		gameobj_flip_v(kirby);
+	//if(key_hit(KEY_B))	// vertically
+	//	gameobj_flip_v(kirby);
 	
 	// make it glow (via palette swapping)
 	//pb= key_is_down(KEY_SELECT) ? 1 : 0;

@@ -57,7 +57,7 @@ void level_select_update()
 	{
 		audio_play_sound(SFX_BLIP_HIGH);
 		main_game_init();
-		load_level_data(cur_lvl_selection);
+		load_level_data(cur_lvl_selection+1);	
 		go_to_main_game();
 	}
 

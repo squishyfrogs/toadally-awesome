@@ -20,7 +20,6 @@ extern void playerobj_init();			// playerobj.c
 extern void ui_init();					// ui.c
 extern void map_init();					// map.c
 // game.c
-extern void init_objs_temp();	//temp
 extern void game_update_main();
 extern void update_world_pos();
 // text.c
@@ -197,7 +196,7 @@ void main_game_init()
 	
 
 	// temp
-	init_objs_temp();
+	//init_objs_temp();
 	//test_init_tte_se4();
 	//test_run_tte_se4();
 	//
@@ -209,8 +208,7 @@ void global_soft_reset()
 {
 	main_game_end();
 	input_unlock_override_all();
-	go_to_logo();
-	main_game_loop();
+	SoftReset();
 }
 
 

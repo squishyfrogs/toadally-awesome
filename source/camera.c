@@ -29,28 +29,13 @@ void set_camera_pos(int target_x, int target_y)
 	int cam_x = world_offset_x + SCREEN_HALF_WIDTH;
 	int cam_y = world_offset_y + SCREEN_HALF_HEIGHT;
 	
-
 	//try to constrain player within camera bounds
-	if(cam_x < target_x - cam_bound_h + PLAYER_SIZE)
-		cam_x = target_x - cam_bound_h + PLAYER_SIZE;
-	if(cam_x > target_x + cam_bound_h)
-		cam_x = target_x + cam_bound_h;
-	if(cam_y < target_y - cam_bound_v + PLAYER_SIZE)
-		cam_y = target_y - cam_bound_v + PLAYER_SIZE;
-	if(cam_y > target_y + cam_bound_v)
-		cam_y = target_y + cam_bound_v;
+	cam_x = clamp(cam_x, target_x - cam_bound_h + PLAYER_SIZE, target_x + cam_bound_h);
+	cam_y = clamp(cam_y, target_y - cam_bound_v + PLAYER_SIZE, target_y + cam_bound_v);
 	
 	//maintain map bounds above all else
-	if(cam_x < SCREEN_HALF_WIDTH)
-		cam_x = SCREEN_HALF_WIDTH;
-	if(cam_x > (MAP_SIZE_X * GAME_TILE_SIZE) - SCREEN_HALF_WIDTH)
-		cam_x = (MAP_SIZE_X * GAME_TILE_SIZE) - SCREEN_HALF_WIDTH;
-
-	if(cam_y < SCREEN_HALF_HEIGHT)
-		cam_y = SCREEN_HALF_HEIGHT;
-	if(cam_y > (MAP_SIZE_Y * GAME_TILE_SIZE) - SCREEN_HALF_HEIGHT)
-		cam_y = (MAP_SIZE_Y * GAME_TILE_SIZE) - SCREEN_HALF_HEIGHT;
-
+	cam_x = clamp(cam_x, SCREEN_HALF_WIDTH, (MAP_SIZE_X * GAME_TILE_SIZE) - SCREEN_HALF_WIDTH);
+	cam_y = clamp(cam_y, SCREEN_HALF_HEIGHT, (MAP_SIZE_Y * GAME_TILE_SIZE) - SCREEN_HALF_HEIGHT);
 	
 	set_world_offset(cam_x - SCREEN_HALF_WIDTH, cam_y - SCREEN_HALF_HEIGHT);
 }

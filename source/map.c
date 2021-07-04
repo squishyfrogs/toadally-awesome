@@ -40,13 +40,24 @@ MapTile map_tiles[MAP_SIZE];
 /// Map Data ///
 ////////////////
 
-
 // initiation function
 void map_init()
 {
-	map_clear();
+	map_clear_all();
 }
 
+
+void load_map_from_current_data()
+{
+	map_clear_all();
+	overlay_clear();
+	load_map_from_data(&current_map);
+	load_overlay_from_data(&current_overlay);
+}
+
+////////////////
+/// Map Data ///
+////////////////
 
 void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info)
 {
@@ -58,42 +69,17 @@ void set_map_data(const unsigned short *palette, const unsigned short *tiles, in
 	current_map.col_info = col_info;
 }
 
-void set_overlay_data(const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len)
-{
-	current_overlay.tiles = tiles;
-	current_overlay.tile_len = tile_len;
-	current_overlay.map = map;
-	current_overlay.map_len = map_len; 
-}
-
-void load_map_from_current_data()
-{
-	load_map_from_data(&current_map);
-	load_overlay_from_data(&current_overlay);
-}
-
 void load_map_from_data(MapData *map_data)
 {
 	// Load palette
 	load_map_palette(map_data->palette);
-	
 	// load tiles
 	load_map_tiles(map_data->tiles, map_data->tile_len);
-	
 	// create the map out of those tiles
 	load_map(map_data->map, map_data->map_len);
-
 	// load collision info
 	load_map_col_info(map_data->col_info);
 }
-
-void load_overlay_from_data(MapData *overlay_data)
-{
-	load_overlay_tiles(overlay_data->tiles, overlay_data->tile_len);
-
-	load_overlay_map(overlay_data->map, overlay_data->map_len);
-}
-
 
 // load a palette into palbg memory
 void load_map_palette(const ushort *map_palette)
@@ -123,6 +109,58 @@ void load_map(const ushort *map, int map_len)
 	}
 }
 
+// load map collision data into memory
+void load_map_col_info(const unsigned short *map_col)
+{
+	for(int i = 0; i < MAP_SIZE; i++)
+	{
+		map_tiles[i].col_info = map_col[i];
+	}
+}
+
+//clear all aspects of a map
+void map_clear_all()
+{
+	//map_clear_col_info();
+	//map_clear_contents();
+	for(int i = 0; i < MAP_SIZE; i++)
+	{
+		map_tile_clear(&map_tiles[i]);
+	}
+	overlay_clear();
+}
+
+
+// clear map collision data
+void map_clear_col_info()
+{
+	for(int i = 0; i < MAP_SIZE; i++)
+	{
+		map_tiles[i].col_info = 0;
+	}
+}
+
+
+
+///////////////
+/// Overlay ///
+///////////////
+
+
+void set_overlay_data(const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len)
+{
+	current_overlay.tiles = tiles;
+	current_overlay.tile_len = tile_len;
+	current_overlay.map = map;
+	current_overlay.map_len = map_len; 
+}
+
+void load_overlay_from_data(MapData *overlay_data)
+{
+	load_overlay_tiles(overlay_data->tiles, overlay_data->tile_len);
+
+	load_overlay_map(overlay_data->map, overlay_data->map_len);
+}
 
 void load_overlay_tiles(const unsigned short *overlay_tiles, int tiles_len)
 {
@@ -144,43 +182,24 @@ void load_overlay_map(const ushort *overlay_map, int map_len)
 	}
 }
 
-// load map collision data into memory
-void load_map_col_info(const unsigned short *map_col)
-{
-	for(int i = 0; i < MAP_SIZE; i++)
-	{
-		map_tiles[i].col_info = map_col[i];
-	}
-}
-
-
-// clear map collision data
-void map_clear_col_info()
-{
-	for(int i = 0; i < MAP_SIZE; i++)
-	{
-		map_tiles[i].col_info = 0;
-	}
-}
-
-
-//clear all aspects of a map
-void map_clear()
-{
-	//map_clear_col_info();
-	//map_clear_contents();
-	for(int i = 0; i < MAP_SIZE; i++)
-	{
-		map_tile_clear(&map_tiles[i]);
-	}
-	overlay_clear();
-}
-
-
 void overlay_clear()
 {
-
+	// clear char block 2
+	//memset(&tile_mem[2][0], 0, CBB_SIZE);
+	CBB_CLEAR(2);
+	CBB_CLEAR(3);
+	// set entire map to tile 0 of char block 2
+	for(int i = 0; i < SBB_SIZE/2; i++)
+	{
+		se_mem[28][i] = 512;
+		se_mem[29][i] = 512;
+	}
 }
+
+
+
+
+
 
 // clear a single tile
 void map_tile_clear(MapTile *tile)
