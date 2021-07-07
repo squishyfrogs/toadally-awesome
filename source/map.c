@@ -6,9 +6,16 @@
 
 #define MAP_PAL_LEN 512 //2 bytes per color, 256 color
 
+#define TILEPROP_SOLID		0x01	// normal terrain
+#define TILEPROP_HOLE		0x02	// objs placed onto this tile will fall down
+#define TILEPROP_CANGRAB	0x04	// player can latch onto this tile with their tongue (should only be set while also solid, to avoid unintended behavior)
+#define TILEPROP_PAIN		0x08	// tile causes damage when stepped on
+#define TILEPROP_VICTORY	0x80
+
 typedef struct MapTile_T{
-	unsigned short height;
-	unsigned short col_info;
+	//unsigned short tile_heightl
+	unsigned short tile_properties;
+	//unsigned short col_info;
 	GameObj *tile_contents;
 	GameObj *floor_contents;
 } MapTile;
@@ -18,7 +25,7 @@ typedef struct MapTile_T{
 
 void map_tile_clear(MapTile *tile);
 void map_tile_clear_contents(MapTile *tile);
-void map_clear_col_info();
+void map_clear_tile_properties();
 void map_clear_contents();
 
 
@@ -78,7 +85,7 @@ void load_map_from_data(MapData *map_data)
 	// create the map out of those tiles
 	load_map(map_data->map, map_data->map_len);
 	// load collision info
-	load_map_col_info(map_data->col_info);
+	load_map_tile_properties(map_data->col_info);
 }
 
 // load a palette into palbg memory
@@ -110,18 +117,18 @@ void load_map(const ushort *map, int map_len)
 }
 
 // load map collision data into memory
-void load_map_col_info(const unsigned short *map_col)
+void load_map_tile_properties(const unsigned short *map_col)
 {
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
-		map_tiles[i].col_info = map_col[i];
+		map_tiles[i].tile_properties = map_col[i];
 	}
 }
 
 //clear all aspects of a map
 void map_clear_all()
 {
-	//map_clear_col_info();
+	//map_clear_tile_properties();
 	//map_clear_contents();
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
@@ -132,11 +139,11 @@ void map_clear_all()
 
 
 // clear map collision data
-void map_clear_col_info()
+void map_clear_tile_properties()
 {
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
-		map_tiles[i].col_info = 0;
+		map_tiles[i].tile_properties = 0;
 	}
 }
 
@@ -204,8 +211,8 @@ void overlay_clear()
 // clear a single tile
 void map_tile_clear(MapTile *tile)
 {
-	tile->height = 0;
-	tile->col_info = 0;
+	tile->tile_properties = 0;
+	//tile->col_info = 0;
 	tile->tile_contents = NULL;
 	tile->floor_contents = NULL;
 }
@@ -242,12 +249,12 @@ int get_tile_id(int x, int y)
 }
 
 // get the collision info of a given tile
-ushort get_tile_col_info(int tile_x, int tile_y)
+ushort get_tile_properties(int tile_x, int tile_y)
 {
 	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
-		return 0;
+		return TILEPROP_SOLID;
 	
-	return map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].col_info;
+	return map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_properties;
 }
 
 // get the contents of a given tile, or NULL if tile is empty
@@ -273,8 +280,8 @@ bool check_tile_free(int tile_x, int tile_y)
 	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
 		return false;
 	// make sure tile has a valid height
-	ushort height = get_tile_col_info(tile_x, tile_y);
-	if(height == 0)
+	ushort props = get_tile_properties(tile_x, tile_y);
+	if(props & (TILEPROP_SOLID|TILEPROP_HOLE))
 		return false;
 
 	return (map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents == NULL);

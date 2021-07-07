@@ -9,6 +9,7 @@
 #include "objhistory.h"
 #include "input.h"
 #include "objinteract.h"
+#include "pausemenu.h"
 #include "audio.h"
 
 
@@ -18,7 +19,8 @@ extern void set_action_count_immediate(int count);
 // playerhealth.c
 extern void playerhealth_damage_check();
 extern void playerhealth_death_check();
-
+// camera.c
+extern void camera_center();
 
 void game_update_main();
 
@@ -47,7 +49,7 @@ int world_offset_y;
 
 void main_game_start()
 {
-	input_lock_sys();
+	input_lock(INPLCK_SYS);
 	
 	load_map_from_current_data();
 
@@ -55,12 +57,17 @@ void main_game_start()
 	set_action_count_immediate(0);
 	game_paused = false;
 	turn_active = false;
+
 	ui_start();
 	
+	
+
+	reg_set_main();
 	// update all obj histories once
 	history_update_all();
 	
-	input_unlock_sys();
+	camera_center();
+	input_unlock(INPLCK_SYS);
 }
 
 
@@ -70,9 +77,9 @@ void main_game_end()
 	//playerobj_init();
 	//ui_init();
 	//effects_init();
-	audio_stop();
+	audio_stop_all();
 	gameobj_erase_all();
-	mem_clear_palettes();
+	mem_clear_obj_palettes();
 	mem_clear_tiles();
 	REGBGOFS_reset_all();
 	// wipe all sbb and cbb data
@@ -86,15 +93,36 @@ void game_update_main()
 
 	if(!input_locked())
 	{
-		if(key_hit(KEY_L))
+		if(key_hit(KEY_START))
 		{
-			history_step_back(1);
+			pausemenu_open();
 		}
-
-		if(key_hit(KEY_R))
+		if(key_hit(KEY_SELECT))
 		{
-			//history_return_to_present();
-			history_step_forward(1);
+			pausemenu_close();
+		}
+		if(history_mode_active())
+		{
+			if(key_hit(KEY_L))
+			{
+				history_step_back(1);
+			}
+			else if(key_hit(KEY_R))
+			{
+				//history_return_to_present();
+				history_step_forward(1);
+			}
+			else if(key_hit(KEY_DIR | KEY_A | KEY_B))
+			{
+				history_mode_disable();
+			}
+		}
+		else
+		{
+			if(key_hit(KEY_SHOULDER))
+			{
+				history_mode_enable();
+			}
 		}
 	}
 
@@ -147,7 +175,7 @@ void finalize_turn()
 	playerhealth_death_check();
 
 	// turn_count_increment();
-	input_unlock_player();
+	input_unlock(INPLCK_PLAYER);
 	// deactivate turn 
 	turn_active = false;
 }

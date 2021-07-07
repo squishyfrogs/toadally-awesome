@@ -29,7 +29,7 @@ void load_map_from_data(MapData *map_data);
 void load_map_palette(const unsigned short *map_palette);
 void load_map_tiles(const unsigned short *map_tiles, int tiles_len);
 void load_map(const unsigned short *map, int map_len);
-void load_map_col_info(const unsigned short *map_col);
+void load_map_tile_properties(const unsigned short *map_col);
 void map_clear_all();																	// clear all aspects of a map
 
 void set_overlay_data(const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len);
@@ -41,7 +41,7 @@ void overlay_clear();
 
 int get_tile_id(int x, int y);														// converts an x,y position to a tile number
 
-ushort get_tile_col_info(int tile_x, int tile_y);									// get the collision info of a given tile
+ushort get_tile_properties(int tile_x, int tile_y);									// get the collision info of a given tile
 bool check_tile_free(int tile_x, int tile_y);										// returns true if the tile is within map bounds and can be entered
 struct struct_GameObj *get_tile_contents(int tile_x, int tile_y);					// get the contents of a given tile, or NULL if tile is empty
 struct struct_GameObj *get_tile_floor_contents(int tile_x, int tile_y);				// get the contents of a given tile floor, or NULL if tile is empty

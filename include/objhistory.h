@@ -33,6 +33,10 @@ void history_clear_future();															// clear the future and progress with
 void history_update_all();																// update history of all objs after an action is performed
 void history_reset();																	// clean up all history-related data
 
+void history_mode_enable();																// enables history mode (scrolling through the past with L/R)
+void history_mode_disable();															// disables history mode (scrolling through the past with L/R)
+bool history_mode_active();																// is history mode currently active?
+
 int turn_count_get();																	// get how many turns have elapsed
 void turn_count_set(int turn_count);													// set the turn count
 void turn_count_increment();

@@ -3,6 +3,8 @@
 #include "effects.h"
 #include "map.h"
 #include "audio.h"
+#include "palettes.h"
+#include "regmem.h"
 
 #include "sprites/objects/coin.h"
 #include "sprites/objects/crate.h"
@@ -12,7 +14,7 @@
 // playerhealth.c
 extern void playerhealth_take_damage();
 
-int oi_pal;
+//int oi_pal;
 
 void objint_init();
 
@@ -22,7 +24,7 @@ void objint_init();
 
 void objint_init()
 {
-	oi_pal = mem_load_palette(spikesPal);
+	//oi_pal = mem_load_palette(spikesPal);
 }
 
 
@@ -85,7 +87,7 @@ void objint_take_damage(GameObj *target, GameObj *instigator)
 GameObj *intobj_create_crate_at_position(int x, int y)
 {
 	int c_tile = mem_load_tiles(spr_crateTiles, spr_crateTilesLen);
-	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, oi_pal, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
+	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, PAL_ID_OBJS, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
 	register_obj_history(crate);
 	gameobj_set_sprite_offset(crate,0,8);
 	place_obj_in_tile(crate, x, y);
@@ -96,7 +98,7 @@ GameObj *intobj_create_crate_at_position(int x, int y)
 GameObj *intobj_create_coin_at_position(int x, int y)
 {
 	int c_tile = mem_load_tiles(spr_coinTiles, spr_coinTilesLen);
-	GameObj *coin = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, oi_pal, c_tile, 0, 0, OBJPROP_PICKUP);
+	GameObj *coin = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, PAL_ID_OBJS, c_tile, 0, 0, OBJPROP_PICKUP);
 	register_obj_history(coin);
 	gameobj_set_sprite_offset(coin,0,2);
 	place_obj_in_tile(coin, x, y);
@@ -119,7 +121,7 @@ GameObj *floorobj_create_spikes_at_position(int x, int y)
 {
 	
 	int s_tile = mem_load_tiles(spikesTiles, spikesTilesLen);
-	GameObj *spikes = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, oi_pal, s_tile, 0, 0, 0);
+	GameObj *spikes = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, PAL_ID_OBJS, s_tile, 0, 0, 0);
 	place_obj_in_tile_floor(spikes, x, y);
 	
 	return spikes;

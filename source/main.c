@@ -9,7 +9,7 @@
 #include "layers.h"
 #include "input.h"
 #include "screens.h"
-
+#include "palettes.h"
 
 
 
@@ -48,7 +48,6 @@ extern void color_cycle_init();
 extern void color_cycle_update();
 
 
-
 void main_game_loop();
 
 // init functions
@@ -78,7 +77,6 @@ void test_init_tte_se4();
 void test_run_tte_se4();
 void bg_demo();
 void update_text_temp();
-void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy);
 
 extern int history_count();
 
@@ -181,7 +179,7 @@ void global_init()
 
 void main_game_init()
 {
-	reg_init_main();
+	//reg_set_main();
 	// game setup
 	animdata_init_all();
 	objint_init();
@@ -206,8 +204,11 @@ void main_game_init()
 
 void global_soft_reset()
 {
+	audio_stop_all();
 	main_game_end();
 	input_unlock_override_all();
+	REG_BLDY = 0;
+	REG_DISPCNT = 0;
 	SoftReset();
 }
 
@@ -219,39 +220,40 @@ void global_soft_reset()
 
 void go_to_logo()
 {
-	reg_init_title();
 	unload_current_screen();
 	set_game_state(GS_LOGO);
-	input_lock_sys();
+	input_lock(INPLCK_SYS);
 	logo_load();
+	reg_set_title();
 	logo_display();
 }
 
 
 void go_to_title()
 {
-	reg_init_title();
 	unload_current_screen();
 	set_game_state(GS_TITLE);
-	input_lock_sys();
+	input_lock(INPLCK_SYS);
 	title_load();
 	audio_play_track(MOD_TITLE_THEME);
+	reg_set_title();
 	title_display();
 }
 
 
 void go_to_level_select()
 {
-	reg_init_lev_sel();
 	unload_current_screen();
 	set_game_state(GS_LEVEL_SELECT);
 	lev_sel_load();
+	reg_set_lev_sel();
 	lev_sel_display();
 }
 
 void go_to_main_game()
 {
 	unload_current_screen();
+	load_main_game_palettes();
 	set_game_state(GS_MAIN_GAME);
 	main_game_start();
 }
@@ -307,7 +309,7 @@ void main_game_update()
 	if(check_turn_active() && gameobj_all_at_rest())
 	{
 		finalize_turn();
-		input_unlock_sys();
+		input_unlock(INPLCK_SYS);
 	}
 
 	// update gameobj attrs based on gameplay changes
@@ -418,22 +420,6 @@ void test_init_tte_se4()
 
 }
 
-
-
-void win_textbox(uint bgnr, int left, int top, int right, int bottom, uint bldy)
-{
-	REG_WIN0H= left<<8 | right;
-	REG_WIN0V=  top<<8 | bottom;
-	REG_WIN0CNT= WIN_ALL | WIN_BLD;
-	REG_WINOUTCNT= WIN_ALL;
-
-	REG_BLDCNT= (BLD_ALL&~BIT(bgnr)) | BLD_BLACK;
-	REG_BLDY= bldy;
-
-	REG_DISPCNT |= DCNT_WIN0;
-
-	tte_set_margins(left, top, right, bottom);
-}
 
 
 void test_run_tte_se4()

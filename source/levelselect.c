@@ -1,5 +1,6 @@
 #include <tonc.h>
 #include "regmem.h"
+#include "palettes.h"
 #include "gameobj.h"
 #include "audio.h"
 #include "sprites/ui/levSelCursor.h"
@@ -82,7 +83,7 @@ void level_select_clear()
 
 void load_level_cursor()
 {
-	int cursor_pal = mem_load_palette(levSelCursorPal);
+	int cursor_pal = mem_load_palette(levSelCursorPal, PAL_ID_UI);
 	int cursor_tile = mem_load_tiles(levSelCursorTiles, levSelCursorTilesLen);
 	cursor = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_WIDE, ATTR1_SIZE_64x32, cursor_pal, cursor_tile, 32, 32, OBJPROP_FIXED_POS);
 	gameobj_set_sprite_offset(cursor, 16,8);

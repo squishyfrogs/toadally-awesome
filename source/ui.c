@@ -3,16 +3,14 @@
 #include "gameobj.h"
 #include "playerhealth.h"
 #include "animation.h"
+#include "input.h"
 #include "layers.h"
+#include "regmem.h"
+#include "palettes.h"
 #include "sprites/ui/heart.h"
 #include "sprites/ui/numbers.h"
 #include "sprites/ui/gear.h"
 #include "sprites/ui/timegauge.h"
-
-
-// input.c
-extern void input_lock_ui();
-extern void input_unlock_ui();
 
 
 void ui_init();
@@ -28,7 +26,7 @@ void ui_animate_gear_forward();
 void ui_animate_gear_backward();
 
 
-int ui_palette;										// shared palette for ui elements
+// int ui_palette;										// shared palette for ui elements
 ////////////////////
 // Action Counter //
 ////////////////////
@@ -74,7 +72,7 @@ int g_anim;
 void ui_init()
 {
 	// TODO: change to uiPal
-	ui_palette = mem_load_palette(numbersPal);
+	//ui_palette = mem_load_palette(numbersPal);
 
 	// init action counter
 	a_tile = mem_load_tiles(numbersTiles, numbersTilesLen);
@@ -84,7 +82,7 @@ void ui_init()
 		action_counter[i]->layer_priority = LAYER_OVERLAY;
 		int ac_x = ACTION_COUNTER_OFFSET_X + i*8;
 		int ac_y = ACTION_COUNTER_OFFSET_Y + 152;
-		gameobj_update_attr_full(action_counter[i], ATTR0_SQUARE, ATTR1_SIZE_8x8, ui_palette, a_tile, ac_x, ac_y, OBJPROP_FIXED_POS);
+		gameobj_update_attr_full(action_counter[i], ATTR0_SQUARE, ATTR1_SIZE_8x8, PAL_ID_UI, a_tile, ac_x, ac_y, OBJPROP_FIXED_POS);
 	}
 	reset_action_count();
 
@@ -92,13 +90,14 @@ void ui_init()
 	// init time gauge
 	t_tile = mem_load_tiles(timegaugeTiles, timegaugeTilesLen);
 
-	// init hp bar
+	// init hp icons
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
 	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
-		int h_x = (i*8) + 2 - (3*(i/2));
+
+		int h_x = (i*8) + 0 - (3*(i>>1));
 		int h_y = 0;
-		hearts[i] = gameobj_init_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, ui_palette, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
+		hearts[i] = gameobj_init_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, PAL_ID_UI, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
 		if(i % 2)
 			gameobj_set_flip_h(hearts[i], true);
 	}
@@ -108,7 +107,7 @@ void ui_init()
 	gear = gameobj_init();
 	g_tile = mem_load_tiles(gearTiles, gearTilesLen);
 	gear->layer_priority = LAYER_OVERLAY;
-	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, ui_palette, g_tile, 0, 128, OBJPROP_FIXED_POS);
+	gameobj_update_attr_full(gear, ATTR0_SQUARE, ATTR1_SIZE_32x32, PAL_ID_UI, g_tile, 0, 128, OBJPROP_FIXED_POS);
 	AnimationData *gear_anim = animdata_create(g_tile, ANIM_OFFSET_32x32, 3, 0);
 	gameobj_set_anim_data(gear, gear_anim, 0);
 	//gameobj_set_anim_info(gear, 3, ANIM_OFFSET_32x32, 0, false);
@@ -177,7 +176,7 @@ void ui_update_anim()
 			displayed_action_count += count_rolling;
 			if(displayed_action_count == true_action_count)
 			{
-				input_unlock_ui();
+				input_unlock(INPLCK_UI);
 				count_rolling = 0;
 				set_action_count_immediate(true_action_count);		//should be redundant if everything works properly, but just in case
 			}
@@ -200,7 +199,7 @@ void reset_action_count()
 	}
 	count_rolling = 0;
 	set_action_count_immediate(0);
-	input_unlock_ui();
+	input_unlock(INPLCK_UI);
 }
 
 void set_action_count_immediate(int count)
@@ -217,7 +216,7 @@ void set_action_count_immediate(int count)
 	action_counter[2]->spr_tile_id = a_tile + (DIGIT_ANIM_LENGTH * (count % 10));
 	gameobj_update_attr(action_counter[2]);
 	count_rolling = 0;
-	input_unlock_ui();
+	input_unlock(INPLCK_UI);
 }
 
 void set_action_count(int count)
@@ -228,14 +227,14 @@ void set_action_count(int count)
 		count_rolling = -1;
 		c_frame = 0;
 		ui_animate_gear_backward();
-		input_lock_ui();
+		input_lock(INPLCK_UI);
 	}
 	if(true_action_count > displayed_action_count)
 	{
 		count_rolling = 1;
 		c_frame = 0;
 		ui_animate_gear_forward();
-		input_lock_ui();
+		input_lock(INPLCK_UI);
 	}
 }
 

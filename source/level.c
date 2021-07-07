@@ -22,6 +22,21 @@ void load_level_data(int level_id)
 }
 
 
+void load_map_objs(int level_id)
+{
+
+	switch(level_id)
+	{
+		case 1:
+			
+			break;
+		default:
+			
+			break;
+	}
+}
+
+
 
 ////////////
 /// Temp ///
@@ -40,7 +55,7 @@ void set_map_data_temp()
 	
 	//load_map(fe_mapMap, fe_mapMapLen);
 //	load_map(testmapMap, testmapMapLen);
-//	load_map_col_info(testmapCol);
+//	load_map_tile_properties(testmapCol);
 
 	set_map_data(testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
 

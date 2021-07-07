@@ -4,7 +4,7 @@
 
 
 #define DEBUG_SKIP_INTROS 	0			// set to skip straight to gameplay
-#define DEBUG_MUTE_SONGS 	1			// set to mute audio tracks
+#define DEBUG_MUTE_SONGS 	0			// set to mute audio tracks
 #define DEBUG_MUTE_SFX 		0			// set to mute sound effects
 #define DEBUG_MUTE_ALL		0			// set to mute everything
 

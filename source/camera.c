@@ -3,16 +3,19 @@
 #include "map.h"
 #include "gameobj.h"
 
-#define SCREEN_HALF_WIDTH (SCREEN_WIDTH/2)		// half screen width
-#define SCREEN_HALF_HEIGHT (SCREEN_HEIGHT/2)	// half screen height
-#define CAMERA_BOUNDS_HORIZONTAL	32
-#define CAMERA_BOUNDS_VERTICAL		32
-#define PLAYER_SIZE					16			// player size in pixels
+#define SCREEN_HALF_WIDTH 			120		// half screen width
+#define SCREEN_HALF_HEIGHT 			80		// half screen height
+#define CAMERA_BOUNDS_HORIZONTAL	24
+#define CAMERA_BOUNDS_VERTICAL		24
+#define PLAYER_SIZE					16		// player size in pixels
+
 
 void set_camera_pos(int target_x, int target_y);
 void camera_update_pos();
 void camera_set_target(GameObj *target);
 void camera_find_target(GameObj *target);
+void camera_center();
+
 extern void set_world_offset(int off_x, int off_y);
 
 
@@ -58,4 +61,12 @@ void camera_find_target(GameObj *target)
 {
 	Vector2 v = gameobj_get_pixel_pos(target);
 	camera_update_pos(v.x, v.y);
+}
+
+void camera_center()
+{
+	//set_camera_pos(128,128);
+
+
+	set_world_offset(8, 46);
 }

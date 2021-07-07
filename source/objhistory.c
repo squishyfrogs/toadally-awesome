@@ -4,6 +4,7 @@
 #include "game.h"
 #include "map.h"
 #include "effects.h"
+#include "audio.h"
 
 #include "debug.h"
 
@@ -17,6 +18,10 @@ extern void set_action_count_immediate(int count);
 extern void map_clear_contents();
 // frogtongue.c
 extern void tongue_store();
+// palette.c
+extern void palette_activate_grayscale_mode();
+extern void palette_deactivate_grayscale_mode();
+
 
 
 void set_game_to_turn(int new_turns_ago);
@@ -41,9 +46,8 @@ inline void hist_obj_unlink(ObjHistory *hist, GameObj *obj){
 
 
 ObjHistory obj_history_list[OBJ_HISTORY_MAX];		// history of all gameobjs in current scene
-//static int free_history = 0;						// marker for first free slot in history array
 
-
+static bool history_mode;							// history mode (scrolling through the past with L/R)
 static int game_turns_elapsed;						// how many turns have passed since the game started
 static int current_turns_ago;						// measure of how far back in time we are currently rewound
 
@@ -232,6 +236,8 @@ void set_game_to_turn(int turns_ago)
 
 	// update turn counter
 	set_action_count(game_turns_elapsed - turns_ago);
+	// play clock tick sound
+	audio_play_sound(SFX_CLOCK_TICK);
 }
 
 // set a GameObj to a specific turn in its history
@@ -333,6 +339,36 @@ void history_reset()
 	current_turns_ago = 0;
 	game_turns_elapsed = 0;
 	reset_action_count();
+}
+
+
+////////////////////
+/// History Mode ///
+////////////////////
+
+
+
+void history_mode_enable()
+{
+	history_mode = true;
+	// play sound effect
+	audio_play_sound(SFX_TICK_DOWN);
+	// grey out palette
+	palette_activate_grayscale_mode();
+}
+
+void history_mode_disable()
+{
+	history_mode = false;
+	// play sound effect
+	audio_play_sound(SFX_TICK_UP);
+	// color palette
+	palette_deactivate_grayscale_mode();
+}
+
+bool history_mode_active()
+{
+	return history_mode;
 }
 
 

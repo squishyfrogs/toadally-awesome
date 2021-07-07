@@ -1,6 +1,7 @@
 #include <maxmod.h>
 #include <tonc.h>
 #include "audio.h"
+#include "soundbank_bin.h"
 #include "debug.h"
 
 
@@ -36,8 +37,9 @@ void audio_unmute()
 	muted = false;
 }
 
-void audio_stop()
+void audio_stop_all()
 {
+	mmEffectCancelAll();
 	mmStop();
 }
 
@@ -55,6 +57,11 @@ void audio_play_track(int track_id)
 		mmSetModuleTempo(512);
 	}
 	mmStart(track_id, MM_PLAY_LOOP);
+}
+
+void audio_stop_track()
+{
+	mmStop();
 }
 
 

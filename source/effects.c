@@ -1,5 +1,6 @@
 #include "effects.h"
 #include "regmem.h"
+#include "palettes.h"
 #include "game.h"
 #include "gameobj.h"
 #include "sprites/effects/dustcloud.h"
@@ -35,7 +36,7 @@ void effects_init()
 		effects[i].obj = gameobj_init();
 	}
 
-	int effects_pal = mem_load_palette(dustcloudPal);
+	int effects_pal = palette_load_simple(dustcloudPal);
 
 	// dust
 	int dust_tile = mem_load_tiles(dustcloudTiles, dustcloudTilesLen);
