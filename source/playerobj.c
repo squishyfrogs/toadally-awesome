@@ -8,7 +8,7 @@
 #include "objhistory.h"
 #include "playerobj.h"
 #include "playerhealth.h"
-#include "frogtongue.h"
+#include "playertongue.h"
 #include "objinteract.h"
 #include "map.h"
 #include "audio.h"

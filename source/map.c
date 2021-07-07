@@ -6,11 +6,6 @@
 
 #define MAP_PAL_LEN 512 //2 bytes per color, 256 color
 
-#define TILEPROP_SOLID		0x01	// normal terrain
-#define TILEPROP_HOLE		0x02	// objs placed onto this tile will fall down
-#define TILEPROP_CANGRAB	0x04	// player can latch onto this tile with their tongue (should only be set while also solid, to avoid unintended behavior)
-#define TILEPROP_PAIN		0x08	// tile causes damage when stepped on
-#define TILEPROP_VICTORY	0x80
 
 typedef struct MapTile_T{
 	//unsigned short tile_heightl

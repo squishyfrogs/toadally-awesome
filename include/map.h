@@ -39,6 +39,14 @@ void load_overlay_map(const unsigned short *overlay_map, int map_len);
 void overlay_clear();
 
 
+/// Tiles ///
+
+#define TILEPROP_SOLID		0x01	// normal terrain
+#define TILEPROP_HOLE		0x02	// objs placed onto this tile will fall down
+#define TILEPROP_CANGRAB	0x04	// player can latch onto this tile with their tongue (should only be set while also solid, to avoid unintended behavior)
+#define TILEPROP_PAIN		0x08	// tile causes damage when stepped on
+#define TILEPROP_VICTORY	0x80	// tile that, when stepped on, clears the level
+
 int get_tile_id(int x, int y);														// converts an x,y position to a tile number
 
 ushort get_tile_properties(int tile_x, int tile_y);									// get the collision info of a given tile

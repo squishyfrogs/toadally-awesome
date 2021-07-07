@@ -1,4 +1,4 @@
-#include "frogtongue.h"
+#include "playertongue.h"
 #include "playerobj.h"
 #include "input.h"
 #include "direction.h"
@@ -16,7 +16,7 @@
 typedef enum TongueState_T{
 	TS_STORED,			// tongue in mouth
 	TS_EXTENDING,		// tongue extending from mouth
-	TS_ATTACHED,		// tongue extended and attached to an object
+	TS_ATTACHED,		// tongue extended and attached to an object or tile
 	TS_RETRACTING,		// tongue returning to mouth
 	TS_CONTRACTING,		// tongue contracting because the player is moving toward it 
 	TS_PULLING_OBJ,		// tongue returning to mouth, but dragging an attached obj with it
@@ -37,6 +37,7 @@ extern int playerobj_current_hop_height();
 
 void tongue_check();						// check for objects at the apex of tongue stretching
 void tongue_attach_obj(GameObj *target);	// attach the tongue to a valid target
+void tongue_attach_tile(Vector2 tile);
 void tongue_update_length();				// handles extending/retracting
 void tongue_update_sprites();
 
@@ -54,7 +55,8 @@ int base_tile;				// tile_id of the tongue sprite sheet
 GameObj *tongue_pieces[TONGUE_PIECES];	// the "neck" of the tongue
 
 GameObj *tongue_owner;		// playerobj, essentially
-GameObj *attached_obj;		// what the tongue is stuck on, if anything
+GameObj *attached_obj;		// what obj the tongue is stuck on, if anything
+Vector2 attached_tile;		// what tile the tongue is stuck on, if any (set to -1,-1 when not in use)
 
 
 void tongue_init(GameObj *owner)
@@ -66,7 +68,7 @@ void tongue_init(GameObj *owner)
 	tongue_set_owner(owner);
 	tongue_extension = 0;
 	tongue_len_bonus = 8;
-	attached_obj = NULL;
+	tongue_detach();
 
 	for(int i = 0; i < TONGUE_PIECES; i++)
 	{
@@ -151,7 +153,6 @@ void tongue_update_length()
 			{
 				if(tongue_extension - EXT_SPD <= tongue_len_bonus)
 				{
-
 					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * (tongue_extension - tongue_len_bonus), owner_facing.y * (tongue_extension - tongue_len_bonus));
 					gameobj_update_current_tile(tongue_owner);
 					history_update_all();
@@ -160,9 +161,9 @@ void tongue_update_length()
 					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * EXT_SPD, owner_facing.y * EXT_SPD);
 			}
 			tongue_extension -= EXT_SPD;
-			if(tongue_extension <= 0)
+			if(tongue_extension <= tongue_len_bonus - 8)
 			{
-				tongue_extension = 0;
+				tongue_extension = tongue_len_bonus - 8;
 				tongue_store();
 			}
 			camera_update_pos();
@@ -263,8 +264,18 @@ void tongue_extend()
 		if(!check_tile_free(v.x, v.y) || tmax == TONGUE_EXT_TL)
 		{
 			// trim tongue len if bumping into solid obj
-			if(gameobj_check_properties(get_tile_contents(v.x, v.y), OBJPROP_SOLID))
+			GameObj *contents = get_tile_contents(v.x, v.y);
+			if(contents != NULL)
+			{
+				if(gameobj_check_properties(contents, OBJPROP_SOLID))
+					tongue_len_bonus = 8;
+			}
+			else
+			{
+				
 				tongue_len_bonus = 8;
+			}
+			
 			break;
 		}
 		tmax++;
@@ -306,11 +317,16 @@ void tongue_retract()
 		tongue_state = TS_PULLING_OBJ;
 		input_lock(INPLCK_TONGUE);
 	}
+	else if(attached_tile.x > 0 && attached_tile.y > 0)
+	{
+		tongue_state = TS_PULLING_PL;
+		input_lock(INPLCK_TONGUE);
+	}
 	else
 	{
 		playerobj_play_anim(PAI_TONGUE);
 		tongue_state = TS_RETRACTING;
-		tongue_detach_obj();
+		tongue_detach();
 		input_lock(INPLCK_TONGUE);
 	}
 }
@@ -331,7 +347,7 @@ void tongue_store()
 	tongue_max_tl = TONGUE_EXT_TL;
 	tongue_extension = 0;
 	tongue_len_bonus = 8;
-	attached_obj = NULL;
+	tongue_detach();
 
 	for(int i = 0; i < TONGUE_PIECES; i++)
 		gameobj_hide(tongue_pieces[i]);
@@ -359,12 +375,18 @@ void tongue_check()
 			return;
 		}
 	}
+	ushort tile_props = get_tile_properties(v.x, v.y);
+	if(tile_props & TILEPROP_CANGRAB)
+	{
+		tongue_attach_tile(v);
+		input_unlock(INPLCK_TONGUE);
+		return;
+	}
 	tongue_retract();
 }
 
 void tongue_attach_obj(GameObj *target)
-{
-		
+{	
 	attached_obj = target;
 	if(target != NULL)
 		tongue_state = TS_ATTACHED;
@@ -373,6 +395,24 @@ void tongue_attach_obj(GameObj *target)
 void tongue_detach_obj()
 {
 	attached_obj = NULL;
+}
+
+void tongue_attach_tile(Vector2 tile)
+{
+	attached_tile = tile;
+	tongue_state = TS_ATTACHED;
+}
+
+void tongue_detach_tile()
+{
+	attached_tile.x = -1;
+	attached_tile.y = -1;
+}
+
+void tongue_detach()
+{
+	tongue_detach_obj();
+	tongue_detach_tile();
 }
 
 GameObj *tongue_get_attached_object()

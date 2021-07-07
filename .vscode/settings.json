@@ -30,6 +30,7 @@
 		"numbers.h": "c",
 		"colors.h": "c",
 		"palettes.h": "c",
-		"audio.h": "c"
+		"audio.h": "c",
+		"playertongue.h": "c"
 	}
 }
