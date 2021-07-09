@@ -31,6 +31,7 @@ typedef struct struct_Animation {
 #define ANIM_FLAG_LOOPING		0x02
 #define ANIM_FLAG_REVERSED		0x04
 #define ANIM_FLAG_ASYMMETRIC	0x08	// whether or not the sprite has unique sprites for East and West facing
+#define ANIM_FLAG_CLAMP			0x10	// if set, hold on final frame when animation ends. if not set, return to frame 0
 
 
 void animdata_init_all();

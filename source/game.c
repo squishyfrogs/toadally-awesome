@@ -17,6 +17,9 @@
 extern void ui_start();
 extern void ui_erase();
 extern void set_action_count_immediate(int count);
+// playerobj.c
+extern void playerobj_level_intro_start();
+extern void playerobj_timestop_start();
 // playerhealth.c
 extern void playerhealth_damage_check();
 extern void playerhealth_death_check();
@@ -78,9 +81,10 @@ void main_game_start()
 	camera_center();
 
 	// play level intro animation 
-	
+	playerobj_level_intro_start();
 	input_unlock(INPLCK_SYS);
 	set_game_state(GS_MAIN_GAME);
+
 }
 
 
@@ -125,6 +129,7 @@ void game_update_main()
 			}
 			else if(key_hit(KEY_DIR | KEY_A | KEY_B))
 			{
+				playerobj_timestop_start();
 				history_mode_disable();
 			}
 		}
@@ -132,6 +137,7 @@ void game_update_main()
 		{
 			if(key_hit(KEY_SHOULDER))
 			{
+				playerobj_timestop_start();
 				history_mode_enable();
 			}
 		}
@@ -186,7 +192,6 @@ void finalize_turn()
 	playerhealth_death_check();
 
 	// turn_count_increment();
-	input_unlock(INPLCK_PLAYER);
 	// deactivate turn 
 	turn_active = false;
 }

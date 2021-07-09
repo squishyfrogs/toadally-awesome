@@ -14,6 +14,7 @@ void playerhealth_death_check();
 
 void playerhealth_die();
 void playerhealth_heal(int heal_amt);
+void playerhealth_reduce_hp(int dmg_amt);
 
 #define PLAYER_HP_MAX 6
 

@@ -24,7 +24,6 @@ const int hop_arc[16] = {0, 2, 4, 5, 6, 7, 7, 8, 8, 7, 7, 6, 5, 4, 2, 0};
 
 // main.c
 extern void action_update();
-extern void finalize_turn();
 extern void set_turn_active();
 // camera.c
 extern void camera_set_target(GameObj *target);
@@ -48,8 +47,12 @@ void playerobj_finalize_movement();
 // timed actions
 void playerobj_falling_start();
 void playerobj_falling_finish();
+void playerobj_level_intro_start();
+void playerobj_level_intro_finish();
 void playerobj_victory_start();
 void playerobj_victory_finish();
+void playerobj_timestop_start();
+void playerobj_timestop_finish();
 
 static GameObj *player_obj;
 static AnimationData *player_anims[PAI_COUNT];
@@ -388,6 +391,9 @@ void playerobj_finalize_movement()
 
 	if(!check_tongue_out())
 		playerobj_play_anim(PAI_IDLE);
+	
+	// unlock right here bc we might immediately need to re-lock
+	input_unlock(INPLCK_PLAYER);
 	// check floor tile
 	playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y);
 }
@@ -399,13 +405,17 @@ void playerobj_check_floor_tile(int tile_x, int tile_y)
 	{
 		playerhealth_take_damage();
 	}
-	if(props & TILEPROP_VICTORY)
+	else if(props & TILEPROP_VICTORY)
 	{
 		playerobj_victory_start();
 	}
-	if(props & TILEPROP_HOLE)
+	else if(props & TILEPROP_HOLE)
 	{
 		playerobj_falling_start();
+	}
+	else 
+	{
+		finalize_turn();
 	}
 }
 
@@ -421,11 +431,27 @@ void playerobj_falling_start()
 	input_lock(INPLCK_PLAYER);
 	playerobj_play_anim(PAI_FALL);
 	// wait a while, then return to last position
-	timer_init(&player_timer, 60, playerobj_falling_finish, TIMERFLAG_ENABLED);
+	timer_init(&player_timer, 50, playerobj_falling_finish, TIMERFLAG_ENABLED);
 }
 
 // called when timer ends
 void playerobj_falling_finish()
+{
+	playerhealth_reduce_hp(1);
+	history_step_back(1);
+	input_unlock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_IDLE);
+	timer_clear(&player_timer);
+}
+
+void playerobj_level_intro_start()
+{
+	input_lock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_VICTORY);
+	timer_init(&player_timer, 50, playerobj_level_intro_finish, TIMERFLAG_ENABLED);
+}
+// called when timer ends
+void playerobj_level_intro_finish()
 {
 	input_unlock(INPLCK_PLAYER);
 	playerobj_play_anim(PAI_IDLE);
@@ -440,7 +466,6 @@ void playerobj_victory_start()
 	// wait a while, then return to last position
 	timer_init(&player_timer, 140, playerobj_victory_finish, TIMERFLAG_ENABLED);
 }
-
 // called when timer ends
 void playerobj_victory_finish()
 {
@@ -451,6 +476,19 @@ void playerobj_victory_finish()
 }
 
 
+void playerobj_timestop_start()
+{
+	input_lock(INPLCK_PLAYER);
+	timer_init(&player_timer, 20, playerobj_timestop_finish, TIMERFLAG_ENABLED);
+}
+// called when timer ends
+void playerobj_timestop_finish()
+{
+	input_unlock(INPLCK_PLAYER);
+	timer_clear(&player_timer);
+}
+
+
 
 // play one of the player's animations
 void playerobj_play_anim(PlayerAnimID pid) 
@@ -458,6 +496,8 @@ void playerobj_play_anim(PlayerAnimID pid)
 	int anim_flags = 0;
 	if(pid != PAI_FALL)
 		anim_flags |= ANIM_FLAG_LOOPING;
+	if(pid == PAI_FALL)
+		anim_flags |= ANIM_FLAG_CLAMP;
 	gameobj_set_anim_data(player_obj, player_anims[pid], anim_flags);
 	gameobj_play_anim(player_obj);
 }

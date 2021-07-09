@@ -24,7 +24,7 @@ typedef enum TongueState_T{
 	TS_PULLING_PL		// tongue returning to mouth, but dragging the player toward the attached obj
 } TongueState;
 
-#define TONGUE_EXT_TL	2	// how many tiles forward the tongue can reach
+#define TONGUE_TL_MAX	3	// how many tiles forward the tongue can reach
 //#define TONGUE_EXT_PX	((TONGUE_EXT_TL*16)+8)		// max reach of tongue
 #define EXT_SPD			2	// how many pixels per frame the tongue extends/retracts
 
@@ -50,7 +50,7 @@ TongueState tongue_state;
 
 GameObj *tongue_tip;
 int base_tile;				// tile_id of the tongue sprite sheet
-#define TONGUE_PIECES 6
+#define TONGUE_PIECES 7
 GameObj *tongue_pieces[TONGUE_PIECES];	// the "neck" of the tongue
 
 GameObj *tongue_owner;		// playerobj, essentially
@@ -163,7 +163,6 @@ void tongue_update_length()
 				if(tongue_extension - EXT_SPD <= tongue_len_bonus)
 				{
 					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * (tongue_extension - tongue_len_bonus), owner_facing.y * (tongue_extension - tongue_len_bonus));
-					history_update_all();
 				}
 				else
 					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * EXT_SPD, owner_facing.y * EXT_SPD);
@@ -173,6 +172,7 @@ void tongue_update_length()
 			{
 				tongue_extension = tongue_len_bonus - 8;
 				tongue_store();
+				playerobj_finalize_movement();
 			}
 			camera_update_pos();
 			break;
@@ -265,11 +265,11 @@ void tongue_extend()
 	tongue_len_bonus = 16;	// reach halfway into the next tile if uninterrupted
 
 	Vector2 v = tongue_owner->tile_pos;
-	for(tmax = 0; tmax <= TONGUE_EXT_TL; )
+	for(tmax = 0; tmax <= TONGUE_TL_MAX; )
 	{
 		v.x += dir.x;
 		v.y += dir.y;
-		if(!check_tile_free(v.x, v.y) || tmax == TONGUE_EXT_TL)
+		if(!check_tile_free(v.x, v.y) || tmax == TONGUE_TL_MAX)
 		{
 			// trim tongue len if bumping into solid obj
 			GameObj *contents = get_tile_contents(v.x, v.y);
@@ -342,7 +342,7 @@ void tongue_retract()
 bool tongue_stretch()
 {
 	// if already max length, we can't stretch further and abort mission
-	if(tongue_max_tl >= TONGUE_EXT_TL)
+	if(tongue_max_tl >= TONGUE_TL_MAX)
 		return false;
 	tongue_max_tl += 1;
 	tongue_state = TS_STRETCHING;
@@ -361,7 +361,7 @@ void tongue_contract()
 void tongue_store()
 {
 	tongue_state = TS_STORED;
-	tongue_max_tl = TONGUE_EXT_TL;
+	tongue_max_tl = TONGUE_TL_MAX;
 	tongue_extension = 0;
 	tongue_len_bonus = 8;
 	tongue_detach();

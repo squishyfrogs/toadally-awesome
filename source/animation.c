@@ -94,7 +94,11 @@ void anim_update(Animation *anim)
 
 		// stop after one cycle if not looping
 		if(next_frame == 0 && !(anim->flags & ANIM_FLAG_LOOPING))
+		{
 			anim_stop(anim);
+			if((anim->flags & ANIM_FLAG_CLAMP) == 0)
+				anim->cur_frame = next_frame;
+		}
 		else
 			anim->cur_frame = next_frame;
 	}

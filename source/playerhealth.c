@@ -60,7 +60,10 @@ void playerhealth_die()
 void playerhealth_heal(int heal_amt)
 {
 	// show a sparkle, increase health
-	player_health += heal_amt;
-	if(player_health > PLAYER_HP_MAX)
-		player_health = PLAYER_HP_MAX;
+	player_health = clamp(player_health + heal_amt, 0, PLAYER_HP_MAX);
+}
+
+void playerhealth_reduce_hp(int dmg_amt)
+{
+	player_health = clamp(player_health - dmg_amt, 0, PLAYER_HP_MAX);
 }
