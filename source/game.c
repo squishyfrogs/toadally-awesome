@@ -105,15 +105,7 @@ void main_game_end()
 
 void game_update_main()
 {
-	if(check_pausemenu_active())
-	{
-
-		if(key_hit(KEY_START))
-		{
-			pausemenu_close();
-			return;		// returning ensures no weird immediate input issues
-		}
-	}
+	
 	if(!input_locked())
 	{
 		if(key_hit(KEY_START))

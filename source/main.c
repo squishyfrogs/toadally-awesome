@@ -47,6 +47,9 @@ extern void objint_init();
 // colors.c
 extern void color_cycle_init();
 extern void color_cycle_update();
+// pausemenu.c
+extern void pausemenu_init();
+extern void pausemenu_update();
 
 
 void main_loop();
@@ -198,6 +201,7 @@ void main_game_init()
 	playerobj_init();
 	ui_init();
 	effects_init();
+	pausemenu_init();
 	
 	textsys_init();		// call in global init should be sufficient, but it isn't and i'm out of time to investigate why lol
 	
@@ -335,12 +339,11 @@ void game_update()
 {
 	
 	// gameplay update functions go out here
-	update_text_temp();
 	playerobj_update();				// update player first
 	gameobj_update_all();			// update gameobj movement
 	game_update_main();				
 	update_world_pos();				// push the map around
-
+	pausemenu_update();
 	ui_update();
 
 	// finalize the turn when all objects come to rest
@@ -352,10 +355,6 @@ void game_update()
 
 	// update gameobj attrs based on gameplay changes
 	gameobj_push_all_updates();
-
-
-	debug_write_int(get_game_state());
-	
 
 }
 

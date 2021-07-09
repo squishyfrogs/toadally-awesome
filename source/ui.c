@@ -279,3 +279,4 @@ void ui_animate_gear_backward()
 {
 	anim_play_reversed(&gear->anim);
 }
+
