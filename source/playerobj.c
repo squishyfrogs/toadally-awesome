@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "game.h"
 #include "vector2.h"
+#include "timer.h"
 #include "direction.h"
 #include "input.h"
 #include "gameobj.h"
@@ -35,18 +36,24 @@ extern void gameobj_push_changes(GameObj *obj);
 
 void playerobj_init();
 void player_anim_init();		// initialize anims
-void player_anim_create(PlayerAnimID pid, int offset, int len);
+void player_anim_create(PlayerAnimID pid, int offset, int len, int facing_offset);
 void playerobj_update();
 
 void playerobj_input_direction(int input_x, int input_y);
+void playerobj_update_facing(int x, int y);
 void playerobj_move(int move_x, int move_y);
 void playerobj_update_movement();
-void playerobj_update_facing(int x, int y);
+void playerobj_finalize_movement();
 
-int playerobj_current_hop_height();
+// timed actions
+void playerobj_falling_start();
+void playerobj_falling_finish();
+void playerobj_victory_start();
+void playerobj_victory_finish();
 
 static GameObj *player_obj;
 static AnimationData *player_anims[PAI_COUNT];
+static Timer player_timer;
 
 //static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
@@ -56,6 +63,7 @@ static Vector2 end_tile;		// end tile (for movement)
 static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
+
 
 
 GameObj *get_player_obj()
@@ -83,32 +91,44 @@ void playerobj_init()
 	gameobj_update_current_tile(player_obj);
 	camera_set_target(player_obj);
 	playerobj_play_anim(PAI_IDLE);
-	gameobj_play_anim(player_obj);
 
 	// initialize tongue 
 	tongue_init(player_obj);
 	// initialize health
 	playerhealth_init();
+	
+	timer_init(&player_timer, 0, NULL, 0);
 }
+
 
 // initialize anims
 void player_anim_init()
 {
-	player_anim_create(PAI_IDLE, 0, 2);
-	player_anim_create(PAI_HOP, 1, 1);
-	player_anim_create(PAI_TONGUE, 2, 1);
-	player_anim_create(PAI_NOM, 1, 1);
+	player_anim_create(PAI_IDLE, 0, 2, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_HOP, 1, 1, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_TONGUE, 2, 1, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_NOM, 3, 1, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_HURT, 4, 1, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_DIE, 4, 1, PLAYER_FACING_OFFSET);
+	player_anim_create(PAI_FALL, 26, 3, 0);
+	player_anim_create(PAI_VICTORY, 24, 2, 0);
 }
 
-void player_anim_create(PlayerAnimID pid, int offset, int len)
+void player_anim_create(PlayerAnimID pid, int offset, int len, int facing_offset)
 {
 	offset *= ANIM_OFFSET_16x16;
-	player_anims[pid] = animdata_create(p_tile_start + offset, ANIM_OFFSET_16x16, len, PLAYER_FACING_OFFSET);
+	player_anims[pid] = animdata_create(p_tile_start + offset, ANIM_OFFSET_16x16, len, facing_offset);
 }
 
+extern void main_game_end();
 // main PlayerObj update
 void playerobj_update()
 {
+	if(key_hit(KEY_SELECT))
+	{
+		go_to_game_state(GS_LEVEL_SELECT);
+	}
+	timer_update(&player_timer);
 	if(!input_locked() && !gameobj_is_moving(player_obj) && !history_mode_active())
 	{
 		if(key_hit(KEY_A))
@@ -129,10 +149,8 @@ void playerobj_update()
 // apply dpad inputs to the player and attempt to move them
 void playerobj_input_direction(int input_x, int input_y)
 {	
-	// check for an object attached to the tongue 
-	GameObj *obj_att = tongue_get_attached_object();
-	// if one exists, disable inputs perpendicular to the facing dir
-	if(obj_att != NULL)
+	// if tongue out and attached, disable inputs perpendicular to the facing dir
+	if(check_tongue_attached())
 	{
 		switch(gameobj_get_facing(player_obj))
 		{
@@ -168,6 +186,25 @@ void playerobj_input_direction(int input_x, int input_y)
 	// TODO: add a ~3 frame buffer for the input to be held before committing to movement
 	playerobj_move(input_x, input_y);
 }
+
+
+
+
+// update direction player is facing
+void playerobj_update_facing(int x, int y)
+{
+	if(x > 0)
+		gameobj_set_facing(player_obj, DIRECTION_EAST);
+	else if(x < 0)
+		gameobj_set_facing(player_obj, DIRECTION_WEST);
+	else if(y > 0)
+		gameobj_set_facing(player_obj, DIRECTION_SOUTH);
+	else if(y < 0)
+		gameobj_set_facing(player_obj, DIRECTION_NORTH);
+}
+
+
+
 
 // move the player
 void playerobj_move(int move_x, int move_y)
@@ -248,36 +285,58 @@ void playerobj_move(int move_x, int move_y)
 	offset.y = 0;
 	hop_offset = 0;
 
+	int mov_dir = ints_to_dir(move_x, move_y);
+
+	// check for an object or tile attached to the tongue 
+	if(check_tongue_attached())
+	{
+		// move the attached tongue obj if applicable
+		GameObj *obj_att = tongue_get_attached_object();
+		if(obj_att != NULL)
+		{
+			// if moving away from obj_att, pull it
+			if(gameobj_get_facing(player_obj) != mov_dir)
+				gameobj_set_moving(obj_att, true, mov_dir);
+			// if moving toward obj_att, contract tongue
+			else
+				tongue_contract();
+		}
+		else
+		{
+			Vector2 attach_tile = tongue_get_attached_tile();
+			if(attach_tile.x >= 0 && attach_tile.y >= 0)
+			{
+				// if moving away from tile, attempt stretch
+				if(gameobj_get_facing(player_obj) != mov_dir)
+				{
+					if(tongue_stretch() == false)
+						return;
+				}
+				// if moving toward tile, contract tongue
+				else
+					tongue_contract();
+			}
+		}
+	}
+
+
+	// finalize movement //
+
+
 	// set mov values
 	mov.x = move_x * PLAYER_MOVE_SPEED;
 	mov.y = move_y * PLAYER_MOVE_SPEED;
-
 	// lock inputs
 	input_lock(INPLCK_PLAYER);
 	// set the turn active
 	set_turn_active();
 	// mark player as moving
-	int mov_dir = ints_to_dir(move_x, move_y);
 	gameobj_set_moving(player_obj, true, mov_dir);
 	// play hop anim
 	if(!check_tongue_out())
 		playerobj_play_anim(PAI_HOP);
 	// play hop sfx
 	audio_play_sound(SFX_FROG_HOP);
-
-	// check for an object attached to the tongue 
-	GameObj *obj_att = tongue_get_attached_object();
-	// move the attached tongue obj if applicable
-	if(obj_att != NULL)
-	{
-		// if moving away from obj_att, pull it
-		if(gameobj_get_facing(player_obj) != mov_dir)
-			gameobj_set_moving(obj_att, true, mov_dir);
-		// if moving toward obj_att, contract tongue
-		else
-			tongue_contract();
-	}
-
 	// perform an action update
 	action_update();
 }
@@ -316,26 +375,79 @@ void playerobj_update_movement()
 	
 	if(mov.x == 0 && mov.y == 0)
 	{
-		//player_update_current_tile();
-		gameobj_update_current_tile(player_obj);
-		gameobj_set_moving(player_obj,false, 0);
-		if(!check_tongue_out())
-			playerobj_play_anim(PAI_IDLE);
+		playerobj_finalize_movement();
 	}
 
 }
 
-// update direction player is facing
-void playerobj_update_facing(int x, int y)
+void playerobj_finalize_movement()
 {
-	if(x > 0)
-		gameobj_set_facing(player_obj, DIRECTION_EAST);
-	else if(x < 0)
-		gameobj_set_facing(player_obj, DIRECTION_WEST);
-	else if(y > 0)
-		gameobj_set_facing(player_obj, DIRECTION_SOUTH);
-	else if(y < 0)
-		gameobj_set_facing(player_obj, DIRECTION_NORTH);
+	//player_update_current_tile();
+	gameobj_update_current_tile(player_obj);
+	gameobj_set_moving(player_obj,false, 0);
+
+	if(!check_tongue_out())
+		playerobj_play_anim(PAI_IDLE);
+	// check floor tile
+	playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y);
+}
+
+void playerobj_check_floor_tile(int tile_x, int tile_y)
+{
+	ushort props = get_tile_properties(tile_x, tile_y);
+	if(props & TILEPROP_PAIN)
+	{
+		playerhealth_take_damage();
+	}
+	if(props & TILEPROP_VICTORY)
+	{
+		playerobj_victory_start();
+	}
+	if(props & TILEPROP_HOLE)
+	{
+		playerobj_falling_start();
+	}
+}
+
+
+
+
+/////////////////////
+/// Timer Actions ///
+/////////////////////
+
+void playerobj_falling_start()
+{
+	input_lock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_FALL);
+	// wait a while, then return to last position
+	timer_init(&player_timer, 60, playerobj_falling_finish, TIMERFLAG_ENABLED);
+}
+
+// called when timer ends
+void playerobj_falling_finish()
+{
+	input_unlock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_IDLE);
+	timer_clear(&player_timer);
+}
+
+
+void playerobj_victory_start()
+{
+	input_lock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_VICTORY);
+	// wait a while, then return to last position
+	timer_init(&player_timer, 140, playerobj_victory_finish, TIMERFLAG_ENABLED);
+}
+
+// called when timer ends
+void playerobj_victory_finish()
+{
+	//input_unlock(INPLCK_PLAYER);
+	playerobj_play_anim(PAI_IDLE);
+	timer_clear(&player_timer);
+	go_to_game_state(GS_LEVEL_SELECT);
 }
 
 
@@ -343,8 +455,9 @@ void playerobj_update_facing(int x, int y)
 // play one of the player's animations
 void playerobj_play_anim(PlayerAnimID pid) 
 {
-
-	int anim_flags = ANIM_FLAG_LOOPING;
+	int anim_flags = 0;
+	if(pid != PAI_FALL)
+		anim_flags |= ANIM_FLAG_LOOPING;
 	gameobj_set_anim_data(player_obj, player_anims[pid], anim_flags);
 	gameobj_play_anim(player_obj);
 }
@@ -352,7 +465,10 @@ void playerobj_play_anim(PlayerAnimID pid)
 
 void playerobj_action_primary()
 {
-	tongue_extend();
+	if(check_tongue_out())
+		tongue_retract();
+	else
+		tongue_extend();
 	// perform an action update
 	action_update();
 }
@@ -360,7 +476,10 @@ void playerobj_action_primary()
 // perform the B press action
 void playerobj_action_secondary()
 {
-	tongue_retract();
+	if(check_tongue_out())
+		tongue_retract();
+	else
+		tongue_extend();
 	// perform an action update
 	action_update();
 }

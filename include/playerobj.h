@@ -17,10 +17,16 @@ typedef enum PlayerAnimID_T{
 	PAI_HOP,
 	PAI_TONGUE,
 	PAI_NOM,
+	PAI_HURT,
+	PAI_DIE,
+	PAI_FALL,
+	PAI_VICTORY,
 	PAI_COUNT				// INVALID
 } PlayerAnimID;
 
 
+void playerobj_check_floor_tile(int tile_x, int tile_y);
+int playerobj_current_hop_height();
 void playerobj_play_anim(PlayerAnimID pid);
 void playerobj_action_primary();			// perform the A press action
 void playerobj_action_secondary();			// perform the B press action

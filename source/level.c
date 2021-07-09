@@ -13,6 +13,10 @@ void load_level_data(int level_id)
 			set_map_data(map1Pal, map1Tiles, map1TilesLen, map1Map, map1MapLen, map1Col);
 			set_overlay_data(map1overlayTiles, map1overlayTilesLen, map1overlayMap, map1overlayMapLen);
 			break;
+		case 2:
+			set_map_data(map2Pal, map2Tiles, map2TilesLen, map2Map, map2MapLen, map2Col);
+			set_overlay_data(map2overlayTiles, map2overlayTilesLen, map2overlayMap, map2overlayMapLen);
+			break;
 		default:
 			set_map_data(testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
 			overlay_clear();
@@ -36,6 +40,11 @@ void load_map_objs(int level_id)
 	}
 }
 
+
+void level_clear()
+{
+	
+}
 
 
 ////////////

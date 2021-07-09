@@ -31,6 +31,7 @@
 		"colors.h": "c",
 		"palettes.h": "c",
 		"audio.h": "c",
-		"playertongue.h": "c"
+		"playertongue.h": "c",
+		"timer.h": "c"
 	}
 }

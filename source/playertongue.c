@@ -18,7 +18,8 @@ typedef enum TongueState_T{
 	TS_EXTENDING,		// tongue extending from mouth
 	TS_ATTACHED,		// tongue extended and attached to an object or tile
 	TS_RETRACTING,		// tongue returning to mouth
-	TS_CONTRACTING,		// tongue contracting because the player is moving toward it 
+	TS_STRETCHING,		// tongue expanding because the player is moving away from the attached obj
+	TS_CONTRACTING,		// tongue contracting because the player is moving toward the attached obj
 	TS_PULLING_OBJ,		// tongue returning to mouth, but dragging an attached obj with it
 	TS_PULLING_PL		// tongue returning to mouth, but dragging the player toward the attached obj
 } TongueState;
@@ -31,9 +32,7 @@ typedef enum TongueState_T{
 extern void history_update_all();
 // camera.c
 extern void camera_update_pos();
-// player.c
-extern int playerobj_current_hop_height();
-
+extern void playerobj_finalize_movement();
 
 void tongue_check();						// check for objects at the apex of tongue stretching
 void tongue_attach_obj(GameObj *target);	// attach the tongue to a valid target
@@ -119,6 +118,14 @@ void tongue_update_length()
 				tongue_store();
 			}
 			break;
+		case TS_STRETCHING:
+			tongue_extension += PLAYER_MOVE_SPEED;
+			if(tongue_extension >= tongue_max_px())
+			{
+				tongue_extension = tongue_max_px();
+				tongue_state = TS_ATTACHED;
+			}
+			break;
 		case TS_CONTRACTING:
 			tongue_extension -= PLAYER_MOVE_SPEED;
 			if(tongue_extension <= tongue_max_px())
@@ -126,6 +133,8 @@ void tongue_update_length()
 				tongue_extension = tongue_max_px();
 				if(tongue_max_tl <= 0)
 					tongue_store();
+				else
+					tongue_state = TS_ATTACHED;
 			}
 			break;
 		case TS_PULLING_OBJ:
@@ -154,7 +163,6 @@ void tongue_update_length()
 				if(tongue_extension - EXT_SPD <= tongue_len_bonus)
 				{
 					gameobj_change_pixel_pos(tongue_owner, owner_facing.x * (tongue_extension - tongue_len_bonus), owner_facing.y * (tongue_extension - tongue_len_bonus));
-					gameobj_update_current_tile(tongue_owner);
 					history_update_all();
 				}
 				else
@@ -186,7 +194,7 @@ void tongue_update_sprites()
 //		p.y = attached_obj->pixel_pos.y;
 	//find distance between tip and owner
 	int tonglen = tongue_extension;
-	if(attached_obj != NULL)
+	if(check_tongue_attached())
 	{	
 		if(owner_facing.x == 0)
 			p.y += playerobj_current_hop_height();
@@ -272,7 +280,6 @@ void tongue_extend()
 			}
 			else
 			{
-				
 				tongue_len_bonus = 8;
 			}
 			
@@ -332,6 +339,16 @@ void tongue_retract()
 }
 
 
+bool tongue_stretch()
+{
+	// if already max length, we can't stretch further and abort mission
+	if(tongue_max_tl >= TONGUE_EXT_TL)
+		return false;
+	tongue_max_tl += 1;
+	tongue_state = TS_STRETCHING;
+	return true;
+}
+
 void tongue_contract()
 {
 	tongue_state = TS_CONTRACTING;
@@ -353,7 +370,8 @@ void tongue_store()
 		gameobj_hide(tongue_pieces[i]);
 	gameobj_hide(tongue_tip);
 
-	playerobj_play_anim(PAI_IDLE);
+	playerobj_finalize_movement();
+
 	input_unlock(INPLCK_TONGUE);
 }
 
@@ -385,6 +403,8 @@ void tongue_check()
 	tongue_retract();
 }
 
+
+
 void tongue_attach_obj(GameObj *target)
 {	
 	attached_obj = target;
@@ -396,6 +416,8 @@ void tongue_detach_obj()
 {
 	attached_obj = NULL;
 }
+
+
 
 void tongue_attach_tile(Vector2 tile)
 {
@@ -420,7 +442,17 @@ GameObj *tongue_get_attached_object()
 	return attached_obj;
 }
 
+Vector2 tongue_get_attached_tile()
+{
+	return attached_tile;
+}
+
 bool check_tongue_out()
 {
 	return (tongue_state != TS_STORED);
+}
+
+bool check_tongue_attached()
+{
+	return (attached_obj != NULL) || (attached_tile.x >= 0 && attached_tile.y >= 0);
 }

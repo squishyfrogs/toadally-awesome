@@ -276,7 +276,7 @@ bool check_tile_free(int tile_x, int tile_y)
 		return false;
 	// make sure tile has a valid height
 	ushort props = get_tile_properties(tile_x, tile_y);
-	if(props & (TILEPROP_SOLID|TILEPROP_HOLE))
+	if(props & (TILEPROP_SOLID))
 		return false;
 
 	return (map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_contents == NULL);

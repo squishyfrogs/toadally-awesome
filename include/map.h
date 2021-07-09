@@ -18,9 +18,12 @@ typedef struct struct_MapData{
 } MapData;
 
 
+/// level.c /// 
+void load_level_data(int level_id);													// handles selecting which map data files to access for a given level
+void load_map_objs(int level_id);
+void level_clear();
 
-void load_level_data(int level_id);													// handles selecting which map data files to access for a given level || located in level.c
-
+/// map.c ///
 void map_init();
 void load_map_from_current_data();
 

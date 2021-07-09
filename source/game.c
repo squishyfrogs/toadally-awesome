@@ -15,12 +15,22 @@
 
 // ui.c
 extern void ui_start();
+extern void ui_erase();
 extern void set_action_count_immediate(int count);
 // playerhealth.c
 extern void playerhealth_damage_check();
 extern void playerhealth_death_check();
 // camera.c
 extern void camera_center();
+// main.c
+extern void go_to_logo();
+extern void go_to_title();
+extern void go_to_level_select();
+extern void go_to_main_game();
+
+
+void set_game_state(GameState state);
+
 
 void game_update_main();
 
@@ -39,6 +49,7 @@ void game_update_main_temp();
 static bool turn_active;							// is the game currently performing a turn?
 
 static GameState game_state;						// what state the game is currently in
+
 
 static bool game_paused;							// is the game currently paused?
 
@@ -60,14 +71,16 @@ void main_game_start()
 
 	ui_start();
 	
-	
-
 	reg_set_main();
 	// update all obj histories once
 	history_update_all();
 	
 	camera_center();
+
+	// play level intro animation 
+	
 	input_unlock(INPLCK_SYS);
+	set_game_state(GS_MAIN_GAME);
 }
 
 
@@ -77,10 +90,12 @@ void main_game_end()
 	//playerobj_init();
 	//ui_init();
 	//effects_init();
+	pausemenu_close();
+	ui_erase();
 	audio_stop_all();
-	gameobj_erase_all();
 	mem_clear_obj_palettes();
 	mem_clear_tiles();
+	gameobj_erase_all();
 	REGBGOFS_reset_all();
 	// wipe all sbb and cbb data
 	//memset16(VRAM, 0, 32768);
@@ -90,16 +105,20 @@ void main_game_end()
 
 void game_update_main()
 {
+	if(check_pausemenu_active())
+	{
 
+		if(key_hit(KEY_START))
+		{
+			pausemenu_close();
+			return;		// returning ensures no weird immediate input issues
+		}
+	}
 	if(!input_locked())
 	{
 		if(key_hit(KEY_START))
 		{
 			pausemenu_open();
-		}
-		if(key_hit(KEY_SELECT))
-		{
-			pausemenu_close();
 		}
 		if(history_mode_active())
 		{
@@ -126,7 +145,7 @@ void game_update_main()
 		}
 	}
 
-	game_update_main_temp();
+	// game_update_main_temp();
 }
 
 
@@ -195,6 +214,8 @@ GameState get_game_state()
 {
 	return game_state;
 }
+
+
 
 
 /////////////////////

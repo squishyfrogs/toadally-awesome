@@ -5,13 +5,13 @@
 #include "vector2.h"
 
 typedef enum GameState_T{
-	GS_DEBUG,
-	GS_STARTUP,
-	GS_LOGO,
-	GS_TITLE,
-	GS_LEVEL_SELECT,
-	GS_MAIN_GAME,
-	GS_CREDITS
+	GS_DEBUG			= 0,
+	GS_STARTUP			= 1,
+	GS_LOGO				= 2,
+	GS_TITLE			= 3,
+	GS_LEVEL_SELECT		= 4,
+	GS_MAIN_GAME		= 5,
+	GS_CREDITS			= 6
 } GameState;
 
 
@@ -29,8 +29,8 @@ void action_update();								// update that occurs when the player takes an acti
 void finalize_turn();								// update that occurs after all pieces have settled
 
 
-void set_game_state(GameState state);
 GameState get_game_state();
+void go_to_game_state(GameState gs);				// calls for a change of gamestate, which will be executed at the END of the current frame
 
 void set_game_paused(bool paused);
 bool check_game_paused();

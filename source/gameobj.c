@@ -41,8 +41,6 @@ GameObj obj_list[OBJ_COUNT];
 OBJ_ATTR objattr_buffer[OBJ_COUNT];
 
 
-
-
 //////////////////////
 /// INIT FUNCTIONS ///
 //////////////////////
@@ -60,12 +58,14 @@ void gameobj_init_all()
 
 void gameobj_erase_all()
 {
+	gameobj_hide_all();
 	for(int i = 0; i < OBJ_COUNT; i++)
 	{
 		gameobj_erase(&obj_list[i]);
 	}
+	// copy all changes into oam memory
+	oam_copy(oam_mem, objattr_buffer, ATTR_COUNT);
 	OAM_CLEAR();
-	gameobj_hide_all();
 }
 
 ////////////////////////
@@ -237,8 +237,10 @@ GameObj *gameobj_clone(GameObj *dest, GameObj *src)
 // wipe all attributes of a GameObj and mark it as unused
 void gameobj_erase(GameObj *obj)
 {
-	obj_hide(&objattr_buffer[obj->obj_id]);
+	if(obj == NULL)
+		return;
 	obj_set_attr(&objattr_buffer[obj->obj_id], 0, 0, 0);
+	obj_hide(&objattr_buffer[obj->obj_id]);
 	obj->in_use = 0;
 	obj->obj_id = 0;
 	obj->pal_bank_id = 0;
@@ -254,7 +256,7 @@ void gameobj_erase(GameObj *obj)
 		clear_obj_history(obj->hist);
 	obj->hist = NULL;
 	anim_clear(&obj->anim);
-	
+	gameobj_push_changes(obj);
 }
 
 

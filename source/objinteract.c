@@ -63,14 +63,14 @@ void objint_step_on(GameObj *target, GameObj *instigator)
 	if(target == NULL) return;
 
 	// if spikes, damage instigator
-	objint_take_damage(instigator, target);
+	objint_deal_damage(instigator, target);		// switching instigator and target here is intentional
 
 	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
 }
 
 
 // take damage
-void objint_take_damage(GameObj *target, GameObj *instigator)
+void objint_deal_damage(GameObj *target, GameObj *instigator)
 {
 	if(target == NULL) return;
 	if(gameobj_is_player(target))

@@ -10,11 +10,16 @@
 #include "sprites/screens/titleScreen.h"
 #include "sprites/screens/levelSelectScreen.h"
 
+// main.c
+extern void main_game_end();
 // levelselect.c
 extern void level_select_init();
 extern void level_select_clear();
 // game.c
 extern void set_world_offset(int off_x, int off_y);
+// gameobj.c
+extern void gameobj_hide_all();
+extern void gameobj_erase_all();
 
 void load_screen_pal(const ushort *scr_palette);
 void load_screen_tiles(const ushort *scr_tiles, int tiles_len);
@@ -95,6 +100,7 @@ void lev_sel_display()
 	REG_BG2HOFS = 0;
 	REG_BG2VOFS = 0;
 	load_screen(levelSelectScreenMap, levelSelectScreenMapLen);
+	gameobj_hide_all();
 	level_select_init();
 }
 
@@ -132,6 +138,7 @@ void load_screen(const ushort *scr, int scr_len)
 	}
 }
 
+
 void unload_current_screen()
 {
 	audio_stop_all();
@@ -146,7 +153,11 @@ void unload_current_screen()
 	case GS_LEVEL_SELECT:
 		lev_sel_unload();
 		break;
+	case GS_MAIN_GAME:
+		main_game_end();
+		break;
 	default:
 		break;
 	}
+	gameobj_erase_all();
 }

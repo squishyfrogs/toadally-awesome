@@ -16,6 +16,7 @@
 void ui_init();
 void ui_start();
 void ui_update();
+void ui_erase();
 
 void reset_action_count();
 void set_action_count_immediate(int count);
@@ -94,7 +95,6 @@ void ui_init()
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
 	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
-
 		int h_x = (i*8) + 0 - (3*(i>>1));
 		int h_y = 0;
 		hearts[i] = gameobj_init_full(LAYER_OVERLAY, ATTR0_TALL, ATTR1_SIZE_8x16, PAL_ID_UI, h_tile, h_x, h_y, OBJPROP_FIXED_POS);
@@ -119,6 +119,22 @@ void ui_init()
 void ui_start()
 {
 	reset_action_count();
+}
+
+void ui_erase()
+{
+	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
+	{
+		gameobj_erase(action_counter[i]);
+	}
+	for(int i = 0; i < PLAYER_HP_MAX; i++)
+	{
+		hearts[i]->spr_tile_id = 0;
+		//gameobj_update_attr_full(hearts[i],ATTR0_SQUARE, ATTR1);
+		gameobj_erase(hearts[i]);
+	}
+	gameobj_erase(timeGauge);
+	gameobj_erase(gear);
 }
 
 // gameplay update

@@ -15,11 +15,10 @@
 
 extern void audio_init();				// audio.c
 extern void animdata_init_all();		// animation.c
-extern void gameobj_init_all();			// gameobj.c
 extern void playerobj_init();			// playerobj.c
-extern void ui_init();					// ui.c
 extern void map_init();					// map.c
 // game.c
+extern void set_game_state(GameState state);
 extern void game_update_main();
 extern void update_world_pos();
 // text.c
@@ -34,9 +33,11 @@ extern void effects_anim_update();
 // playerobj.c
 extern void playerobj_update();
 // ui.c
+extern void ui_init();
 extern void ui_update();
 extern void ui_update_anim();
 // gameobj.c
+extern void gameobj_init_all();
 extern void gameobj_update_all();
 extern void gameobj_update_anim_all();
 extern void gameobj_push_all_updates();
@@ -48,11 +49,10 @@ extern void color_cycle_init();
 extern void color_cycle_update();
 
 
-void main_game_loop();
+void main_loop();
 
 // init functions
 void global_init();
-void timer_init();
 void main_game_init();
 void main_game_end();
 void global_soft_reset();
@@ -61,12 +61,15 @@ void go_to_logo();									// go to the logo screen (the first scene upon game s
 void go_to_title();									// go to the title screen
 void go_to_level_select();
 void go_to_main_game();
+static void (*state_change)();						// state change function to execute at the end of each frame (must point to one of the above functions, or be NULL)
+
+
 void main_game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
 void title_update();								// update title screen
 void graphics_update();							// update graphics and animation
-void main_game_update();							// update gameplay elements
+void game_update();							// update gameplay elements
 
 
 
@@ -103,14 +106,14 @@ int main(void)
 	
 	//main_game_start();
 
-	main_game_loop();
+	main_loop();
 
 
 	return 0;
 }
 
 // Where all the magic happens
-void main_game_loop()
+void main_loop()
 {
 	while (1) 
 	{
@@ -128,6 +131,7 @@ void main_game_loop()
 
 		graphics_update();
 
+
 		switch(get_game_state())
 		{
 			case GS_LOGO:
@@ -141,8 +145,13 @@ void main_game_loop()
 			default:
 				//debug_write_int(input_current_lock());
 				//debug_write_int(history_count());
-				main_game_update();
+				game_update();
 				break;
+		}
+
+		if(state_change != NULL)
+		{
+			state_change();
 		}
 		
 	}
@@ -214,12 +223,37 @@ void global_soft_reset()
 
 
 //////////////////
-/// Game Start ///
+/// Game States ///
 //////////////////
+
+// calls for a change of gamestate, which will be executed at the END of the current frame
+void go_to_game_state(GameState gs)
+{
+	switch(gs)
+	{
+		case GS_LOGO:
+			state_change = go_to_logo;
+			break;
+		case GS_TITLE:
+			state_change = go_to_title;
+			break;
+		case GS_LEVEL_SELECT:
+			state_change = go_to_level_select;
+			break;
+		case GS_MAIN_GAME:
+			state_change = go_to_main_game;
+			break;
+		default:
+			state_change = NULL;
+			break;
+	}
+}
+
 
 
 void go_to_logo()
 {
+	state_change = NULL;
 	unload_current_screen();
 	set_game_state(GS_LOGO);
 	input_lock(INPLCK_SYS);
@@ -231,6 +265,7 @@ void go_to_logo()
 
 void go_to_title()
 {
+	state_change = NULL;
 	unload_current_screen();
 	set_game_state(GS_TITLE);
 	input_lock(INPLCK_SYS);
@@ -243,6 +278,7 @@ void go_to_title()
 
 void go_to_level_select()
 {
+	state_change = NULL;
 	unload_current_screen();
 	set_game_state(GS_LEVEL_SELECT);
 	lev_sel_load();
@@ -252,9 +288,11 @@ void go_to_level_select()
 
 void go_to_main_game()
 {
+	state_change = NULL;
 	unload_current_screen();
-	load_main_game_palettes();
 	set_game_state(GS_MAIN_GAME);
+	main_game_init();
+	load_main_game_palettes();
 	main_game_start();
 }
 
@@ -281,7 +319,7 @@ void title_update()
 				go_to_level_select();
 				break;
 			case GS_LEVEL_SELECT:
-				main_game_start();
+				go_to_main_game();
 				break;
 			default:
 				break;
@@ -293,7 +331,7 @@ void title_update()
 
 
 // update gameplay elements
-void main_game_update()
+void game_update()
 {
 	
 	// gameplay update functions go out here
@@ -315,7 +353,10 @@ void main_game_update()
 	// update gameobj attrs based on gameplay changes
 	gameobj_push_all_updates();
 
+
+	debug_write_int(get_game_state());
 	
+
 }
 
 
@@ -366,8 +407,8 @@ void graphics_update()
 
 
 // initialize game timers (currently unused?)
-void timer_init()
-{
+//void timer_init()
+//{
 	// Overflow every ~1 second:
 	// 0x4000 ticks @ FREQ_1024
 
@@ -375,7 +416,7 @@ void timer_init()
 	// REG_TM2CNT = TM_FREQ_1024;		// use 1024 cycle timer
 	// REG_TM2CNT = TM_ENABLE;
 	// REG_TM3CNT= TM_ENABLE | TM_CASCADE;		// tm1 cascades into tm0
-}
+//}
 
 
 

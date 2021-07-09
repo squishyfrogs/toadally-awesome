@@ -12,7 +12,7 @@ void objint_push_gameobj(GameObj *obj, int push_dir);
 void objint_collect(GameObj *target, GameObj *instigator);
 void objint_step_on(GameObj *target, GameObj *instigator);
 
-void objint_take_damage(GameObj *target, GameObj *instigator);
+void objint_deal_damage(GameObj *target, GameObj *instigator);
 
 
 GameObj *intobj_create_coin_at_position(int x, int y);

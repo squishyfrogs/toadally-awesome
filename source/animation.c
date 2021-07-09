@@ -86,14 +86,17 @@ void anim_update(Animation *anim)
 		return;
 	if((anim->flags & ANIM_FLAG_PLAYING) && anim->anim_data->frame_ct > 0)
 	{
+		int next_frame;
 		if(anim->flags & ANIM_FLAG_REVERSED)
-			anim->cur_frame = (anim->cur_frame + anim->anim_data->frame_ct - 1) % anim->anim_data->frame_ct;
+			next_frame = (anim->cur_frame + anim->anim_data->frame_ct - 1) % anim->anim_data->frame_ct;
 		else
-			anim->cur_frame = (anim->cur_frame + 1) % anim->anim_data->frame_ct;
+			next_frame = (anim->cur_frame + 1) % anim->anim_data->frame_ct;
 
 		// stop after one cycle if not looping
-		if(anim->cur_frame == 0 && !(anim->flags & ANIM_FLAG_LOOPING))
+		if(next_frame == 0 && !(anim->flags & ANIM_FLAG_LOOPING))
 			anim_stop(anim);
+		else
+			anim->cur_frame = next_frame;
 	}
 }
 

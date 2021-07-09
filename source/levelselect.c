@@ -16,7 +16,6 @@ extern void gameobj_update_all();
 extern void gameobj_push_all_updates();
 
 extern void init_objs_temp();
-extern void main_game_init();
 
 void level_select_init();
 void level_select_update();
@@ -57,7 +56,6 @@ void level_select_update()
 	if(key_hit(KEY_ACCEPT))
 	{
 		audio_play_sound(SFX_BLIP_HIGH);
-		main_game_init();
 		load_level_data(cur_lvl_selection+1);	
 		go_to_main_game();
 	}
