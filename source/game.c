@@ -71,6 +71,7 @@ void main_game_start()
 	set_action_count_immediate(0);
 	game_paused = false;
 	turn_active = false;
+	history_reset();
 
 	ui_start();
 	

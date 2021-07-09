@@ -322,6 +322,7 @@ void history_reset()
 {
 	current_turns_ago = 0;
 	game_turns_elapsed = 0;
+	history_mode = false;
 	reset_action_count();
 }
 
