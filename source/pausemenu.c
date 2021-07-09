@@ -1,6 +1,7 @@
 #include <tonc.h>
 #include "pausemenu.h"
 #include "game.h"
+#include "text.h"
 #include "input.h"
 #include "gameobj.h"
 #include "regmem.h"
@@ -44,11 +45,10 @@ void pausemenu_init()
 	pausemenu_close();
 	menu_actions[ACTION_RESUME] = pausemenu_close;
 	menu_actions[ACTION_QUIT] = exit_level;
-	tte_init_se(
+	tte_init_se_no_color(
 		0,						// Background number (BG 0)
 		BG_CBB(0)|BG_SBB(31),	// BG control (for REG_BGxCNT)
 		1,						// Tile offset (special cattr)
-		CLR_WHITE,				// Ink color
 		62,						// BitUnpack offset (on-pixel = 15)
 		NULL,					// Default font (sys8) 
 		NULL);					// Default renderer (se_drawg_s)
@@ -77,11 +77,10 @@ void pausemenu_update()
 
 void pausemenu_open()
 {
-	tte_init_se(
+	tte_init_se_no_color(
 		0,						// Background number (BG 0)
 		BG_CBB(0)|BG_SBB(31),	// BG control (for REG_BGxCNT)
 		1,						// Tile offset (special cattr)
-		CLR_WHITE,				// Ink color
 		62,						// BitUnpack offset (on-pixel = 15)
 		NULL,					// Default font (sys8) 
 		NULL);					// Default renderer (se_drawg_s)

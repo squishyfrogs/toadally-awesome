@@ -67,24 +67,16 @@ void go_to_main_game();
 static void (*state_change)();						// state change function to execute at the end of each frame (must point to one of the above functions, or be NULL)
 
 
-void main_game_start();									// after initializing everything, this is called to set the game in motion, then we enter the game loop
+void main_game_start();								// after initializing everything, this is called to set the game in motion, then we enter the game loop
 
 // update functions
 void title_update();								// update title screen
-void graphics_update();							// update graphics and animation
-void game_update();							// update gameplay elements
+void graphics_update();								// update graphics and animation
+void game_update();									// update gameplay elements
 
 
 
 
-
-// placeholder
-void test_init_tte_se4();
-void test_run_tte_se4();
-void bg_demo();
-void update_text_temp();
-
-extern int history_count();
 
 
 
@@ -146,8 +138,6 @@ void main_loop()
 				break;
 			case GS_MAIN_GAME:
 			default:
-				//debug_write_int(input_current_lock());
-				//debug_write_int(history_count());
 				game_update();
 				break;
 		}
@@ -418,84 +408,4 @@ void graphics_update()
 //}
 
 
-
-void test_init_tte_se4()
-{
-
-	// (1) Init for text
-//	tte_init_chr4c(
-//		0,									// BG number.
-//		BG_CBB(0)|BG_SBB(16),				// BG control.
-//		0xF000,								// Screen-entry base
-//		bytes2word(13,15,15,15),				// Color attributes.
-//		CLR_MAG,							// Ink color
-//		&verdana9_b4Font,					// Verdana 9, with shade.
-//		(fnDrawg)chr4c_drawg_b4cts_fast);	// b4cts renderer, asm version
-	
-
-	// --- (1) Base TTE init for tilemaps ---
-	tte_init_se(
-		0,						// Background number (BG 0)
-		BG_CBB(0)|BG_SBB(31),	// BG control (for REG_BGxCNT)
-		0,						// Tile offset (special cattr)
-		CLR_WHITE,				// Ink color
-		14,						// BitUnpack offset (on-pixel = 15)
-		NULL,					// Default font (sys8) 
-		NULL);					// Default renderer (se_drawg_s)
-
-
-	tte_init_con();
-
-	// --- (2) Init some colors ---
-	//pal_bg_bank[1][15]= CLR_RED;
-	//pal_bg_bank[2][15]= CLR_GREEN;
-	//pal_bg_bank[3][15]= CLR_BLUE;
-	//pal_bg_bank[4][15]= CLR_WHITE;
-	//pal_bg_bank[5][15]= CLR_MAG;
-
-	// (3) Create and print to a text box.
-	//win_textbox(0, 8, 160-32+4, 232, 160-4, 8);
-
-	
-
-}
-
-
-
-void test_run_tte_se4()
-{
-//	tte_erase_screen();
-
-	// --- (3) Print some text ---
-	//tte_set_margins(16,16,144,144);
-	//tte_set_pos(8, 8);
-	//	"Hello world in different colors"
-	//	tte_write("\n #{cx:0x0000}Hahahahaha\n");
-	//	tte_write(" #{cx:0x1000}It took me an entire day\n");
-	//	tte_write(" #{cx:0x2000}But I made text and sprites \n show up at the same time\n");
-	//	tte_write(" #{cx:0x5000}It was a 1 line fix....\n");
-
-	// Color use explained
-	//tte_set_pos(8, 84);
-	//tte_write("#{cx:0x0000}C#{cx:0x1000}o#{cx:0x2000}l");
-	//tte_write("#{cx:0x3000}o#{cx:0x4000}r#{cx:0x5000}s");
-	//tte_write("#{cx:0} provided by \\#{cx:#}.");
-
-}
-
-
-
-void update_text_temp()
-{
-	if(key_hit(KEY_SELECT))
-	{
-		static bool txt_hidden;
-		if(txt_hidden)
-			test_run_tte_se4();
-		else
-			tte_erase_screen();
-		txt_hidden = !txt_hidden;
-		//tte_erase_rect(0,0,64,32);
-	}
-}
 

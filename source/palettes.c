@@ -109,10 +109,10 @@ void swap_palettes(int id_a, int id_b)
 
 void swap_bg_pal()
 {
-	int temp[64];
-	memcpy(temp, pal_bg_mem, 256);
-	memmove(pal_bg_mem, pal_bg_mem + 128, 256);
-	memcpy(pal_bg_mem + 128, temp, 256);
+	int temp[56];
+	memcpy(temp, pal_bg_mem + 16, 256-32);
+	memmove(pal_bg_mem + 16, pal_bg_mem + 128 + 16, 256-32);
+	memcpy(pal_bg_mem + 128 + 16, temp, 256-32);
 }
 
 

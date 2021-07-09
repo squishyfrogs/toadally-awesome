@@ -9,6 +9,7 @@
 
 
 typedef struct struct_MapData{
+	int level_id;
 	const unsigned short *palette;
 	const unsigned short *tiles;
 	int tile_len;
@@ -27,7 +28,7 @@ void level_clear();
 void map_init();
 void load_map_from_current_data();
 
-void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info);
+void set_map_data(int level_id, const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info);
 void load_map_from_data(MapData *map_data);
 void load_map_palette(const unsigned short *map_palette);
 void load_map_tiles(const unsigned short *map_tiles, int tiles_len);

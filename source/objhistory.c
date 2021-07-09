@@ -51,22 +51,6 @@ static bool history_mode;							// history mode (scrolling through the past with
 static int game_turns_elapsed;						// how many turns have passed since the game started
 static int current_turns_ago;						// measure of how far back in time we are currently rewound
 
-int history_count();
-
-int history_count()
-{
-	int ct = 0;
-	for(int i = 0; i < OBJ_HISTORY_MAX; i++)
-	{
-		if(obj_history_list[i].in_use != 0)
-		{
-			ct++;
-		}
-	}
-	return ct;
-}
-
-
 //////////////////
 /// ObjHistory ///
 //////////////////

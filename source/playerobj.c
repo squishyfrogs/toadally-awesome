@@ -251,8 +251,7 @@ void playerobj_move(int move_x, int move_y)
 	//	if((dest_height == 0) || (start_height - dest_height > 2) || (dest_height - start_height > 2))
 	//	return;
 	//ushort tile_props = get_tile_properties(end_tile.x, end_tile.y);
-	if(!check_tile_free(end_tile.x, end_tile.y))
-		return;
+	
 
 	// check that dest tile is empty
 	GameObj *contents = get_tile_contents(end_tile.x, end_tile.y);
@@ -270,6 +269,7 @@ void playerobj_move(int move_x, int move_y)
 				//create_effect_at_position(end_tile.x, end_tile.y);
 				input_lock(INPLCK_PLAYER);
 				set_turn_active();
+				action_update();
 			}
 			// whether we can push the obj or not, end movement at this point
 			// TODO: play bonk sound
@@ -282,6 +282,8 @@ void playerobj_move(int move_x, int move_y)
 			return;
 		}
 	}
+	if(!check_tile_free(end_tile.x, end_tile.y))
+		return;
 
 	// reset offsets (should already be 0 but just in case)
 	offset.x = 0;
@@ -413,10 +415,7 @@ void playerobj_check_floor_tile(int tile_x, int tile_y)
 	{
 		playerobj_falling_start();
 	}
-	else 
-	{
-		finalize_turn();
-	}
+	
 }
 
 

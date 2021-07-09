@@ -192,6 +192,7 @@ void finalize_turn()
 	playerhealth_death_check();
 
 	// turn_count_increment();
+	input_unlock(INPLCK_PLAYER);
 	// deactivate turn 
 	turn_active = false;
 }

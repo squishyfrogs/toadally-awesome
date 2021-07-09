@@ -61,8 +61,9 @@ void load_map_from_current_data()
 /// Map Data ///
 ////////////////
 
-void set_map_data(const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info)
+void set_map_data(int level_id, const unsigned short *palette, const unsigned short *tiles, int tile_len, const unsigned short *map, int map_len, const unsigned short *col_info)
 {
+	current_map.level_id = level_id;
 	current_map.palette = palette;
 	current_map.tiles = tiles;
 	current_map.tile_len = tile_len;
@@ -81,6 +82,8 @@ void load_map_from_data(MapData *map_data)
 	load_map(map_data->map, map_data->map_len);
 	// load collision info
 	load_map_tile_properties(map_data->col_info);
+
+	load_map_objs(map_data->level_id);
 }
 
 // load a palette into palbg memory
