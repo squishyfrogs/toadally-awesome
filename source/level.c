@@ -1,6 +1,8 @@
 #include "map.h"
 #include "maps.h"
 #include "objinteract.h"
+#include "game.h"
+#include "gamedata.h"
 
 extern void set_map_data_temp();
 
@@ -47,7 +49,8 @@ void load_map_objs(int level_id)
 
 void level_clear()
 {
-	
+	gamedata_save();
+	go_to_game_state(GS_LEVEL_SELECT);
 }
 
 

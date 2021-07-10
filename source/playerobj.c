@@ -32,6 +32,9 @@ extern void set_camera_pos(int target_x, int target_y);
 extern void create_effect_at_position(int tile_x, int tile_y);
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
+// ui.c
+extern void ui_hide();
+extern void ui_show();
 
 void playerobj_init();
 void player_anim_init();		// initialize anims
@@ -61,6 +64,7 @@ void playerobj_timestop_finish();
 static GameObj *player_obj;
 static AnimationData *player_anims[PAI_COUNT];
 static Timer player_timer;
+static Timer die_timer;			// yet another crunch-inspired hacky fix -- death shouldn't need its own separate timer, and yet...
 
 //static int p_palette;			// index of player palette in memory
 static int p_tile_start;		// index of first tile of player sheet in memory
@@ -70,7 +74,6 @@ static Vector2 end_tile;		// end tile (for movement)
 static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
-
 
 
 GameObj *get_player_obj()
@@ -105,6 +108,7 @@ void playerobj_init()
 	playerhealth_init();
 	
 	timer_init(&player_timer, 0, NULL, 0);
+
 }
 
 
@@ -131,8 +135,9 @@ extern void main_game_end();
 // main PlayerObj update
 void playerobj_update()
 {
-	
 	timer_update(&player_timer);
+	timer_update(&die_timer);
+	
 	if(!input_locked() && !gameobj_is_moving(player_obj) && !history_mode_active())
 	{
 		if(key_hit(KEY_A))
@@ -442,13 +447,13 @@ void playerobj_falling_start()
 // called when timer ends
 void playerobj_falling_finish()
 {
-	playerhealth_reduce_hp(1);
+	timer_clear(&player_timer);
 	history_step_back(1);
 	history_clear_future();
 	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
+	playerhealth_reduce_hp(1);
 	finalize_turn();
-	timer_clear(&player_timer);
 }
 
 
@@ -474,16 +479,16 @@ void playerobj_die_start()
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_DIE);
 	// wait a while, then return to last position
-	//timer_init(&player_timer, 5, playerobj_die_finish, TIMERFLAG_ENABLED);
-	playerobj_die_finish();
+	timer_init(&die_timer, 60, playerobj_die_finish, TIMERFLAG_ENABLED);
 }
 
 // called when timer ends
 void playerobj_die_finish()
 {
 	input_unlock(INPLCK_TIMER);
-	timer_clear(&player_timer);
-	go_to_game_state(GS_LEVEL_SELECT);
+	playerobj_play_anim(PAI_IDLE);
+	timer_clear(&die_timer);
+	level_clear();
 }
 
 void playerobj_level_intro_start()
@@ -491,6 +496,7 @@ void playerobj_level_intro_start()
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_VICTORY);
 	timer_init(&player_timer, 50, playerobj_level_intro_finish, TIMERFLAG_ENABLED);
+	
 }
 // called when timer ends
 void playerobj_level_intro_finish()
@@ -498,6 +504,7 @@ void playerobj_level_intro_finish()
 	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&player_timer);
+
 }
 
 void playerobj_victory_start()
@@ -513,7 +520,7 @@ void playerobj_victory_finish()
 	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&player_timer);
-	go_to_game_state(GS_LEVEL_SELECT);
+	level_clear();
 }
 
 void playerobj_timestop_start()

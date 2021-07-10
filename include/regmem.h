@@ -13,8 +13,5 @@ void reg_set_main();
 void reg_set_title();
 void reg_set_lev_sel();
 
-void reg_save_game_data();
-void reg_load_game_data();
-
 
 #endif //REGMEM_H

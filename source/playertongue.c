@@ -7,6 +7,7 @@
 #include "regmem.h"
 #include "game.h"
 #include "palettes.h"
+#include "audio.h"
 #include "sprites/player/spr_tongue.h"
 
 #define TSPR_PIECE_H	0
@@ -312,6 +313,7 @@ void tongue_extend()
 	//for(int i = 0; i < TONGUE_PIECES; i++)
 	//	gameobj_unhide(tongue_pieces[i]);
 	playerobj_play_anim(PAI_TONGUE);
+	audio_play_sound(SFX_FROG_TONGUE);
 	gameobj_unhide(tongue_tip);
 	input_lock(INPLCK_TONGUE);
 }
@@ -338,6 +340,7 @@ void tongue_retract()
 		tongue_detach();
 		input_lock(INPLCK_TONGUE);
 	}
+	audio_play_sound(SFX_FROG_TONGUE_2);
 	set_turn_active();
 }
 

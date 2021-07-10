@@ -38,6 +38,7 @@ void playerhealth_take_damage()
 
 void playerhealth_damage_check()
 {
+	if(player_damaged || player_dead) return;
 	if(player_damaged)
 	{
 		player_health--;
@@ -51,6 +52,7 @@ void playerhealth_damage_check()
 
 void playerhealth_death_check()
 {
+	if(player_dead) return;
 	if(player_health <= 0 && !player_dead)
 	{
 		playerhealth_die();
@@ -63,6 +65,11 @@ void playerhealth_die()
 	player_damaged = false;
 	// play sound effect + anim, set timer, then reset level when timer expires
 	playerobj_die_start();
+}
+
+bool playerhealth_is_dead()
+{
+	return player_dead;
 }
 
 

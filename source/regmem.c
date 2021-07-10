@@ -88,22 +88,5 @@ void reg_set_lev_sel()
 
 
 
-///////////////////
-/// Save & Load ///
-///////////////////
-
-// 0x0E00_0000 to 0x0FFF_FFFF
-// byte r/w only
-
-void reg_save_game_data()
-{
-	
-}
-
-
-void reg_load_game_data()
-{
-
-}
 
 

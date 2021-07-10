@@ -3,6 +3,9 @@
 
 void timer_init(Timer *timer, int duration, void(*end_callback)(), u8 flags)
 {
+	//if(!(timer->flags & TIMERFLAG_ENABLED) && timer->end_callback != NULL)
+	//	timer->end_callback();
+	
 	timer->duration = duration;
 	timer->time = duration;
 	timer->end_callback = end_callback;

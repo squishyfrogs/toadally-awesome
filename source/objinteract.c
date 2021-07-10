@@ -87,6 +87,10 @@ void objint_deal_damage(GameObj *target, GameObj *instigator)
 
 bool objint_check_floor_tile(GameObj *obj, int tile_x, int tile_y)
 {
+	// hacky fix, replace
+	if(gameobj_is_player(obj))
+		return true;
+
 	bool tile_safe = true;
 	ushort props = get_tile_properties(tile_x, tile_y);
 	if(props & TILEPROP_PAIN)
@@ -103,6 +107,10 @@ bool objint_check_floor_tile(GameObj *obj, int tile_x, int tile_y)
 
 void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
 {
+	// hacky fix, replace
+	if(gameobj_is_player(obj))
+		return;
+
 	if(tongue_get_attached_object() == obj)
 		tongue_detach_obj();
 

@@ -18,6 +18,9 @@ void ui_init();
 void ui_start();
 void ui_erase();
 void ui_update();
+void ui_show();
+void ui_hide();
+
 void ui_update_hearts();
 void ui_update_time_gauge();
 
@@ -140,10 +143,12 @@ void ui_init()
 void ui_start()
 {
 	reset_action_count();
+	ui_show();
 }
 
 void ui_erase()
 {
+	reset_action_count();
 	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
 	{
 		gameobj_erase(action_counter[i]);
@@ -168,6 +173,43 @@ void ui_update()
 	ui_update_time_gauge();
 }
 
+void ui_show()
+{
+	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
+	{
+		gameobj_unhide(action_counter[i]);
+	}
+	for(int i = 0; i < PLAYER_HP_MAX; i++)
+	{
+		gameobj_unhide(hearts[i]);
+	}
+	for(int i = 0; i < TIME_GAUGE_SEGMENTS; i++)
+	{
+		gameobj_unhide(time_gauge[i]);
+	}
+	gameobj_unhide(gear);
+	count_rolling = 0;
+	set_action_count_immediate(true_action_count);
+}
+
+void ui_hide()
+{
+	for(int i = 0; i < ACTION_COUNTER_DIGITS; i++)
+	{
+		gameobj_hide(action_counter[i]);
+	}
+	for(int i = 0; i < PLAYER_HP_MAX; i++)
+	{
+		gameobj_hide(hearts[i]);
+	}
+	for(int i = 0; i < TIME_GAUGE_SEGMENTS; i++)
+	{
+		gameobj_hide(time_gauge[i]);
+	}
+	gameobj_hide(gear);
+	count_rolling = 0;
+	set_action_count_immediate(true_action_count);
+}
 
 
 void ui_update_hearts()

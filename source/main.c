@@ -322,7 +322,7 @@ void title_update()
 	}
 }
 
-
+extern bool playerhealth_is_dead();
 
 // update gameplay elements
 void game_update()
@@ -337,7 +337,7 @@ void game_update()
 	ui_update();
 
 	// finalize the turn when all objects come to rest
-	if(check_turn_active() && gameobj_all_at_rest())
+	if(check_turn_active() && gameobj_all_at_rest() && !playerhealth_is_dead())
 	{
 		finalize_turn();
 		input_unlock(INPLCK_SYS);
