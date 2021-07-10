@@ -8,7 +8,8 @@ typedef enum LockFlag_T {
 	INPLCK_UI		= 0x02,
 	INPLCK_PLAYER	= 0x04,
 	INPLCK_TONGUE	= 0x08,
-	INPLCK_PAUSE	= 0x10
+	INPLCK_PAUSE	= 0x10,
+	INPLCK_TIMER	= 0x20
 } LockFlag;
 
 bool input_locked();

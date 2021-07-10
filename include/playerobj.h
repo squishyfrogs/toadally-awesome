@@ -25,7 +25,7 @@ typedef enum PlayerAnimID_T{
 } PlayerAnimID;
 
 
-void playerobj_check_floor_tile(int tile_x, int tile_y);
+bool playerobj_check_floor_tile(int tile_x, int tile_y);
 int playerobj_current_hop_height();
 void playerobj_play_anim(PlayerAnimID pid);
 void playerobj_action_primary();			// perform the A press action

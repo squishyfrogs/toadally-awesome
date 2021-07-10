@@ -42,4 +42,8 @@ void turn_count_set(int turn_count);													// set the turn count
 void turn_count_increment();
 void turn_count_decrement();
 
+void time_charges_reset();
+int time_charges_check();
+bool time_charge_use();
+
 #endif //OBJHISTORY_H

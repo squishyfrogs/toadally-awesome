@@ -6,7 +6,7 @@
 
 // TODO: replace these with dedicated palette headers 
 #include "sprites/player/spr_player.h"
-#include "sprites/ui/numbers.h"
+#include "sprites/ui/timegauge.h"
 #include "sprites/objects/spikes.h"
 
 int get_free_pal_id();
@@ -26,7 +26,7 @@ void load_level_select_palettes()
 void load_main_game_palettes()
 {
 	palette_load(spr_playerPal, PAL_ID_PLAYER);
-	palette_load(numbersPal, PAL_ID_UI);
+	palette_load(timegaugePal, PAL_ID_UI);
 	palette_load(spikesPal, PAL_ID_OBJS);
 }
 

@@ -387,9 +387,8 @@ void playerobj_update_movement()
 
 void playerobj_finalize_movement()
 {
-	//player_update_current_tile();
-	gameobj_update_current_tile(player_obj);
 	gameobj_set_moving(player_obj,false, 0);
+	gameobj_update_current_tile(player_obj);
 
 	if(!check_tongue_out())
 		playerobj_play_anim(PAI_IDLE);
@@ -397,25 +396,32 @@ void playerobj_finalize_movement()
 	// unlock right here bc we might immediately need to re-lock
 	input_unlock(INPLCK_PLAYER);
 	// check floor tile
-	playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y);
+	if(playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y))
+	{
+	}
 }
 
-void playerobj_check_floor_tile(int tile_x, int tile_y)
+// returns true if the player will successfully stay in the current tile
+bool playerobj_check_floor_tile(int tile_x, int tile_y)
 {
+	bool tile_safe = true;
 	ushort props = get_tile_properties(tile_x, tile_y);
 	if(props & TILEPROP_PAIN)
 	{
 		playerhealth_take_damage();
+		tile_safe = false;
 	}
 	else if(props & TILEPROP_VICTORY)
 	{
 		playerobj_victory_start();
+		tile_safe = true;
 	}
 	else if(props & TILEPROP_HOLE)
 	{
 		playerobj_falling_start();
+		tile_safe = false;
 	}
-	
+	return tile_safe;
 }
 
 
@@ -427,8 +433,9 @@ void playerobj_check_floor_tile(int tile_x, int tile_y)
 
 void playerobj_falling_start()
 {
-	input_lock(INPLCK_PLAYER);
+	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_FALL);
+	remove_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
 	// wait a while, then return to last position
 	timer_init(&player_timer, 50, playerobj_falling_finish, TIMERFLAG_ENABLED);
 }
@@ -438,21 +445,22 @@ void playerobj_falling_finish()
 {
 	playerhealth_reduce_hp(1);
 	history_step_back(1);
-	input_unlock(INPLCK_PLAYER);
+	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
+	history_update_all();
 	timer_clear(&player_timer);
 }
 
 void playerobj_level_intro_start()
 {
-	input_lock(INPLCK_PLAYER);
+	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_VICTORY);
 	timer_init(&player_timer, 50, playerobj_level_intro_finish, TIMERFLAG_ENABLED);
 }
 // called when timer ends
 void playerobj_level_intro_finish()
 {
-	input_unlock(INPLCK_PLAYER);
+	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&player_timer);
 }
@@ -460,7 +468,7 @@ void playerobj_level_intro_finish()
 
 void playerobj_victory_start()
 {
-	input_lock(INPLCK_PLAYER);
+	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_VICTORY);
 	// wait a while, then return to last position
 	timer_init(&player_timer, 140, playerobj_victory_finish, TIMERFLAG_ENABLED);
@@ -468,7 +476,7 @@ void playerobj_victory_start()
 // called when timer ends
 void playerobj_victory_finish()
 {
-	//input_unlock(INPLCK_PLAYER);
+	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&player_timer);
 	go_to_game_state(GS_LEVEL_SELECT);
@@ -522,6 +530,8 @@ void playerobj_action_secondary()
 	// perform an action update
 	action_update();
 }
+
+
 
 
 // returns the current height of the player's hop arc

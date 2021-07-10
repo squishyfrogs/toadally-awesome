@@ -1,8 +1,9 @@
 #include <tonc.h>
 
 #include "gameobj.h"
-#include "playerhealth.h"
 #include "animation.h"
+#include "playerhealth.h"
+#include "objhistory.h"
 #include "input.h"
 #include "layers.h"
 #include "regmem.h"
@@ -15,8 +16,10 @@
 
 void ui_init();
 void ui_start();
-void ui_update();
 void ui_erase();
+void ui_update();
+void ui_update_hearts();
+void ui_update_time_gauge();
 
 void reset_action_count();
 void set_action_count_immediate(int count);
@@ -49,7 +52,11 @@ static int c_frame = 0;
 // Time Gauge //
 ////////////////
 int t_tile;
-GameObj *timeGauge;
+#define TIME_GAUGE_SEGMENTS 4
+#define TG_END_OFFSET_L	0
+#define TG_END_OFFSET_R 2
+#define TG_OFFSET_MID 4
+GameObj *time_gauge[TIME_GAUGE_SEGMENTS];
 
 
 ////////////
@@ -90,6 +97,20 @@ void ui_init()
 
 	// init time gauge
 	t_tile = mem_load_tiles(timegaugeTiles, timegaugeTilesLen);
+	for(int i = 0; i < TIME_GAUGE_SEGMENTS; i++)
+	{
+		time_gauge[i] = gameobj_init();
+		time_gauge[i]->layer_priority = LAYER_OVERLAY;
+		int tg_x = 26 + (i*8);
+		int tg_y = SCREEN_HEIGHT - 12;
+		int tg_t = t_tile + (2*TG_END_OFFSET_L);
+		if(i == TIME_GAUGE_SEGMENTS-1)
+			tg_t += (2*TG_END_OFFSET_R);
+		else if(i > 0)
+			tg_t += (2*TG_OFFSET_MID);
+		gameobj_update_attr_full(time_gauge[i], ATTR0_TALL, ATTR1_SIZE_8x16, PAL_ID_UI, tg_t, tg_x, tg_y, OBJPROP_FIXED_POS);
+
+	}
 
 	// init hp icons
 	h_tile = mem_load_tiles(heartTiles, heartTilesLen);
@@ -129,18 +150,28 @@ void ui_erase()
 	}
 	for(int i = 0; i < PLAYER_HP_MAX; i++)
 	{
-		hearts[i]->spr_tile_id = 0;
+		//hearts[i]->spr_tile_id = 0;
 		//gameobj_update_attr_full(hearts[i],ATTR0_SQUARE, ATTR1);
 		gameobj_erase(hearts[i]);
 	}
-	gameobj_erase(timeGauge);
+	for(int i = 0; i < TIME_GAUGE_SEGMENTS; i++)
+	{
+		gameobj_erase(time_gauge[i]);
+	}
 	gameobj_erase(gear);
 }
 
 // gameplay update
 void ui_update()
 {
+	ui_update_hearts();
+	ui_update_time_gauge();
+}
 
+
+
+void ui_update_hearts()
+{
 	int player_health = playerhealth_get();
 
 	for(int i = 0; i < PLAYER_HP_MAX; i++)
@@ -155,6 +186,35 @@ void ui_update()
 	}
 }
 
+void ui_update_time_gauge()
+{
+	int time_charges = time_charges_check();
+	if(time_charges > 0)
+		time_gauge[0]->spr_tile_id = t_tile + 2*(TG_END_OFFSET_L);
+	else
+		time_gauge[0]->spr_tile_id = t_tile + 2*(1+TG_END_OFFSET_L);
+	if(time_charges == 5)
+		time_gauge[TIME_GAUGE_SEGMENTS-1]->spr_tile_id = t_tile + 2*(TG_END_OFFSET_R);
+	else
+		time_gauge[TIME_GAUGE_SEGMENTS-1]->spr_tile_id = t_tile + 2*(1+TG_END_OFFSET_R);
+
+	for(int i = 1; i < TIME_GAUGE_SEGMENTS-1; i++)
+	{
+		int seg = 1 + (2*(i-1));
+		int fr = t_tile;
+		if(time_charges < seg)
+			fr += 2*(3+TG_OFFSET_MID);
+		else if(time_charges == seg)
+			fr += 2*(2+TG_OFFSET_MID);
+		else if(time_charges == seg+1)
+			fr += 2*(1+TG_OFFSET_MID);
+		else
+			fr += 2*(TG_OFFSET_MID);
+
+		time_gauge[i]->spr_tile_id = fr;
+
+	}
+}
 
 // animation update
 void ui_update_anim()

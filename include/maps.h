@@ -8,6 +8,9 @@
 // map 2
 #include "maps/map2.h"
 #include "maps/map2overlay.h"
+// map 3
+#include "maps/map3.h"
+#include "maps/map3overlay.h"
 
 
 #endif //MAPS_H

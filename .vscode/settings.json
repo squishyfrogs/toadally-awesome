@@ -32,6 +32,8 @@
 		"palettes.h": "c",
 		"audio.h": "c",
 		"playertongue.h": "c",
-		"timer.h": "c"
+		"timer.h": "c",
+		"timegauge.h": "c",
+		"map2overlay.h": "c"
 	}
 }

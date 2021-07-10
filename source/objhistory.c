@@ -29,6 +29,7 @@ void set_obj_to_turn(ObjHistory *history, int turns_ago);
 void clear_obj_future(ObjHistory *history);
 
 
+
 inline void hist_obj_link(ObjHistory *hist, GameObj *obj){
 	if(obj != NULL)
 		obj->hist = hist;
@@ -50,6 +51,11 @@ ObjHistory obj_history_list[OBJ_HISTORY_MAX];		// history of all gameobjs in cur
 static bool history_mode;							// history mode (scrolling through the past with L/R)
 static int game_turns_elapsed;						// how many turns have passed since the game started
 static int current_turns_ago;						// measure of how far back in time we are currently rewound
+
+#define TIME_CHARGES_MAX 5
+static int time_charges;
+
+
 
 //////////////////
 /// ObjHistory ///
@@ -220,8 +226,6 @@ void set_game_to_turn(int turns_ago)
 
 	// update turn counter
 	set_action_count(game_turns_elapsed - turns_ago);
-	// play clock tick sound
-	audio_play_sound(SFX_CLOCK_TICK);
 }
 
 // set a GameObj to a specific turn in its history
@@ -323,6 +327,7 @@ void history_reset()
 	current_turns_ago = 0;
 	game_turns_elapsed = 0;
 	history_mode = false;
+	time_charges_reset();
 	reset_action_count();
 }
 
@@ -384,4 +389,32 @@ void turn_count_decrement()
 {
 	game_turns_elapsed--;
 	set_action_count(game_turns_elapsed - current_turns_ago);
+}
+
+
+
+////////////////////
+/// Time Charges ///
+////////////////////
+
+
+
+void time_charges_reset()
+{
+	time_charges = TIME_CHARGES_MAX;
+}
+
+int time_charges_check()
+{
+	return time_charges;
+}
+
+bool time_charge_use()
+{
+	if(time_charges > 0)
+	{
+		time_charges--;
+		return true;
+	}
+	return false;
 }

@@ -122,11 +122,15 @@ void game_update_main()
 			if(key_hit(KEY_L))
 			{
 				history_step_back(1);
+				// play clock tick sound
+				audio_play_sound(SFX_CLOCK_TICK);
 			}
 			else if(key_hit(KEY_R))
 			{
 				//history_return_to_present();
 				history_step_forward(1);
+				// play clock tick sound
+				audio_play_sound(SFX_CLOCK_TICK);
 			}
 			else if(key_hit(KEY_DIR | KEY_A | KEY_B))
 			{
@@ -136,7 +140,7 @@ void game_update_main()
 		}
 		else
 		{
-			if(key_hit(KEY_SHOULDER))
+			if(key_hit(KEY_SHOULDER) && time_charge_use())
 			{
 				playerobj_timestop_start();
 				history_mode_enable();

@@ -5,6 +5,7 @@
 #include "input.h"
 #include "gameobj.h"
 #include "regmem.h"
+#include "audio.h"
 #include "palettes.h"
 #include "sprites/ui/pauseCursor.h"
 #include "sprites/ui/menuPanel.h"
@@ -62,9 +63,15 @@ void pausemenu_update()
 	if(pause_buffer)
 	{
 		if(key_hit(KEY_DOWN))
+		{
 			selected_action = (selected_action+1) % 2;
+			audio_play_sound(SFX_BLIP_LOW);
+		}
 		if(key_hit(KEY_UP))
+		{
 			selected_action = ((selected_action-1) + 2) % 2;
+			audio_play_sound(SFX_BLIP_LOW);
+		}
 
 		gameobj_set_pixel_pos(pause_cursor, PM_L, PM_TOP + 4 + (selected_action * 16));
 
@@ -98,6 +105,7 @@ void pausemenu_open()
 	selected_action = 0;
 	gameobj_set_pixel_pos(pause_cursor, PM_L, PM_TOP + 4 + (selected_action * 16));
 	
+	audio_play_sound(SFX_BLIP_HIGH);
 	gameobj_unhide(pause_cursor);
 	pausemenu_active = true;
 	pause_buffer = false;
@@ -112,6 +120,7 @@ void pausemenu_close()
 	gameobj_hide(pause_cursor);
 	pausemenu_active = false;
 	pause_buffer = false;
+	audio_play_sound(SFX_BLIP_HIGH);
 }
 
 bool check_pausemenu_active()
