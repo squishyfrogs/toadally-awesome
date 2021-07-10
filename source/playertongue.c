@@ -5,6 +5,7 @@
 #include "map.h"
 #include "effects.h"
 #include "regmem.h"
+#include "game.h"
 #include "palettes.h"
 #include "sprites/player/spr_tongue.h"
 
@@ -173,6 +174,7 @@ void tongue_update_length()
 				tongue_extension = tongue_len_bonus - 8;
 				tongue_store();
 				playerobj_finalize_movement();
+				finalize_turn();
 			}
 			camera_update_pos();
 			break;
@@ -336,6 +338,7 @@ void tongue_retract()
 		tongue_detach();
 		input_lock(INPLCK_TONGUE);
 	}
+	set_turn_active();
 }
 
 

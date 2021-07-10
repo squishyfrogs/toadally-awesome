@@ -9,6 +9,7 @@ extern void playerobj_die_start();
 
 static int player_health = PLAYER_HP_MAX;
 static bool player_damaged;
+static bool player_dead;
 
 
 void playerhealth_init()
@@ -19,6 +20,7 @@ void playerhealth_init()
 void playerhealth_reset()
 {
 	player_damaged = false;
+	player_dead = false;
 	player_health = PLAYER_HP_MAX;
 }
 
@@ -49,7 +51,7 @@ void playerhealth_damage_check()
 
 void playerhealth_death_check()
 {
-	if(player_health <= 0)
+	if(player_health <= 0 && !player_dead)
 	{
 		playerhealth_die();
 	}
@@ -57,6 +59,8 @@ void playerhealth_death_check()
 
 void playerhealth_die()
 {
+	player_dead = true;
+	player_damaged = false;
 	// play sound effect + anim, set timer, then reset level when timer expires
 	playerobj_die_start();
 }

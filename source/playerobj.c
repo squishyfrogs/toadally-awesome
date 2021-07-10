@@ -131,10 +131,7 @@ extern void main_game_end();
 // main PlayerObj update
 void playerobj_update()
 {
-	if(key_hit(KEY_SELECT))
-	{
-		go_to_game_state(GS_LEVEL_SELECT);
-	}
+	
 	timer_update(&player_timer);
 	if(!input_locked() && !gameobj_is_moving(player_obj) && !history_mode_active())
 	{
@@ -400,9 +397,7 @@ void playerobj_finalize_movement()
 	// unlock right here bc we might immediately need to re-lock
 	input_unlock(INPLCK_PLAYER);
 	// check floor tile
-	if(playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y))
-	{
-	}
+	playerobj_check_floor_tile(player_obj->tile_pos.x, player_obj->tile_pos.y);
 }
 
 // returns true if the player will successfully stay in the current tile
@@ -479,7 +474,8 @@ void playerobj_die_start()
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_DIE);
 	// wait a while, then return to last position
-	timer_init(&player_timer, 45, playerobj_die_finish, TIMERFLAG_ENABLED);
+	//timer_init(&player_timer, 5, playerobj_die_finish, TIMERFLAG_ENABLED);
+	playerobj_die_finish();
 }
 
 // called when timer ends
