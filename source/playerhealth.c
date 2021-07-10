@@ -4,6 +4,9 @@
 #include "audio.h"
 
 
+extern void playerobj_damaged_start();
+extern void playerobj_die_start();
+
 static int player_health = PLAYER_HP_MAX;
 static bool player_damaged;
 
@@ -39,6 +42,7 @@ void playerhealth_damage_check()
 		audio_play_sound(SFX_FROG_HIT);
 		// TODO: maybe change this to not rewind? 
 		history_step_back(1);
+		playerobj_damaged_start();
 	}
 	player_damaged = false;
 }
@@ -54,6 +58,7 @@ void playerhealth_death_check()
 void playerhealth_die()
 {
 	// play sound effect + anim, set timer, then reset level when timer expires
+	playerobj_die_start();
 }
 
 

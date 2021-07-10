@@ -47,6 +47,10 @@ void playerobj_finalize_movement();
 // timed actions
 void playerobj_falling_start();
 void playerobj_falling_finish();
+void playerobj_damaged_start();
+void playerobj_damaged_finish();
+void playerobj_die_start();
+void playerobj_die_finish();
 void playerobj_level_intro_start();
 void playerobj_level_intro_finish();
 void playerobj_victory_start();
@@ -445,10 +449,45 @@ void playerobj_falling_finish()
 {
 	playerhealth_reduce_hp(1);
 	history_step_back(1);
+	history_clear_future();
 	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
-	history_update_all();
+	finalize_turn();
 	timer_clear(&player_timer);
+}
+
+
+void playerobj_damaged_start()
+{
+	input_lock(INPLCK_TIMER);
+	playerobj_play_anim(PAI_HURT);
+	// wait a while, then return to last position
+	timer_init(&player_timer, 50, playerobj_damaged_finish, TIMERFLAG_ENABLED);
+}
+
+// called when timer ends
+void playerobj_damaged_finish()
+{
+	input_unlock(INPLCK_TIMER);
+	playerobj_play_anim(PAI_IDLE);
+	timer_clear(&player_timer);
+}
+
+
+void playerobj_die_start()
+{
+	input_lock(INPLCK_TIMER);
+	playerobj_play_anim(PAI_DIE);
+	// wait a while, then return to last position
+	timer_init(&player_timer, 45, playerobj_die_finish, TIMERFLAG_ENABLED);
+}
+
+// called when timer ends
+void playerobj_die_finish()
+{
+	input_unlock(INPLCK_TIMER);
+	timer_clear(&player_timer);
+	go_to_game_state(GS_LEVEL_SELECT);
 }
 
 void playerobj_level_intro_start()
@@ -464,7 +503,6 @@ void playerobj_level_intro_finish()
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&player_timer);
 }
-
 
 void playerobj_victory_start()
 {
@@ -482,16 +520,15 @@ void playerobj_victory_finish()
 	go_to_game_state(GS_LEVEL_SELECT);
 }
 
-
 void playerobj_timestop_start()
 {
-	input_lock(INPLCK_PLAYER);
+	input_lock(INPLCK_TIMER);
 	timer_init(&player_timer, 20, playerobj_timestop_finish, TIMERFLAG_ENABLED);
 }
 // called when timer ends
 void playerobj_timestop_finish()
 {
-	input_unlock(INPLCK_PLAYER);
+	input_unlock(INPLCK_TIMER);
 	timer_clear(&player_timer);
 }
 
