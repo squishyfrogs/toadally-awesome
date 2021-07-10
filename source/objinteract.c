@@ -6,6 +6,7 @@
 #include "palettes.h"
 #include "regmem.h"
 
+
 #include "sprites/objects/coin.h"
 #include "sprites/objects/crate.h"
 
@@ -13,6 +14,9 @@
 
 // playerhealth.c
 extern void playerhealth_take_damage();
+// playertongue.c
+extern void tongue_detach_obj();
+extern GameObj *tongue_get_attached_object();
 
 //int oi_pal;
 
@@ -79,6 +83,37 @@ void objint_deal_damage(GameObj *target, GameObj *instigator)
 	}
 }
 
+
+
+bool objint_check_floor_tile(GameObj *obj, int tile_x, int tile_y)
+{
+	bool tile_safe = true;
+	ushort props = get_tile_properties(tile_x, tile_y);
+	if(props & TILEPROP_PAIN)
+	{
+		tile_safe = false;
+	}
+	else if(props & TILEPROP_HOLE)
+	{
+		gameobj_fall(obj, tile_x, tile_y);
+		tile_safe = false;
+	}
+	return tile_safe;
+}
+
+void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
+{
+	if(tongue_get_attached_object() == obj)
+		tongue_detach_obj();
+
+	ushort props = get_tile_properties(tile_x, tile_y);
+	set_tile_properties(tile_x, tile_y, props & ~TILEPROP_HOLE);
+	remove_tile_contents(obj, tile_x, tile_y);
+	//TODO: ADD SPRITE OF OBJ IN THE HOLE
+
+	gameobj_hide(obj);
+}
+
 ////////////////////////////
 /// Interactable Objects ///
 ////////////////////////////
@@ -126,3 +161,4 @@ GameObj *floorobj_create_spikes_at_position(int x, int y)
 	
 	return spikes;
 }
+

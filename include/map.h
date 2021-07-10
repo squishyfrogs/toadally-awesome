@@ -54,6 +54,7 @@ void overlay_clear();
 int get_tile_id(int x, int y);														// converts an x,y position to a tile number
 
 ushort get_tile_properties(int tile_x, int tile_y);									// get the collision info of a given tile
+void set_tile_properties(int tile_x, int tile_y, ushort props);
 bool check_tile_free(int tile_x, int tile_y);										// returns true if the tile is within map bounds and can be entered
 struct struct_GameObj *get_tile_contents(int tile_x, int tile_y);					// get the contents of a given tile, or NULL if tile is empty
 struct struct_GameObj *get_tile_floor_contents(int tile_x, int tile_y);				// get the contents of a given tile floor, or NULL if tile is empty

@@ -520,7 +520,12 @@ void gameobj_update_current_tile(GameObj *obj)
 	{
 		objint_step_on(floor_obj, obj);
 	}
+
+	objint_check_floor_tile(obj, obj->tile_pos.x, obj->tile_pos.y);
 }
+
+
+
 
 
 //////////////

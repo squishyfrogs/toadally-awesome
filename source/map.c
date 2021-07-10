@@ -255,6 +255,14 @@ ushort get_tile_properties(int tile_x, int tile_y)
 	return map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_properties;
 }
 
+void set_tile_properties(int tile_x, int tile_y, ushort props)
+{
+	if(tile_x < 0 || tile_y < 0 || tile_x >= MAP_SIZE_X || tile_y >= MAP_SIZE_Y)
+		return;
+	
+	map_tiles[(tile_x%MAP_SIZE_X)+(tile_y*MAP_SIZE_X)].tile_properties = props;
+}
+
 // get the contents of a given tile, or NULL if tile is empty
 GameObj *get_tile_contents(int tile_x, int tile_y)
 {

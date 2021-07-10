@@ -36,11 +36,10 @@ void load_map_objs(int level_id)
 
 	switch(level_id)
 	{
-		case 1:
-			intobj_create_crate_at_position(8,8);
+		case 3:
+			intobj_create_crate_at_position(10,8);
 			break;
 		default:
-			
 			break;
 	}
 }
