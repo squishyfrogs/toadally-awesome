@@ -35,13 +35,14 @@ void set_level_data(int level_id)
 			set_overlay_data(map3overlayTiles, map3overlayTilesLen, map3overlayMap, map3overlayMapLen);
 			break;
 		default:
-			set_map_data(level_id, testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
-			overlay_clear();
+			set_map_data(level_id, map1Pal, map1Tiles, map1TilesLen, map1Map, map1MapLen, map1Col);
+			set_overlay_data(map1overlayTiles, map1overlayTilesLen, map1overlayMap, map1overlayMapLen);
+			//set_map_data(level_id, testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
+			//overlay_clear();
 			break;
 	}
 	
 }
-
 
 void load_map_objs(int level_id)
 {
@@ -66,6 +67,9 @@ void load_map_objs(int level_id)
 			intobj_create_crate_at_position(11,4);
 			break;
 		default:
+			player_start_x = 10;
+			player_start_y = 5;
+			floorobj_create_victory_tile_at_position(10,5);
 			break;
 	}
 
@@ -91,6 +95,7 @@ void set_level_unlocked(int level_id)
 	//set_plaque_state(level_id, 2);
 	level_info[level_id] |= LEVINFO_UNLOCKED;
 }
+
 void set_level_cleared(int level_id)
 {
 	level_info[level_id] |= LEVINFO_CLEARED;
@@ -127,5 +132,4 @@ void save_level_info()
 	{
 		gamedata_save_byte(level_info[i], i);
 	}
-
 }

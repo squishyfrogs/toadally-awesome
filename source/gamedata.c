@@ -18,16 +18,12 @@ void gamedata_init()
 // byte r/w only
 
 
-void gamedata_save_byte(unsigned char data, int mem_offset)
-{
-	toncset(sram_mem + mem_offset, data, 1);
-	
+void gamedata_save_byte(byte data, int mem_offset)
+{ 
+	sram_mem[mem_offset] = data;
 }
 
-
-
-unsigned char gamedata_load_byte(int mem_offset)
+byte gamedata_load_byte(int mem_offset)
 {
-	return (unsigned char)sram_mem[mem_offset];
-	
+	return (byte)sram_mem[mem_offset];
 }
