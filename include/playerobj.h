@@ -20,6 +20,7 @@ typedef enum PlayerAnimID_T{
 	PAI_HURT,
 	PAI_DIE,
 	PAI_FALL,
+	PAI_INTRO,
 	PAI_VICTORY,
 	PAI_COUNT				// INVALID
 } PlayerAnimID;

@@ -280,7 +280,6 @@ void go_to_level_select()
 	set_game_state(GS_LEVEL_SELECT);
 	lev_sel_load();
 	reg_set_lev_sel();
-	load_level_info();
 	lev_sel_display();
 }
 

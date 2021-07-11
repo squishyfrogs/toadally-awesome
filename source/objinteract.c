@@ -16,6 +16,7 @@
 extern void playerhealth_take_damage();
 // playertongue.c
 extern void tongue_detach_obj();
+extern void tongue_retract();
 extern GameObj *tongue_get_attached_object();
 
 //int oi_pal;
@@ -69,7 +70,7 @@ void objint_step_on(GameObj *target, GameObj *instigator)
 	// if spikes, damage instigator
 	objint_deal_damage(instigator, target);		// switching instigator and target here is intentional
 
-	create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
+	//create_effect_at_position(ET_SMOKE, target->tile_pos.x, target->tile_pos.y);
 }
 
 
@@ -114,7 +115,10 @@ void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
 		return;
 
 	if(tongue_get_attached_object() == obj)
+	{
 		tongue_detach_obj();
+		tongue_retract();
+	}
 
 	//ushort props = get_tile_properties(tile_x, tile_y);
 	//set_tile_properties(tile_x, tile_y, props & ~TILEPROP_HOLE);
@@ -124,7 +128,7 @@ void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
 	gameobj_play_anim(obj);
 	audio_play_sound(SFX_FALL);
 	//gameobj_hide(obj);
-	// gameobj_add_property_flags(obj, OBJPROP_TIME_IMMUNITY);
+	gameobj_add_property_flags(obj, OBJPROP_TIME_IMMUNITY);
 }
 
 ////////////////////////////

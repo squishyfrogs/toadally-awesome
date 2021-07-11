@@ -43,6 +43,7 @@ void playerobj_input_direction(int input_x, int input_y);
 void playerobj_update_facing(int x, int y);
 void playerobj_move(int move_x, int move_y);
 void playerobj_update_movement();
+void playerobj_hop_in_place();
 void playerobj_finalize_movement();
 
 // timed actions
@@ -71,6 +72,8 @@ static Vector2 start_tile;		// start tile (for movement)
 static Vector2 end_tile;		// end tile (for movement)
 static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
+#define HOP_DURATION 16
+static int hop_time;			
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
 
 #define MOV_BUFFER_MAX	8
@@ -109,7 +112,7 @@ void playerobj_init()
 	playerhealth_init();
 	
 	timer_init(&player_timer, 0, NULL, 0);
-
+	hop_time = 0;
 }
 
 
@@ -123,7 +126,8 @@ void player_anim_init()
 	player_anim_create(PAI_HURT, 4, 1, PLAYER_FACING_OFFSET);
 	player_anim_create(PAI_DIE, 4, 1, PLAYER_FACING_OFFSET);
 	player_anim_create(PAI_FALL, 26, 3, 0);
-	player_anim_create(PAI_VICTORY, 24, 2, 0);
+	player_anim_create(PAI_INTRO, 24, 2, 0);
+	player_anim_create(PAI_VICTORY, 32, 4, 0);
 }
 
 void player_anim_create(PlayerAnimID pid, int offset, int len, int facing_offset)
@@ -307,6 +311,7 @@ void playerobj_move(int move_x, int move_y)
 	offset.x = 0;
 	offset.y = 0;
 	hop_offset = 0;
+	hop_time = HOP_DURATION;
 
 	int mov_dir = ints_to_dir(move_x, move_y);
 
@@ -372,18 +377,12 @@ void playerobj_move(int move_x, int move_y)
 // called every frame to keep player in motion
 void playerobj_update_movement()
 {
+
 	offset.x += mov.x;
 	offset.y += mov.y;
 
 	//update hop offset
-	if(mov.x != 0)
-	{
-		hop_offset = hop_arc[((GAME_TILE_SIZE + offset.x) % GAME_TILE_SIZE)];
-	}
-	else
-	{
-		hop_offset = hop_arc[((GAME_TILE_SIZE + offset.y) % GAME_TILE_SIZE)];
-	}
+	hop_offset = hop_arc[HOP_DURATION - hop_time];
 
 	// check if we moved a full tile, and if so, stop movement 
 	if((offset.x >= GAME_TILE_SIZE) || (offset.x <= -GAME_TILE_SIZE))
@@ -399,13 +398,48 @@ void playerobj_update_movement()
 	set_camera_pos(v.x, v.y + hop_offset);									// add hop_offset back in to keep camera smooth
 
 	
-	
-	if(mov.x == 0 && mov.y == 0)
+	hop_time--;
+	if(hop_time <= 0)
 	{
+		hop_time = 0;
 		playerobj_finalize_movement();
 	}
 
 }
+
+
+void playerobj_hop_in_place()
+{
+	start_tile.x = player_obj->tile_pos.x;
+	start_tile.y = player_obj->tile_pos.y;
+	end_tile.x = player_obj->tile_pos.x;
+	end_tile.y = player_obj->tile_pos.y;
+	offset.x = 0;
+	offset.y = 0;
+	hop_offset = 0;
+	hop_time = HOP_DURATION;
+	mov.x = 0;
+	mov.y = 0;
+	// lock inputs
+	input_lock(INPLCK_PLAYER);
+	// set the turn active
+	set_turn_active();
+	// mark player as moving
+	gameobj_set_moving(player_obj, true, gameobj_get_facing(player_obj));
+	// play hop anim
+	if(check_tongue_out())
+	{
+		tongue_detach();
+		tongue_retract();
+	}
+	playerobj_play_anim(PAI_HOP);
+	// play hop sfx
+	audio_play_sound(SFX_FROG_HOP);
+	// perform an action update
+	action_update();
+}
+
+
 
 void playerobj_finalize_movement()
 {
@@ -516,7 +550,7 @@ void playerobj_die_finish()
 void playerobj_level_intro_start()
 {
 	input_lock(INPLCK_TIMER);
-	playerobj_play_anim(PAI_VICTORY);
+	playerobj_play_anim(PAI_INTRO);
 	timer_init(&player_timer, 50, playerobj_level_intro_finish, TIMERFLAG_ENABLED);
 }
 // called when timer ends
@@ -573,6 +607,7 @@ void playerobj_play_anim(PlayerAnimID pid)
 }
 
 
+// perform the A press action
 void playerobj_action_primary()
 {
 	if(check_tongue_out())
@@ -583,17 +618,14 @@ void playerobj_action_primary()
 	action_update();
 }
 
+
 // perform the B press action
 void playerobj_action_secondary()
 {
-	if(check_tongue_out())
-		tongue_retract();
-	else
-		tongue_extend();
+	playerobj_hop_in_place();
 	// perform an action update
 	action_update();
 }
-
 
 
 

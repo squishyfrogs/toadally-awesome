@@ -20,6 +20,9 @@ extern void set_world_offset(int off_x, int off_y);
 // gameobj.c
 extern void gameobj_hide_all();
 extern void gameobj_erase_all();
+// level.c
+extern void load_level_info();
+
 
 void load_screen_pal(const ushort *scr_palette);
 void load_screen_tiles(const ushort *scr_tiles, int tiles_len);
@@ -86,6 +89,7 @@ void lev_sel_load()
 {
 	load_screen_pal(levelSelectScreenPal);
 	load_screen_tiles(levelSelectScreenTiles, levelSelectScreenTilesLen);
+	load_level_info();
 }
 
 void lev_sel_unload()

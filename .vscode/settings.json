@@ -37,6 +37,10 @@
 		"map2overlay.h": "c",
 		"victory_tile.h": "c",
 		"levselcursor.h": "c",
-		"levellock.h": "c"
+		"levellock.h": "c",
+		"map4.h": "c",
+		"map3overlay.h": "c",
+		"map5.h": "c",
+		"map8overlay.h": "c"
 	}
 }
