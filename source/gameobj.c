@@ -169,7 +169,8 @@ GameObj *gameobj_init_full(u16 layer_priority, u16 attr0_shape, u16 attr1_size, 
 	obj->spr_tile_id = spr_tile_id;
 	obj->obj_properties = properties;
 	obj->hist = NULL;
-
+	obj->spr_off.x = 0;
+	obj->spr_off.y = 0;
 	// if a sprite is FIXED_POS, init differently 
 	if(properties & OBJPROP_FIXED_POS)
 	{

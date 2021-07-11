@@ -124,7 +124,7 @@ void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
 	gameobj_play_anim(obj);
 	audio_play_sound(SFX_FALL);
 	//gameobj_hide(obj);
-	gameobj_add_property_flags(obj, OBJPROP_TIME_IMMUNITY);
+	// gameobj_add_property_flags(obj, OBJPROP_TIME_IMMUNITY);
 }
 
 ////////////////////////////

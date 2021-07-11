@@ -19,6 +19,7 @@ void audio_init()
 	// Initialize maxmod with default settings
 	// pass soundbank address, and allocate 8 channels.
 	mmInitDefault((mm_addr)soundbank_bin, 8);
+	mmSetModuleVolume(768);
 }
 
 
@@ -42,7 +43,6 @@ void audio_stop_all()
 	mmEffectCancelAll();
 	mmStop();
 }
-
 
 void audio_play_track(int track_id)
 {
@@ -73,4 +73,9 @@ void audio_play_sound(int sound_id)
 		sound_id = 0;
 
 	mmEffect(sound_id);
+}
+
+void audio_stop_sounds()
+{
+	mmEffectCancelAll();
 }

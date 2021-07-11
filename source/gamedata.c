@@ -1,5 +1,14 @@
 #include <tonc.h>
 #include "gamedata.h"
+#include "debug.h"
+
+void gamedata_init()
+{
+	if(DEBUG_CLEAR_SRAM)
+	{
+		toncset(sram_mem, 0, SRAM_SIZE);
+	}
+}
 
 ///////////////////
 /// Save & Load ///
@@ -9,13 +18,16 @@
 // byte r/w only
 
 
-void gamedata_save()
+void gamedata_save_byte(unsigned char data, int mem_offset)
 {
-
+	toncset(sram_mem + mem_offset, data, 1);
+	
 }
 
 
-void gamedata_load()
-{
 
+unsigned char gamedata_load_byte(int mem_offset)
+{
+	return (unsigned char)sram_mem[mem_offset];
+	
 }

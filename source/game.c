@@ -87,7 +87,7 @@ void main_game_start()
 	playerobj_level_intro_start();
 	input_unlock(INPLCK_SYS);
 	set_game_state(GS_MAIN_GAME);
-
+	audio_play_track(MOD_LEVEL_SEL);
 }
 
 

@@ -35,6 +35,8 @@
 		"timer.h": "c",
 		"timegauge.h": "c",
 		"map2overlay.h": "c",
-		"victory_tile.h": "c"
+		"victory_tile.h": "c",
+		"levselcursor.h": "c",
+		"levellock.h": "c"
 	}
 }

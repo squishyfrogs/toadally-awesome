@@ -73,6 +73,9 @@ static Vector2 offset;			// pixel offset within one tile
 static Vector2 mov;				// x and y speed+direction of current movement
 static int hop_offset;			// number of pixels to shove sprite vertically to simulate hopping
 
+#define MOV_BUFFER_MAX	8
+static int mov_buffer;			// small buffer after changing facing direction but before moving
+
 
 GameObj *get_player_obj()
 {
@@ -183,7 +186,10 @@ void playerobj_input_direction(int input_x, int input_y)
 
 	// can't move if no inputs
 	if(input_x == 0 && input_y == 0)
+	{
+		mov_buffer = 0;
 		return;
+	}
 
 	//zero out y movement if diagonals are banned (clunky, replace with smart diagonal reading later maybe)
 	if(!ALLOW_DIAGONAL && input_x != 0)
@@ -197,7 +203,9 @@ void playerobj_input_direction(int input_x, int input_y)
 	}
 	
 	// TODO: add a ~3 frame buffer for the input to be held before committing to movement
-	playerobj_move(input_x, input_y);
+	mov_buffer++;
+	if(mov_buffer >= MOV_BUFFER_MAX)
+		playerobj_move(input_x, input_y);
 }
 
 
@@ -416,6 +424,7 @@ void playerobj_finalize_movement()
 // returns true if the player will successfully stay in the current tile
 bool playerobj_check_floor_tile(int tile_x, int tile_y)
 {
+	
 	bool tile_safe = true;
 	ushort props = get_tile_properties(tile_x, tile_y);
 	GameObj *floor_obj = get_tile_floor_contents(tile_x, tile_y);
@@ -489,6 +498,8 @@ void playerobj_die_start()
 {
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_DIE);
+	audio_stop_track();
+	audio_play_sound(SFX_FAILURE);
 	// wait a while, then return to last position
 	timer_init(&die_timer, 60, playerobj_die_finish, TIMERFLAG_ENABLED);
 }
@@ -499,7 +510,7 @@ void playerobj_die_finish()
 	input_unlock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_IDLE);
 	timer_clear(&die_timer);
-	level_clear();
+	level_restart();
 }
 
 void playerobj_level_intro_start()
@@ -507,7 +518,6 @@ void playerobj_level_intro_start()
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_VICTORY);
 	timer_init(&player_timer, 50, playerobj_level_intro_finish, TIMERFLAG_ENABLED);
-	
 }
 // called when timer ends
 void playerobj_level_intro_finish()
@@ -522,8 +532,10 @@ void playerobj_victory_start()
 {
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_VICTORY);
+	audio_stop_track();
+	audio_play_sound(SFX_VICTORY);
 	// wait a while, then return to last position
-	timer_init(&player_timer, 140, playerobj_victory_finish, TIMERFLAG_ENABLED);
+	timer_init(&player_timer, 100, playerobj_victory_finish, TIMERFLAG_ENABLED);
 }
 // called when timer ends
 void playerobj_victory_finish()

@@ -4,13 +4,13 @@
 
 #include "game.h"
 #include "debug.h"
+#include "gamedata.h"
 #include "regmem.h"
 #include "audio.h"
 #include "layers.h"
 #include "input.h"
 #include "screens.h"
 #include "palettes.h"
-
 
 
 extern void audio_init();				// audio.c
@@ -24,7 +24,8 @@ extern void update_world_pos();
 // text.c
 extern void textsys_init();
 // level.c
-extern void load_level_data(int level_id);
+extern void load_level_info();
+extern void set_level_data(int level_id);
 // levelselect.c
 extern void level_select_update();
 // effects.c
@@ -92,7 +93,7 @@ int main(void)
 	if(DEBUG_SKIP_INTROS)
 	{
 		main_game_init();
-		load_level_data(0);
+		set_level_data(0);
 		go_to_main_game();
 	}
 	else
@@ -121,7 +122,8 @@ void main_loop()
 		//if(key_is_down(KEY_SELECT))
 		if(key_is_down(KEY_RESET) == KEY_RESET)
 		{	
-			break;		// exit the loop 
+			if(get_game_state() != GS_LOGO)
+				break;		// exit the loop 
 		}
 
 		graphics_update();
@@ -163,6 +165,7 @@ void global_init()
 {	
 	//set_game_state(GS_DEBUG);
 	set_game_state(GS_STARTUP);
+	gamedata_init();
 
 	// GBA interrupt setup
 	irq_init(NULL);
@@ -264,7 +267,7 @@ void go_to_title()
 	set_game_state(GS_TITLE);
 	input_lock(INPLCK_SYS);
 	title_load();
-	audio_play_track(MOD_TITLE_THEME);
+	audio_play_track(MOD_LEV_SEL_2);
 	reg_set_title();
 	title_display();
 }
@@ -277,6 +280,7 @@ void go_to_level_select()
 	set_game_state(GS_LEVEL_SELECT);
 	lev_sel_load();
 	reg_set_lev_sel();
+	load_level_info();
 	lev_sel_display();
 }
 

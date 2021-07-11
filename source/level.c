@@ -5,11 +5,21 @@
 #include "gamedata.h"
 
 extern void playerobj_set_starting_pos(int pos_x, int pos_y);
+extern  void set_plaque_state(int plaque_id, int p_state);
 
 
-void load_level_data(int level_id)
+#define NUM_LEVELS 16
+#define LEVINFO_UNLOCKED	0x01
+#define LEVINFO_CLEARED		0x02
+volatile static unsigned char level_info[NUM_LEVELS];
+
+static int current_level;
+
+
+void set_level_data(int level_id)
 {
 	//set_map_data_temp();
+	current_level = level_id - 1;
 	switch(level_id)
 	{
 		case 1:
@@ -65,6 +75,57 @@ void load_map_objs(int level_id)
 
 void level_clear()
 {
-	gamedata_save();
+	set_level_cleared(current_level);
+	set_level_unlocked(current_level+1);
+	save_level_info();
 	go_to_game_state(GS_LEVEL_SELECT);
+}
+
+void level_restart()
+{
+	go_to_game_state(GS_MAIN_GAME);
+}
+
+void set_level_unlocked(int level_id)
+{
+	//set_plaque_state(level_id, 2);
+	level_info[level_id] |= LEVINFO_UNLOCKED;
+}
+void set_level_cleared(int level_id)
+{
+	level_info[level_id] |= LEVINFO_CLEARED;
+	//set_plaque_state(level_id, 2);
+}
+
+
+bool check_level_unlocked(int level_id)
+{
+	return level_info[level_id] & LEVINFO_UNLOCKED;
+}
+
+bool check_level_cleared(int level_id)
+{
+	return level_info[level_id] & LEVINFO_CLEARED;
+}
+
+
+
+void load_level_info()
+{
+	for(int i = 0; i < NUM_LEVELS; i++)
+	{
+		level_info[i] = gamedata_load_byte(i);
+	}
+
+	level_info[0] |= LEVINFO_UNLOCKED;
+}
+
+
+void save_level_info()
+{
+	for(int i = 0; i < NUM_LEVELS; i++)
+	{
+		gamedata_save_byte(level_info[i], i);
+	}
+
 }
