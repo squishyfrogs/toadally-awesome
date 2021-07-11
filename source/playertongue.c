@@ -144,7 +144,6 @@ void tongue_update_length()
 			{
 				if(tongue_extension - EXT_SPD <= tongue_len_bonus)
 				{
-
 					gameobj_change_pixel_pos(attached_obj, owner_facing.x * (tongue_len_bonus - tongue_extension), owner_facing.y * (tongue_len_bonus - tongue_extension));
 					gameobj_update_current_tile(attached_obj);
 					history_update_all();
@@ -324,7 +323,11 @@ void tongue_retract()
 	if(attached_obj != NULL)
 	{
 		// pull the attached object
-		//create_effect_at_position(ET_SMOKE, attached_obj->tile_pos.x, attached_obj->tile_pos.y);
+		if(tongue_max_tl > 0)
+		{
+			audio_play_sound(SFX_PUSH_BLOCK);
+			create_effect_at_position(ET_SMOKE, attached_obj->tile_pos.x, attached_obj->tile_pos.y);
+		}
 		tongue_state = TS_PULLING_OBJ;
 		input_lock(INPLCK_TONGUE);
 	}
@@ -376,7 +379,8 @@ void tongue_store()
 		gameobj_hide(tongue_pieces[i]);
 	gameobj_hide(tongue_tip);
 
-	playerobj_finalize_movement();
+	playerobj_play_anim(PAI_IDLE);
+	//playerobj_finalize_movement();
 
 	input_unlock(INPLCK_TONGUE);
 }

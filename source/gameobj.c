@@ -301,12 +301,27 @@ void gameobj_set_property_flags(GameObj *obj, u16 properties)
 	obj->obj_properties = properties;
 }
 
+void gameobj_add_property_flags(GameObj *obj, u16 properties)
+{
+	obj->obj_properties |= properties;
+}
+
+void gameobj_remove_property_flags(GameObj *obj, u16 properties)
+{
+	obj->obj_properties &= ~properties;
+}
+
 // return the matching bits in a GameObj's property flags
 u16 gameobj_check_properties(GameObj *obj, u16 properties)
 {
 	if(obj == NULL)
 		return 0;
 	return obj->obj_properties & properties;
+}
+
+u16 gameobj_get_properties(GameObj *obj)
+{
+	return obj->obj_properties;
 }
 
 // unhide a GameObj

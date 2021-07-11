@@ -15,7 +15,7 @@
 #include "audio.h"
 #include "regmem.h"
 #include "palettes.h"
-
+#include "effects.h"
 
 #define PLAYER_START_X			5		// player starting location (temp)
 #define PLAYER_START_Y			5		// player starting location (temp)
@@ -28,8 +28,6 @@ extern void set_turn_active();
 // camera.c
 extern void camera_set_target(GameObj *target);
 extern void set_camera_pos(int target_x, int target_y);
-// effects.c
-extern void create_effect_at_position(int tile_x, int tile_y);
 // gameobj.c
 extern void gameobj_push_changes(GameObj *obj);
 // ui.c
@@ -93,12 +91,12 @@ void playerobj_init()
 		ATTR1_SIZE_16x16, 
 		PAL_ID_PLAYER, 
 		p_tile_start, 
-		PLAYER_START_X, PLAYER_START_Y,
+		0, 0,
 		OBJPROP_SOLID
 		);
 	register_obj_history(player_obj);
 	player_anim_init();
-	gameobj_update_current_tile(player_obj);
+	
 	camera_set_target(player_obj);
 	playerobj_play_anim(PAI_IDLE);
 
@@ -131,7 +129,13 @@ void player_anim_create(PlayerAnimID pid, int offset, int len, int facing_offset
 	player_anims[pid] = animdata_create(p_tile_start + offset, ANIM_OFFSET_16x16, len, facing_offset);
 }
 
-extern void main_game_end();
+
+void playerobj_set_starting_pos(int pos_x, int pos_y)
+{
+	gameobj_set_tile_pos(player_obj, pos_x, pos_y);
+	gameobj_update_current_tile(player_obj);
+}
+
 // main PlayerObj update
 void playerobj_update()
 {
@@ -307,7 +311,11 @@ void playerobj_move(int move_x, int move_y)
 		{
 			// if moving away from obj_att, pull it
 			if(gameobj_get_facing(player_obj) != mov_dir)
+			{
+				audio_play_sound(SFX_PUSH_BLOCK);
+				create_effect_at_position(ET_SMOKE, obj_att->tile_pos.x, obj_att->tile_pos.y);
 				gameobj_set_moving(obj_att, true, mov_dir);
+			}
 			// if moving toward obj_att, contract tongue
 			else
 				tongue_contract();
@@ -410,6 +418,8 @@ bool playerobj_check_floor_tile(int tile_x, int tile_y)
 {
 	bool tile_safe = true;
 	ushort props = get_tile_properties(tile_x, tile_y);
+	GameObj *floor_obj = get_tile_floor_contents(tile_x, tile_y);
+	u16 fo_props = gameobj_check_properties(floor_obj, 0xFFFF);
 	if(props & TILEPROP_PAIN)
 	{
 		playerhealth_take_damage();
@@ -420,7 +430,7 @@ bool playerobj_check_floor_tile(int tile_x, int tile_y)
 		playerobj_victory_start();
 		tile_safe = true;
 	}
-	else if(props & TILEPROP_HOLE)
+	else if((props & TILEPROP_HOLE) && !(fo_props & OBJPROP_SOLID))
 	{
 		playerobj_falling_start();
 		tile_safe = false;
@@ -439,6 +449,7 @@ void playerobj_falling_start()
 {
 	input_lock(INPLCK_TIMER);
 	playerobj_play_anim(PAI_FALL);
+	audio_play_sound(SFX_FALL);
 	remove_tile_contents(player_obj, player_obj->tile_pos.x, player_obj->tile_pos.y);
 	// wait a while, then return to last position
 	timer_init(&player_timer, 50, playerobj_falling_finish, TIMERFLAG_ENABLED);

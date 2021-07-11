@@ -25,6 +25,7 @@ typedef enum PlayerAnimID_T{
 } PlayerAnimID;
 
 
+void playerobj_set_starting_pos(int pos_x, int pos_y);
 bool playerobj_check_floor_tile(int tile_x, int tile_y);
 int playerobj_current_hop_height();
 void playerobj_play_anim(PlayerAnimID pid);

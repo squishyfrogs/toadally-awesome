@@ -34,6 +34,7 @@
 		"playertongue.h": "c",
 		"timer.h": "c",
 		"timegauge.h": "c",
-		"map2overlay.h": "c"
+		"map2overlay.h": "c",
+		"victory_tile.h": "c"
 	}
 }

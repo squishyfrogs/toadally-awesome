@@ -25,6 +25,7 @@ extern void playerhealth_damage_check();
 extern void playerhealth_death_check();
 // camera.c
 extern void camera_center();
+extern void camera_find_target();
 // main.c
 extern void go_to_logo();
 extern void go_to_title();
@@ -80,6 +81,7 @@ void main_game_start()
 	history_update_all();
 	
 	camera_center();
+	camera_find_target();
 
 	// play level intro animation 
 	playerobj_level_intro_start();

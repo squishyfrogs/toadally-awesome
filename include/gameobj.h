@@ -73,7 +73,10 @@ void gameobj_update_attr(GameObj *obj);
 void gameobj_update_attr_full(GameObj *obj, u16 attr0_shape, u16 attr1_size, u16 palbank, u32 spr_tile_id, int x, int y, u16 properties);
 
 void gameobj_set_property_flags(GameObj *obj, u16 properties);
+void gameobj_add_property_flags(GameObj *obj, u16 properties);
+void gameobj_remove_property_flags(GameObj *obj, u16 properties);
 u16 gameobj_check_properties(GameObj *obj, u16 properties);
+u16 gameobj_get_properties(GameObj *obj);
 void gameobj_unhide(GameObj *obj);
 void gameobj_hide(GameObj *obj);
 

@@ -8,8 +8,8 @@
 
 
 #include "sprites/objects/coin.h"
-#include "sprites/objects/crate.h"
-
+#include "sprites/objects/obj_crate.h"
+#include "sprites/objects/victory_tile.h"
 #include "sprites/objects/spikes.h"
 
 // playerhealth.c
@@ -93,11 +93,13 @@ bool objint_check_floor_tile(GameObj *obj, int tile_x, int tile_y)
 
 	bool tile_safe = true;
 	ushort props = get_tile_properties(tile_x, tile_y);
+	GameObj *floor_obj = get_tile_floor_contents(tile_x, tile_y);
+	u16 fo_props = gameobj_check_properties(floor_obj, 0xFFFF);
 	if(props & TILEPROP_PAIN)
 	{
 		tile_safe = false;
 	}
-	else if(props & TILEPROP_HOLE)
+	else if((props & TILEPROP_HOLE) && !(fo_props & OBJPROP_SOLID))
 	{
 		gameobj_fall(obj, tile_x, tile_y);
 		tile_safe = false;
@@ -114,29 +116,20 @@ void gameobj_fall(GameObj *obj, int tile_x, int tile_y)
 	if(tongue_get_attached_object() == obj)
 		tongue_detach_obj();
 
-	ushort props = get_tile_properties(tile_x, tile_y);
-	set_tile_properties(tile_x, tile_y, props & ~TILEPROP_HOLE);
+	//ushort props = get_tile_properties(tile_x, tile_y);
+	//set_tile_properties(tile_x, tile_y, props & ~TILEPROP_HOLE);
 	remove_tile_contents(obj, tile_x, tile_y);
+	set_floor_contents(obj, tile_x, tile_y);
 	//TODO: ADD SPRITE OF OBJ IN THE HOLE
-
-	gameobj_hide(obj);
+	gameobj_play_anim(obj);
+	audio_play_sound(SFX_FALL);
+	//gameobj_hide(obj);
+	gameobj_add_property_flags(obj, OBJPROP_TIME_IMMUNITY);
 }
 
 ////////////////////////////
 /// Interactable Objects ///
 ////////////////////////////
-
-
-GameObj *intobj_create_crate_at_position(int x, int y)
-{
-	int c_tile = mem_load_tiles(spr_crateTiles, spr_crateTilesLen);
-	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, PAL_ID_OBJS, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
-	register_obj_history(crate);
-	gameobj_set_sprite_offset(crate,0,8);
-	place_obj_in_tile(crate, x, y);
-	return crate;
-}
-
 
 GameObj *intobj_create_coin_at_position(int x, int y)
 {
@@ -151,6 +144,19 @@ GameObj *intobj_create_coin_at_position(int x, int y)
 	return coin;
 }
 
+GameObj *intobj_create_crate_at_position(int x, int y)
+{
+	int c_tile = mem_load_tiles(obj_crateTiles, obj_crateTilesLen);
+	GameObj *crate = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_TALL, ATTR1_SIZE_16x32, PAL_ID_OBJS, c_tile, 0, 0, OBJPROP_SOLID|OBJPROP_MOVABLE);
+	register_obj_history(crate);
+	gameobj_set_sprite_offset(crate,0,8);
+	place_obj_in_tile(crate, x, y);
+	AnimationData *fall_anim = animdata_create(c_tile, 8, 5, 0);
+	gameobj_set_anim_data(crate, fall_anim, ANIM_FLAG_CLAMP | ANIM_FLAG_LOCK);
+	return crate;
+}
+
+
 
 
 
@@ -158,6 +164,18 @@ GameObj *intobj_create_coin_at_position(int x, int y)
 /////////////////////
 /// Floor Objects ///
 /////////////////////
+
+
+GameObj *floorobj_create_victory_tile_at_position(int x, int y)
+{
+	int vt = mem_load_tiles(victory_tileTiles, victory_tileTilesLen);
+	GameObj *vic_tile = gameobj_init_full(LAYER_GAMEOBJ, ATTR0_SQUARE, ATTR1_SIZE_16x16, PAL_ID_OBJS, vt, 0, 0, OBJPROP_TIME_IMMUNITY);
+	place_obj_in_tile_floor(vic_tile, x, y);
+	AnimationData *vt_anim = animdata_create(vt, 4, 4, 0);
+	gameobj_set_anim_data(vic_tile, vt_anim, ANIM_FLAG_LOOPING);
+	gameobj_play_anim(vic_tile);
+	return vic_tile;
+}
 
 
 GameObj *floorobj_create_spikes_at_position(int x, int y)

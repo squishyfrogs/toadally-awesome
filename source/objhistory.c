@@ -241,13 +241,14 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	// clear old tiles
 	int old_tile_id = history_get_tile_id_at_time(history, current_turns_ago);
 	remove_tile_contents_by_id(history->game_obj, old_tile_id);
+	remove_floor_contents_by_id(history->game_obj, old_tile_id);
 
 	// enter new tile
 	int new_tile_id = history_get_tile_id_at_time(history, new_turns_ago);
 	//gameobj_set_tile_pos_by_id(history->game_obj, tile_id);
 	place_obj_in_tile_by_id(history->game_obj, new_tile_id);
 
-	// create a smoke effect if the object changed positions
+	// create a teleport effect if the object changed positions
 	if(old_tile_id != new_tile_id && old_tile_id >= 0 && new_tile_id >= 0)
 	{
 		create_effect_at_tile(ET_TELEPORT, old_tile_id);
@@ -257,7 +258,8 @@ void set_obj_to_turn(ObjHistory *history, int new_turns_ago)
 	int facing = history_get_facing_at_time(history, new_turns_ago);
 	gameobj_set_facing(history->game_obj, facing);
 
-	history->game_obj->anim.cur_frame = 0;
+	if((history->game_obj->anim.flags & ANIM_FLAG_LOCK) == 0)
+		history->game_obj->anim.cur_frame = 0;
 
 }
 

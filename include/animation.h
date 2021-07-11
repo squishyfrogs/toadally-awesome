@@ -32,6 +32,7 @@ typedef struct struct_Animation {
 #define ANIM_FLAG_REVERSED		0x04
 #define ANIM_FLAG_ASYMMETRIC	0x08	// whether or not the sprite has unique sprites for East and West facing
 #define ANIM_FLAG_CLAMP			0x10	// if set, hold on final frame when animation ends. if not set, return to frame 0
+#define ANIM_FLAG_LOCK			0x20	// if set, do not reset animation when changing time (this may be temp, need to think about it)
 
 
 void animdata_init_all();

@@ -44,6 +44,7 @@ void level_select_init()
 {
 	load_level_cursor();
 	reset_level_cursor();
+	audio_play_track(MOD_LEV_SEL_2);
 }
 
 // update level select screen

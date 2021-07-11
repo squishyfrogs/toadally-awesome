@@ -4,7 +4,7 @@
 #include "game.h"
 #include "gamedata.h"
 
-extern void set_map_data_temp();
+extern void playerobj_set_starting_pos(int pos_x, int pos_y);
 
 
 void load_level_data(int level_id)
@@ -35,15 +35,31 @@ void load_level_data(int level_id)
 
 void load_map_objs(int level_id)
 {
-
+	int player_start_x = 0;
+	int player_start_y = 0;
 	switch(level_id)
 	{
+		case 1:
+			player_start_x = 5;
+			player_start_y = 9;
+			floorobj_create_victory_tile_at_position(10,5);
+			break;
+		case 2:
+			player_start_x = 3;
+			player_start_y = 12;
+			floorobj_create_victory_tile_at_position(12,3);
+			break;
 		case 3:
-			intobj_create_crate_at_position(10,8);
+			player_start_x = 4;
+			player_start_y = 4;
+			floorobj_create_victory_tile_at_position(4,10);
+			intobj_create_crate_at_position(11,4);
 			break;
 		default:
 			break;
 	}
+
+	playerobj_set_starting_pos(player_start_x, player_start_y);
 }
 
 
@@ -51,28 +67,4 @@ void level_clear()
 {
 	gamedata_save();
 	go_to_game_state(GS_LEVEL_SELECT);
-}
-
-
-////////////
-/// Temp ///
-////////////
-
-
-void set_map_data_temp()
-{
-	// Load palette
-//	load_map_palette(testmapPal);
-	//load_map_palette(fe_mapPal);
-	
-	//memcpy(&tile_mem[1][start], fe_mapTiles, fe_mapTilesLen);
-	//load_map_tiles(fe_mapTiles, fe_mapTilesLen);
-//	load_map_tiles(testmapTiles, testmapTilesLen);
-	
-	//load_map(fe_mapMap, fe_mapMapLen);
-//	load_map(testmapMap, testmapMapLen);
-//	load_map_tile_properties(testmapCol);
-
-	set_map_data(0, testmapPal, testmapTiles, testmapTilesLen, testmapMap, testmapMapLen, testmapCol);
-
 }

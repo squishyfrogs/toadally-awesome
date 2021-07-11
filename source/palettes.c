@@ -7,7 +7,7 @@
 // TODO: replace these with dedicated palette headers 
 #include "sprites/player/spr_player.h"
 #include "sprites/ui/timegauge.h"
-#include "sprites/objects/spikes.h"
+#include "sprites/objects/victory_tile.h"
 
 int get_free_pal_id();
 void swap_8_colors(int pal_id);
@@ -27,7 +27,7 @@ void load_main_game_palettes()
 {
 	palette_load(spr_playerPal, PAL_ID_PLAYER);
 	palette_load(timegaugePal, PAL_ID_UI);
-	palette_load(spikesPal, PAL_ID_OBJS);
+	palette_load(victory_tilePal, PAL_ID_OBJS);
 }
 
 
